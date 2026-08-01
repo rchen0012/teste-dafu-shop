@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>订单管理 · 完整版</title>
+    <style>
+        :root {
+            --primary: #5B5FFF; --success: #00C48C; --danger: #FF647C; --warning: #FFB946; --edit: #FF8C00;
+            --bg: #F5F6FA; --card-bg: #FFFFFF; --text: #1A1A2E; --text-secondary: #6B7280; --border: #E5E7EB;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: env(safe-area-inset-bottom, 20px);
+            -webkit-font-smoothing: antialiased;
+        }
+        .top-bar {
+            background: var(--primary); color: white; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
+            position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(91,95,255,0.3);
+        }
+        .top-bar h1 { font-size: 18px; font-weight: 700; }
+        .top-bar .badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .tab-bar {
+            display: flex; background: var(--card-bg); margin: 16px 16px 0; border-radius: var(--radius); padding: 4px;
+            box-shadow: var(--shadow); position: sticky; top: 65px; z-index: 99;
+        }
+        .tab-btn {
+            flex: 1 0 auto; padding: 10px 4px; border: none; background: transparent; color: var(--text-secondary);
+            font-size: 12px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.3s; min-width: 55px;
+        }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(91,95,255,0.3); }
+        .tab-content { display: none; padding: 16px; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .edit-banner {
+            background: linear-gradient(135deg, #FFF7ED, #FFEDD5); border: 2px solid var(--edit); border-radius: var(--radius-sm);
+            padding: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .edit-banner .edit-info { font-size: 13px; font-weight: 600; color: var(--edit); }
+        .edit-banner .edit-info span { display: block; font-size: 11px; color: #9A3412; margin-top: 2px; }
+        .btn-cancel-edit {
+            background: white; color: var(--danger); border: 1px solid var(--danger); padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-label .required { color: var(--danger); }
+        .form-input, .form-select {
+            width: 100%; height: 46px; padding: 0 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 16px; color: var(--text); background: #F9FAFB; transition: all 0.2s; -webkit-appearance: none; appearance: none;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(91,95,255,0.1);
+        }
+        .form-input.readonly { background: #F3F4F6; color: #6B7280; border-style: dashed; }
+        .form-input.duplicate { border-color: var(--edit) !important; background: #FFF7ED !important; box-shadow: 0 0 0 3px rgba(255,140,0,0.15) !important; }
+        .form-input.new-order { border-color: var(--success) !important; background: #F0FDF4 !important; box-shadow: 0 0 0 3px rgba(0,196,140,0.1) !important; }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236B7280'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+        }
+        .scan-input-wrap { display: flex; gap: 8px; align-items: center; }
+        .scan-input-wrap .form-input { flex: 1; }
+        .order-hint-card { border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px; display: none; }
+        .order-hint-card.exists { display: block; background: #FFF7ED; border: 2px solid var(--edit); }
+        .order-hint-card.new { display: block; background: #F0FDF4; border: 2px solid var(--success); }
+        .order-hint-card .hint-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+        .order-hint-card.exists .hint-title { color: var(--edit); }
+        .order-hint-card.new .hint-title { color: var(--success); }
+        .order-hint-card .hint-detail { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+        .order-hint-card .hint-photos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .order-hint-card .hint-photo { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); }
+        .order-hint-card .hint-actions { margin-top: 10px; display: flex; gap: 6px; }
+        .btn-icon {
+            width: 46px; height: 46px; border: none; border-radius: var(--radius-sm); font-size: 22px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+        }
+        .btn-icon:active { transform: scale(0.95); }
+        .btn-scan { background: #FEE2E2; color: #EF4444; }
+        .btn-scan.active { background: #D1FAE5; color: #059669; animation: pulse-scan 1.5s ease infinite; }
+        @keyframes pulse-scan { 0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,0.4); } 50% { box-shadow: 0 0 0 12px rgba(5,150,105,0); } }
+        .scan-status { font-size: 11px; margin-top: 4px; font-weight: 500; }
+        .scan-status.manual { color: #6B7280; }
+        .scan-status.scanning { color: #059669; }
+        .person-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 30px; }
+        .person-tag {
+            display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: var(--primary);
+            padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+        }
+        .person-tag .remove-tag { cursor: pointer; font-size: 16px; line-height: 1; color: #EF4444; font-weight: bold; padding: 0 2px; }
+        .add-person-row { display: flex; gap: 8px; margin-top: 8px; }
+        .add-person-row input { flex: 1; height: 40px; font-size: 14px; padding: 0 12px; border: 2px solid var(--border); border-radius: var(--radius-sm); }
+        .add-person-row input:focus { outline: none; border-color: var(--primary); }
+        .btn {
+            height: 48px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
+        }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(91,95,255,0.3); }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 4px 12px rgba(0,196,140,0.3); }
+        .btn-edit { background: var(--edit); color: white; box-shadow: 0 4px 12px rgba(255,140,0,0.3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-sm { height: 36px; font-size: 13px; border-radius: 8px; padding: 0 14px; width: auto; }
+        .btn-xs { height: 36px; font-size: 13px; padding: 0 14px; border-radius: 8px; width: auto; flex-shrink: 0; }
+        .photo-upload { display: flex; flex-wrap: wrap; gap: 10px; }
+        .photo-item { width: 80px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; position: relative; border: 2px solid var(--border); background: #F9FAFB; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-item .delete-photo {
+            position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; background: rgba(239,68,68,0.9);
+            color: white; border: none; border-radius: 50%; font-size: 14px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; line-height: 1;
+        }
+        .photo-add-btn {
+            width: 80px; height: 80px; border: 2px dashed var(--border); border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center; font-size: 28px; color: #9CA3AF;
+            cursor: pointer; background: #F9FAFB; transition: all 0.2s;
+        }
+        .photo-add-btn:active { background: #E5E7EB; border-color: var(--primary); }
+        .order-item { background: var(--card-bg); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; border-left: 4px solid var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .order-item .row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 13px; }
+        .order-item .label { color: var(--text-secondary); font-size: 11px; }
+        .order-item .value { font-weight: 600; font-size: 13px; }
+        .order-item .actions { display: flex; gap: 8px; margin-top: 8px; }
+        .order-item .mini-photos { display: flex; gap: 4px; margin-top: 4px; }
+        .order-item .mini-photo { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
+        .status-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .status-pending { background: #FEF3C7; color: #92400E; }
+        .status-processing { background: #DBEAFE; color: #1E40AF; }
+        .status-done { background: #D1FAE5; color: #065F46; }
+        .status-cancelled { background: #FEE2E2; color: #991B1B; }
+        .stats-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .stat-box {
+            flex: 1 0 calc(50% - 4px); min-width: 80px; background: #F9FAFB; border-radius: var(--radius-sm);
+            padding: 12px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-box:active { transform: scale(0.97); }
+        .stat-box .stat-num { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .stat-box .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .safe-bottom { height: env(safe-area-inset-bottom, 20px); }
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1E1E2E; color: white;
+            padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; z-index: 999;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .toast.show { opacity: 1; }
+        .toast.success { background: #059669; }
+        .toast.error { background: #DC2626; }
+        .hidden-input { display: none; }
+        .person-section { background: #F9FAFB; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
+        .person-section h4 { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .empty-hint { color: #9CA3AF; font-size: 12px; padding: 4px 0; }
+        .modal-photos { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+        .modal-photo { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--border); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5);
+            z-index: 200; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease;
+        }
+        .modal-box {
+            background: white; border-radius: var(--radius); padding: 24px; margin: 20px; max-width: 360px;
+            width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto;
+        }
+        .modal-box h3 { font-size: 17px; margin-bottom: 8px; }
+        .modal-box p { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; white-space: pre-line; }
+        .modal-box .btn-row { display: flex; gap: 10px; }
+        .modal-box .btn-row .btn { flex: 1; height: 42px; font-size: 14px; }
+        .test-label {
+            display: inline-block; background: #FEE2E2; color: #DC2626; padding: 2px 8px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle;
+        }
+        .shipping-status-bar { display: flex; justify-content: space-between; margin: 16px 0; font-size: 12px; position: relative; }
+        .shipping-status-bar::before {
+            content: ''; position: absolute; top: 12px; left: 10%; right: 10%; height: 2px; background: #E5E7EB; z-index: 0;
+        }
+        .shipping-step {
+            display: flex; flex-direction: column; align-items: center; z-index: 1; background: white; padding: 0 8px; color: #9CA3AF;
+        }
+        .shipping-step.active { color: var(--primary); font-weight: 700; }
+        .shipping-step.completed { color: var(--success); }
+        .shipping-step .step-dot {
+            width: 24px; height: 24px; border-radius: 50%; background: #E5E7EB; margin-bottom: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .shipping-step.active .step-dot { background: var(--primary); color: white; }
+        .shipping-step.completed .step-dot { background: var(--success); color: white; }
+    </style>
+</head>
+<body>
+<div class="top-bar"><h1>📦 订单管理 <span class="test-label">本地测试</span></h1><span class="badge" id="orderCount">0 条订单</span></div>
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('add')">➕ 添加</button>
+    <button class="tab-btn" onclick="switchTab('list')">📋 列表</button>
+    <button class="tab-btn" onclick="switchTab('persons')">👥 人员</button>
+    <button class="tab-btn" onclick="switchTab('shipping')">🚚 托运</button>
+</div>
+
+<!-- 添加/编辑订单 -->
+<div id="tab-add" class="tab-content active">
+    <div class="edit-banner" id="editBanner" style="display:none;"><div class="edit-info">✏️ 编辑模式<span>正在修改: <strong id="editOrderNoText"></strong></span></div><button class="btn-cancel-edit" onclick="cancelEdit()">取消编辑</button></div>
+    <div class="card">
+        <div class="card-title" id="formTitle">📝 新增订单</div>
+        <div class="form-group"><label class="form-label">订单编号 (8位数字) <span class="required">*</span></label><div class="scan-input-wrap"><input type="text" class="form-input" id="orderNo" placeholder="输入8位数字或扫描" maxlength="8" inputmode="numeric" pattern="[0-9]*" autofocus oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"><button class="btn-icon btn-scan" id="scanBtn" onclick="toggleScanMode()">📷</button></div><div class="scan-status manual" id="scanStatus">手动输入 · 点击 📷 切换扫码</div></div>
+        <div class="order-hint-card" id="orderHintCard"><div class="hint-title" id="hintTitle"></div><div class="hint-detail" id="hintDetail"></div><div class="hint-photos" id="hintPhotos"></div><div class="hint-actions" id="hintActions"></div></div>
+        <div class="form-group"><label class="form-label">客户名称 <span class="required">*</span></label><input type="text" class="form-input" id="customerName" placeholder="输入客户名称"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><div class="form-group"><label class="form-label">销售 <span class="required">*</span></label><select class="form-select" id="salesPersonSelect"><option value="">请选择</option></select></div><div class="form-group"><label class="form-label">打包工 <span class="required">*</span></label><select class="form-select" id="packerSelect"><option value="">请选择</option></select></div></div>
+        <div class="form-group"><label class="form-label">数量 <span class="required">*</span></label><input type="number" class="form-input" id="quantity" value="1" min="1" inputmode="numeric"></div>
+        <div class="form-group"><label class="form-label">状态</label><select class="form-select" id="orderStatus"><option value="待处理">待处理</option><option value="处理中">处理中</option><option value="已完成">已完成</option><option value="已取消">已取消</option></select></div>
+        <div class="form-group"><label class="form-label">📸 箱子照片</label><div class="photo-upload" id="photoPreview"><div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">+</div></div><input type="file" id="photoInput" class="hidden-input" accept="image/*" capture="environment" multiple onchange="handlePhotos(this)"><small style="color:#9CA3AF;display:block;margin-top:4px;">点击 + 拍照或选择照片</small></div>
+        <div class="form-group"><label class="form-label">备注</label><input type="text" class="form-input" id="remark" placeholder="选填"></div>
+        <button class="btn btn-success" id="submitBtn" onclick="submitOrder()">🚀 提交订单</button>
+    </div>
+</div>
+
+<!-- 订单列表 -->
+<div id="tab-list" class="tab-content">
+    <div class="stats-row"><div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">总订单</div></div><div class="stat-box"><div class="stat-num" id="statPending">0</div><div class="stat-label">待处理</div></div><div class="stat-box"><div class="stat-num" id="statDone">0</div><div class="stat-label">已完成</div></div></div>
+    <div class="card"><input type="text" class="form-input" id="listSearch" placeholder="搜索订单号或客户名称" oninput="renderOrderList()" style="height:40px;font-size:14px;margin-bottom:8px;"><div style="display:flex;gap:8px;"><select class="form-select" id="listStatusFilter" onchange="renderOrderList()" style="height:40px;font-size:13px;flex:1;"><option value="">全部状态</option><option value="待处理">待处理</option><option value="处理中">处理中</option><option value="已完成">已完成</option><option value="已取消">已取消</option></select><button class="btn btn-danger btn-sm" onclick="clearAllOrders()" style="flex-shrink:0;">🗑️ 清空</button></div></div>
+    <div id="orderList"></div>
+</div>
+
+<!-- 人员管理 -->
+<div id="tab-persons" class="tab-content">
+    <div class="card"><div class="card-title">👨‍💼 销售人员</div><div class="person-section"><div class="person-tags" id="salesTags"></div><div class="add-person-row"><input type="text" id="newSalesInput" placeholder="输入销售姓名"><button class="btn btn-primary btn-xs" id="addSalesBtn">+ 添加</button></div></div></div>
+    <div class="card"><div class="card-title">📦 打包工</div><div class="person-section"><div class="person-tags" id="packerTags"></div><div class="add-person-row"><input type="text" id="newPackerInput" placeholder="输入打包工姓名"><button class="btn btn-primary btn-xs" id="addPackerBtn">+ 添加</button></div></div></div>
+    <div class="card"><div class="card-title">💾 数据管理</div><button class="btn btn-primary" onclick="exportData()" style="margin-bottom:8px;">📤 导出数据 (JSON)</button><button class="btn btn-outline" onclick="importDataPrompt()">📥 导入数据</button><input type="file" id="importFileInput" class="hidden-input" accept=".json" onchange="importData(this)"></div>
+</div>
+
+<!-- 🚚 托运 -->
+<div id="tab-shipping" class="tab-content">
+    <div class="card"><div class="card-title">🔍 输入订单号</div><div class="form-group"><label class="form-label">订单编号 (8位数字)</label><div class="scan-input-wrap"><input type="text" class="form-input" id="shippingOrderNo" placeholder="输入8位数字或扫描" maxlength="8" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)"><button class="btn btn-primary btn-sm" onclick="loadShippingOrder()">查询</button></div></div></div>
+    <div class="stats-row" id="shippingStats" style="display:none;">
+        <div class="stat-box" style="background:#FFF7ED;" onclick="showShippedOrders('waiting_invoice')"><div class="stat-num" id="statWaitingInvoice">0</div><div class="stat-label">等待开票</div></div>
+        <div class="stat-box" style="background:#EFF6FF;" onclick="showShippedOrders('invoiced')"><div class="stat-num" id="statInvoiced">0</div><div class="stat-label">待打包</div></div>
+        <div class="stat-box" style="background:#F0FDF4;" onclick="showShippedOrders('packing_confirmed')"><div class="stat-num" id="statPackingConfirmed">0</div><div class="stat-label">等待出货</div></div>
+        <div class="stat-box" style="background:#ECFDF5;" onclick="showShippedOrders('shipped')"><div class="stat-num" id="statShipped">0</div><div class="stat-label">已出货</div></div>
+    </div>
+    <div id="shippingInfo" style="display:none;"><div class="card" id="shippingOrderCard"></div><div class="shipping-status-bar" id="shippingStatusBar"></div><div class="card" id="shippingActionCard"></div></div>
+    <div id="shippedOrdersList" style="display:none;"></div>
+</div>
+
+<div class="safe-bottom"></div>
+<div class="modal-overlay" id="confirmModal" style="display:none;"><div class="modal-box"><h3 id="modalTitle">提示</h3><p id="modalMessage"></p><div class="modal-photos" id="modalPhotos"></div><div class="btn-row"><button class="btn btn-outline" id="modalCancelBtn">取消</button><button class="btn btn-edit" id="modalConfirmBtn">进入编辑</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_ORDERS = 'local_orders_v7', STORAGE_PERSONS = 'local_persons_v7';
+let orders = [], salesList = [], packerList = [], scanMode = false, selectedPhotos = [], isEditMode = false, editingId = null, lastCheckedOrderNo = '';
+let packingPhotos = [], shippingOutPhotos = [], currentShippingOrder = null;
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + (type||'') + ' show';
+    clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function showConfirmWithPhotos(title, message, photos, onConfirm) {
+    document.getElementById('modalTitle').textContent = title; document.getElementById('modalMessage').textContent = message;
+    const pc = document.getElementById('modalPhotos');
+    pc.innerHTML = (photos && photos.length) ? photos.map(src => `<img class="modal-photo" src="${src}" onclick="this.style.transform=this.style.transform==='scale(2)'?'scale(1)':'scale(2)'" style="cursor:pointer;transition:0.2s;">`).join('') : '';
+    pc.style.display = photos && photos.length ? 'flex' : 'none';
+    document.getElementById('confirmModal').style.display = 'flex';
+    const confirmBtn = document.getElementById('modalConfirmBtn'), cancelBtn = document.getElementById('modalCancelBtn');
+    const close = () => { document.getElementById('confirmModal').style.display = 'none'; confirmBtn.removeEventListener('click', handle); cancelBtn.removeEventListener('click', close); };
+    const handle = () => { close(); if (onConfirm) onConfirm(); };
+    confirmBtn.addEventListener('click', handle); cancelBtn.addEventListener('click', close);
+}
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    const idx = ['add','list','persons','shipping'].indexOf(name);
+    const btns = document.querySelectorAll('.tab-btn'); if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
+    if (name === 'list') { updateStats(); renderOrderList(); }
+    if (name === 'shipping') { updateShippingStats(); document.getElementById('shippingOrderNo').focus(); }
+}
+function saveOrders() {
+    localStorage.setItem(STORAGE_ORDERS, JSON.stringify(orders));
+    updateStats(); updateShippingStats();
+    document.getElementById('orderCount').textContent = orders.length + ' 条订单';
+}
+function loadOrders() {
+    const raw = localStorage.getItem(STORAGE_ORDERS);
+    if (raw) { try { orders = JSON.parse(raw); } catch(e) { orders = []; } }
+    if (!Array.isArray(orders)) orders = [];
+    document.getElementById('orderCount').textContent = orders.length + ' 条订单';
+}
+function savePersons() { localStorage.setItem(STORAGE_PERSONS, JSON.stringify({sales:salesList, packers:packerList})); }
+function loadPersons() {
+    const raw = localStorage.getItem(STORAGE_PERSONS);
+    if (raw) { try { const d = JSON.parse(raw); salesList = d.sales||[]; packerList = d.packers||[]; } catch(e) { salesList=[]; packerList=[]; } }
+    if (!salesList.length) salesList = ['张三','李四','王五'];
+    if (!packerList.length) packerList = ['赵六','钱七','孙八'];
+    savePersons();
+}
+function updateStats() {
+    let pending=0, done=0; orders.forEach(o => { if (o.status==='待处理'||o.status==='处理中') pending++; if (o.status==='已完成') done++; });
+    document.getElementById('statTotal').textContent = orders.length;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statDone').textContent = done;
+}
+function updateShippingStats() {
+    let w=0,i=0,p=0,s=0;
+    orders.forEach(o => { if (!o.shipping) return; if (o.shipping.status==='waiting_invoice') w++; else if (o.shipping.status==='invoiced') i++; else if (o.shipping.status==='packing_confirmed') p++; else if (o.shipping.status==='shipped') s++; });
+    document.getElementById('statWaitingInvoice').textContent = w;
+    document.getElementById('statInvoiced').textContent = i;
+    document.getElementById('statPackingConfirmed').textContent = p;
+    document.getElementById('statShipped').textContent = s;
+    document.getElementById('shippingStats').style.display = 'flex';
+}
+function addSalesPerson() {
+    const name = document.getElementById('newSalesInput').value.trim();
+    if (!name) { showToast('请输入姓名','error'); return; }
+    if (salesList.includes(name)) { showToast('已存在','error'); return; }
+    salesList.push(name); document.getElementById('newSalesInput').value = ''; savePersons(); refreshAllUI(); showToast('已添加: '+name,'success');
+}
+function removeSalesPerson(name) { salesList = salesList.filter(n => n!==name); savePersons(); refreshAllUI(); }
+function addPackerPerson() {
+    const name = document.getElementById('newPackerInput').value.trim();
+    if (!name) { showToast('请输入姓名','error'); return; }
+    if (packerList.includes(name)) { showToast('已存在','error'); return; }
+    packerList.push(name); document.getElementById('newPackerInput').value = ''; savePersons(); refreshAllUI(); showToast('已添加: '+name,'success');
+}
+function removePackerPerson(name) { packerList = packerList.filter(n => n!==name); savePersons(); refreshAllUI(); }
+function refreshAllUI() {
+    refreshTags('salesTags', salesList, 'removeSalesPerson'); refreshTags('packerTags', packerList, 'removePackerPerson');
+    refreshSelect('salesPersonSelect', salesList, '请选择销售'); refreshSelect('packerSelect', packerList, '请选择打包工');
+}
+function refreshTags(id, list, fn) {
+    const c = document.getElementById(id); if (!c) return;
+    c.innerHTML = list.length ? list.map(n => `<span class="person-tag">${n} <span class="remove-tag" onclick="${fn}('${n.replace(/'/g,"\\'")}')">×</span></span>`).join('') : '<span class="empty-hint">暂无人员</span>';
+}
+function refreshSelect(id, list, placeholder) {
+    const s = document.getElementById(id); if (!s) return; const val = s.value;
+    s.innerHTML = `<option value="">${placeholder}</option>` + list.map(n => `<option value="${n}" ${n===val?'selected':''}>${n}</option>`).join('');
+}
+function toggleScanMode() {
+    scanMode = !scanMode; const btn = document.getElementById('scanBtn'), status = document.getElementById('scanStatus'), input = document.getElementById('orderNo');
+    if (scanMode) { btn.classList.add('active'); status.textContent = '扫码中 · 等待扫描枪...'; status.className = 'scan-status scanning'; input.placeholder = '等待扫描...'; }
+    else { btn.classList.remove('active'); status.textContent = '手动输入 · 点击 📷 切换扫码'; status.className = 'scan-status manual'; input.placeholder = isEditMode ? '编辑模式' : '输入8位数字或扫描'; }
+    input.focus();
+}
+function checkOrderNo() {
+    if (isEditMode) return;
+    const orderNo = document.getElementById('orderNo').value.trim(), input = document.getElementById('orderNo'), hint = document.getElementById('orderHintCard');
+    input.classList.remove('duplicate','new-order'); hint.classList.remove('exists','new'); hint.style.display = 'none';
+    document.getElementById('hintPhotos').innerHTML = ''; document.getElementById('hintActions').innerHTML = '';
+    if (orderNo.length !== 8 || !/^\d{8}$/.test(orderNo)) return;
+    const existing = orders.find(o => o.orderNo === orderNo);
+    if (existing) {
+        input.classList.add('duplicate'); hint.classList.add('exists'); hint.style.display = 'block';
+        const sm = {'待处理':'status-pending','处理中':'status-processing','已完成':'status-done','已取消':'status-cancelled'};
+        document.getElementById('hintTitle').textContent = '⚠️ 该订单号已存在';
+        document.getElementById('hintDetail').innerHTML = `客户: <strong>${existing.customerName}</strong><br>销售: ${existing.salesPerson} | 打包: ${existing.packer}<br>数量: ${existing.quantity} | 状态: <span class="status-badge ${sm[existing.status]||''}">${existing.status}</span><br>创建时间: ${new Date(existing.createdAt).toLocaleString()}`;
+        if (existing.photos && existing.photos.length) document.getElementById('hintPhotos').innerHTML = existing.photos.map(src => `<img class="hint-photo" src="${src}">`).join('');
+        document.getElementById('hintActions').innerHTML = `<button class="btn btn-edit btn-sm" onclick="editExistingOrder('${existing.id}')" style="flex:1;">✏️ 编辑此订单</button>`;
+    } else {
+        input.classList.add('new-order'); hint.classList.add('new'); hint.style.display = 'block';
+        document.getElementById('hintTitle').textContent = '✅ 新订单号'; document.getElementById('hintDetail').textContent = '该订单号可以使用，将创建新订单';
+    }
+}
+function editExistingOrder(id) { const o = orders.find(o => o.id === id); if (o) enterEditMode(o); }
+function handlePhotos(input) {
+    Array.from(input.files).forEach(f => {
+        if (!f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => { selectedPhotos.push(e.target.result); const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${e.target.result}"><button class="delete-photo" onclick="removePhoto(${selectedPhotos.length})">×</button>`; document.getElementById('photoPreview').insertBefore(div, document.getElementById('photoPreview').lastChild); };
+        reader.readAsDataURL(f);
+    });
+    input.value = '';
+}
+function removePhoto(idx) { selectedPhotos.splice(idx-1,1); rebuildPhotos(); }
+function rebuildPhotos() {
+    const c = document.getElementById('photoPreview'); c.innerHTML = '<div class="photo-add-btn" onclick="document.getElementById(\'photoInput\').click()">+</div>';
+    selectedPhotos.forEach((src,i) => { const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${src}"><button class="delete-photo" onclick="removePhoto(${i+1})">×</button>`; c.insertBefore(div, c.lastChild); });
+}
+function enterEditMode(order) {
+    isEditMode = true; editingId = order.id;
+    document.getElementById('editBanner').style.display = 'flex'; document.getElementById('editOrderNoText').textContent = order.orderNo;
+    document.getElementById('formTitle').textContent = '✏️ 编辑订单';
+    const input = document.getElementById('orderNo'); input.value = order.orderNo; input.readOnly = true; input.classList.add('readonly'); input.classList.remove('duplicate','new-order');
+    document.getElementById('orderHintCard').style.display = 'none';
+    document.getElementById('customerName').value = order.customerName; document.getElementById('salesPersonSelect').value = order.salesPerson;
+    document.getElementById('packerSelect').value = order.packer; document.getElementById('quantity').value = order.quantity;
+    document.getElementById('orderStatus').value = order.status; document.getElementById('remark').value = order.remark || '';
+    selectedPhotos = (order.photos || []).slice(); rebuildPhotos();
+    const btn = document.getElementById('submitBtn'); btn.textContent = '💾 更新订单'; btn.className = 'btn btn-edit';
+    switchTab('add');
+}
+function cancelEdit() {
+    isEditMode = false; editingId = null;
+    document.getElementById('editBanner').style.display = 'none'; document.getElementById('formTitle').textContent = '📝 新增订单';
+    const input = document.getElementById('orderNo'); input.value = ''; input.readOnly = false; input.classList.remove('readonly','duplicate','new-order'); input.style.background = '#F9FAFB';
+    document.getElementById('orderHintCard').style.display = 'none';
+    document.getElementById('customerName').value = ''; document.getElementById('quantity').value = '1'; document.getElementById('remark').value = '';
+    document.getElementById('orderStatus').value = '待处理'; selectedPhotos = []; rebuildPhotos();
+    const btn = document.getElementById('submitBtn'); btn.textContent = '🚀 提交订单'; btn.className = 'btn btn-success';
+    input.focus();
+}
+function submitOrder() {
+    if (isEditMode) { updateOrder(); return; }
+    const orderNo = document.getElementById('orderNo').value.trim(), customerName = document.getElementById('customerName').value.trim(),
+        salesPerson = document.getElementById('salesPersonSelect').value, packer = document.getElementById('packerSelect').value,
+        quantity = parseInt(document.getElementById('quantity').value)||1;
+    if (!/^\d{8}$/.test(orderNo)) { showToast('请输入8位数字订单号','error'); return; }
+    if (!customerName) { showToast('请输入客户名称','error'); return; }
+    if (!salesPerson) { showToast('请选择销售','error'); return; }
+    if (!packer) { showToast('请选择打包工','error'); return; }
+    const existing = orders.find(o => o.orderNo === orderNo);
+    if (existing) { showConfirmWithPhotos('订单号已存在', `订单号: ${orderNo}\n客户: ${existing.customerName}\n状态: ${existing.status}\n是否进入编辑模式？`, existing.photos, () => enterEditMode(existing)); return; }
+    const order = {
+        id: Date.now().toString(), orderNo, customerName, salesPerson, packer, quantity,
+        status: document.getElementById('orderStatus').value, remark: document.getElementById('remark').value.trim(),
+        photos: selectedPhotos.slice(),
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    };
+    orders.unshift(order); saveOrders(); showToast('✅ 订单创建成功!','success'); resetForm();
+}
+function updateOrder() {
+    const order = orders.find(o => o.id === editingId); if (!order) { showToast('订单不存在','error'); return; }
+    order.customerName = document.getElementById('customerName').value.trim(); order.salesPerson = document.getElementById('salesPersonSelect').value;
+    order.packer = document.getElementById('packerSelect').value; order.quantity = parseInt(document.getElementById('quantity').value)||1;
+    order.status = document.getElementById('orderStatus').value; order.remark = document.getElementById('remark').value.trim();
+    order.photos = selectedPhotos.slice(); order.updatedAt = new Date().toISOString();
+    saveOrders(); showToast('✅ 订单更新成功!','success'); cancelEdit(); resetForm();
+}
+function resetForm() {
+    if (!isEditMode) { document.getElementById('orderNo').value = ''; document.getElementById('orderNo').classList.remove('duplicate','new-order'); document.getElementById('orderHintCard').style.display = 'none'; }
+    document.getElementById('customerName').value = ''; document.getElementById('quantity').value = '1'; document.getElementById('remark').value = '';
+    document.getElementById('orderStatus').value = '待处理'; selectedPhotos = []; rebuildPhotos();
+    document.getElementById('orderNo').focus();
+}
+function renderOrderList() {
+    const search = (document.getElementById('listSearch').value||'').trim().toLowerCase(), statusFilter = document.getElementById('listStatusFilter').value;
+    const filtered = orders.filter(o => (!search || o.orderNo.includes(search) || o.customerName.toLowerCase().includes(search)) && (!statusFilter || o.status===statusFilter));
+    const container = document.getElementById('orderList');
+    if (!filtered.length) { container.innerHTML = '<div class="card" style="text-align:center;color:#9CA3AF;padding:20px;">暂无订单</div>'; return; }
+    const sc = {'待处理':'status-pending','处理中':'status-processing','已完成':'status-done','已取消':'status-cancelled'};
+    const shippingMap = { waiting_invoice:'等待开票', invoiced:'已开票', packing_confirmed:'等待托运', shipped:'已出货' };
+    container.innerHTML = filtered.map(o => {
+        const photosHtml = o.photos?.length ? '<div class="mini-photos">'+o.photos.map(src => `<img class="mini-photo" src="${src}">`).join('')+'</div>' : '';
+        const shippingText = o.shipping?.status ? ` | 🚚 ${shippingMap[o.shipping.status]||o.shipping.status}` : '';
+        return `<div class="order-item"><div class="row"><span class="label">订单号</span><span class="value">${o.orderNo}</span></div><div class="row"><span class="label">客户</span><span class="value">${o.customerName}</span></div><div class="row"><span class="label">销售/打包工</span><span class="value">${o.salesPerson} / ${o.packer}</span></div><div class="row"><span class="label">状态</span><span class="value"><span class="status-badge ${sc[o.status]||''}">${o.status}</span>${shippingText}</span></div><div class="row"><span class="label">时间</span><span class="value" style="font-size:11px;">${new Date(o.createdAt).toLocaleString()}</span></div>${o.remark?`<div class="row"><span class="label">备注</span><span class="value">${o.remark}</span></div>`:''}${photosHtml}<div class="actions"><button class="btn btn-edit btn-sm" onclick="editFromList('${o.id}')" style="flex:1;">✏️ 编辑</button><button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')" style="flex:1;">🗑️ 删除</button></div></div>`;
+    }).join('');
+}
+function editFromList(id) { const o = orders.find(o => o.id===id); if (o) enterEditMode(o); }
+function deleteOrder(id) {
+    const o = orders.find(o => o.id===id); if (!o) return;
+    showConfirmWithPhotos('删除订单', `确定删除订单 ${o.orderNo} 吗？`, o.photos, () => { orders = orders.filter(o => o.id!==id); saveOrders(); renderOrderList(); if (editingId===id) cancelEdit(); showToast('已删除','success'); });
+}
+function clearAllOrders() {
+    if (!orders.length) { showToast('没有订单','error'); return; }
+    showConfirmWithPhotos('清空全部', `确定清空全部 ${orders.length} 条订单吗？`, [], () => { orders = []; saveOrders(); renderOrderList(); if (isEditMode) cancelEdit(); showToast('已清空','success'); });
+}
+function exportData() {
+    const data = { orders, salesList, packerList, exportTime: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orders_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    showToast('已导出','success');
+}
+function importDataPrompt() { document.getElementById('importFileInput').click(); }
+function importData(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.orders && Array.isArray(data.orders)) { orders = data.orders; if (data.salesList) salesList = data.salesList; if (data.packerList) packerList = data.packerList; saveOrders(); savePersons(); refreshAllUI(); renderOrderList(); showToast(`成功导入 ${orders.length} 条订单`,'success'); }
+            else showToast('格式不正确','error');
+        } catch(err) { showToast('解析失败','error'); }
+    };
+    reader.readAsText(file); input.value = '';
+}
+
+/* ============ 🚚 托运 ============ */
+function loadShippingOrder() {
+    const orderNo = document.getElementById('shippingOrderNo').value.trim();
+    if (!/^\d{8}$/.test(orderNo)) { showToast('请输入8位数字订单号','error'); return; }
+    const order = orders.find(o => o.orderNo === orderNo);
+    if (!order) { showToast('订单不存在','error'); document.getElementById('shippingInfo').style.display = 'none'; return; }
+    currentShippingOrder = order;
+    document.getElementById('shippingInfo').style.display = 'block';
+    document.getElementById('shippedOrdersList').style.display = 'none';
+    renderShippingUI(order);
+}
+
+function renderShippingUI(order) {
+    const card = document.getElementById('shippingOrderCard');
+    const photosHtml = order.photos?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${order.photos.map(src => `<img src="${src}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;border:2px solid #E5E7EB;">`).join('')}</div>` : '<span style="color:#9CA3AF;font-size:12px;">无照片</span>';
+    card.innerHTML = `<div class="card-title">📋 订单信息</div><div class="row"><span class="label">订单号</span><span class="value">${order.orderNo}</span></div><div class="row"><span class="label">客户</span><span class="value">${order.customerName}</span></div><div class="row"><span class="label">销售</span><span class="value">${order.salesPerson}</span></div><div class="row"><span class="label">打包工</span><span class="value">${order.packer}</span></div><div class="row"><span class="label">数量</span><span class="value">${order.quantity}</span></div><div class="row"><span class="label">箱子照片</span></div>${photosHtml}`;
+
+    const actionCard = document.getElementById('shippingActionCard');
+    if (!order.shipping) {
+        document.getElementById('shippingStatusBar').innerHTML = '';
+        actionCard.innerHTML = `<p style="color:var(--text-secondary);margin-bottom:12px;">该订单尚未进入托运流程，点击下方按钮开始。</p>
+            <button class="btn btn-primary" onclick="startShipping('${order.id}')">🚀 开始托运</button>`;
+        return;
+    }
+
+    const status = order.shipping.status;
+    const steps = [{key:'waiting_invoice',label:'等待开票'},{key:'invoiced',label:'已开票'},{key:'packing_confirmed',label:'等待托运'},{key:'shipped',label:'已出货'}];
+    const currentIdx = steps.findIndex(s => s.key === status);
+    document.getElementById('shippingStatusBar').innerHTML = steps.map((step,i) => {
+        let cls = ''; if (i < currentIdx) cls = 'completed'; else if (i === currentIdx) cls = 'active';
+        return `<div class="shipping-step ${cls}"><div class="step-dot">${i < currentIdx ? '✓' : (i+1)}</div><span>${step.label}</span></div>`;
+    }).join('');
+
+    const statusMap = { waiting_invoice:'等待开票', invoiced:'已开票', packing_confirmed:'等待托运', shipped:'已出货' };
+    let actionHtml = `<div class="card-title">当前状态：${statusMap[status]}</div>`;
+
+    if (status === 'waiting_invoice') {
+        actionHtml += renderInvoiceForm(order);
+    } else if (status === 'invoiced') {
+        actionHtml += `<p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">📋 发票信息：<br>发票号: ${order.shipping.invoice?.number||'-'}<br>托运公司: ${order.shipping.invoice?.company||'-'}<br>发票箱数: ${order.shipping.invoice?.boxCount||'-'}</p>`;
+        actionHtml += `<button class="btn btn-outline btn-sm" onclick="modifyInvoice('${order.id}')" style="margin-bottom:10px;">✏️ 修改发票信息</button>`;
+        actionHtml += renderPackingForm(order);
+    } else if (status === 'packing_confirmed') {
+        actionHtml += `<p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">打包人: ${order.shipping.packingConfirm?.packer||'-'}<br>打包数量: ${order.shipping.packingConfirm?.quantity||'-'}</p>`;
+        actionHtml += `<button class="btn btn-outline btn-sm" onclick="modifyPacking('${order.id}')" style="margin-bottom:10px;">✏️ 修改打包信息</button>`;
+        actionHtml += renderShippingOutForm(order);
+    } else if (status === 'shipped') {
+        actionHtml += `<p style="color:var(--success);font-weight:600;">✅ 已完成出货</p>${order.shipping.shippingOut?`<p style="font-size:13px;">出货数量: ${order.shipping.shippingOut.quantity}</p>`:''}`;
+    }
+
+    // 所有托运状态都添加删除托运按钮
+    actionHtml += `<hr style="margin:15px 0;border-color:#E5E7EB;">
+        <button class="btn btn-danger btn-sm" onclick="deleteShipping('${order.id}')" style="width:100%;">🗑️ 删除此托运流程</button>`;
+
+    actionCard.innerHTML = actionHtml;
+}
+
+function startShipping(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    order.shipping = { status: 'waiting_invoice' };
+    order.updatedAt = new Date().toISOString();
+    saveOrders();
+    showToast('已开始托运流程','success');
+    loadShippingOrder();
+}
+
+function deleteShipping(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    showConfirmWithPhotos('删除托运', `确定删除订单 ${order.orderNo} 的整个托运流程吗？所有托运数据将被清除。`, [], () => {
+        order.shipping = undefined;  // 删除 shipping 属性
+        order.updatedAt = new Date().toISOString();
+        saveOrders();
+        loadShippingOrder();
+        showToast('托运流程已删除','success');
+    });
+}
+
+function modifyInvoice(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    showConfirmWithPhotos('修改发票', '将退回至“等待开票”状态，原发票信息将保留但可重新填写。确定继续？', [], () => {
+        order.shipping.status = 'waiting_invoice';
+        order.updatedAt = new Date().toISOString();
+        saveOrders();
+        loadShippingOrder();
+        showToast('已退回，请重新填写发票','success');
+    });
+}
+
+function modifyPacking(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    showConfirmWithPhotos('修改打包', '将退回至“已开票”状态，原打包信息将保留但可重新确认。确定继续？', [], () => {
+        order.shipping.status = 'invoiced';
+        order.updatedAt = new Date().toISOString();
+        saveOrders();
+        loadShippingOrder();
+        showToast('已退回，请重新确认打包','success');
+    });
+}
+
+function renderInvoiceForm(order) {
+    return `<div class="form-group"><label class="form-label">发票号 <span class="required">*</span></label><input type="text" class="form-input" id="invoiceNumber" placeholder="输入发票号"></div>
+        <div class="form-group"><label class="form-label">托运公司 <span class="required">*</span></label><input type="text" class="form-input" id="invoiceCompany" placeholder="输入托运公司名称"></div>
+        <div class="form-group"><label class="form-label">发票箱数 <span class="required">*</span></label><input type="number" class="form-input" id="invoiceBoxCount" placeholder="输入箱数" min="1"></div>
+        <div class="form-group"><label class="form-label">发票PDF</label><input type="file" id="invoicePdfInput" accept=".pdf" onchange="handleInvoicePdf(this)"><small style="color:#9CA3AF;">上传发票PDF文件</small></div>
+        <button class="btn btn-success" onclick="submitInvoice('${order.id}')">💾 保存发票信息</button>`;
+}
+function handleInvoicePdf(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { currentShippingOrder.shipping.invoicePdfData = e.target.result; showToast('PDF已加载','success'); };
+    reader.readAsDataURL(file);
+}
+function submitInvoice(orderId) {
+    const order = orders.find(o => o.id === orderId); if (!order) return;
+    const number = document.getElementById('invoiceNumber').value.trim(), company = document.getElementById('invoiceCompany').value.trim(), boxCount = parseInt(document.getElementById('invoiceBoxCount').value);
+    if (!number) { showToast('请输入发票号','error'); return; }
+    if (!company) { showToast('请输入托运公司','error'); return; }
+    if (!boxCount || boxCount < 1) { showToast('请输入有效箱数','error'); return; }
+    order.shipping.invoice = { number, company, boxCount, pdf: order.shipping.invoicePdfData || null };
+    order.shipping.status = 'invoiced'; order.updatedAt = new Date().toISOString();
+    saveOrders(); showToast('✅ 发票信息已保存','success'); loadShippingOrder();
+}
+function renderPackingForm(order) {
+    const packerOptions = packerList.map(n => `<option value="${n}">${n}</option>`).join('');
+    return `<div class="form-group"><label class="form-label">打包工 <span class="required">*</span></label><select class="form-select" id="packingPacker"><option value="">请选择</option>${packerOptions}</select></div>
+        <div class="form-group"><label class="form-label">打包数量 <span class="required">*</span></label><input type="number" class="form-input" id="packingQuantity" value="${order.quantity}" min="1"></div>
+        <div class="form-group"><label class="form-label">📸 打包照片</label><div class="photo-upload" id="packingPhotoPreview"><div class="photo-add-btn" onclick="document.getElementById('packingPhotoInput').click()">+</div></div><input type="file" id="packingPhotoInput" class="hidden-input" accept="image/*" capture="environment" multiple onchange="handlePackingPhotos(this)"></div>
+        <button class="btn btn-success" onclick="submitPacking('${order.id}')">✅ 确认打包</button>`;
+}
+function handlePackingPhotos(input) {
+    Array.from(input.files).forEach(f => {
+        if (!f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => { packingPhotos.push(e.target.result); const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${e.target.result}"><button class="delete-photo" onclick="removePackingPhoto(${packingPhotos.length})">×</button>`; document.getElementById('packingPhotoPreview').insertBefore(div, document.getElementById('packingPhotoPreview').lastChild); };
+        reader.readAsDataURL(f);
+    });
+    input.value = '';
+}
+function removePackingPhoto(idx) { packingPhotos.splice(idx-1,1); rebuildPackingPhotos(); }
+function rebuildPackingPhotos() {
+    const c = document.getElementById('packingPhotoPreview'); c.innerHTML = '<div class="photo-add-btn" onclick="document.getElementById(\'packingPhotoInput\').click()">+</div>';
+    packingPhotos.forEach((src,i) => { const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${src}"><button class="delete-photo" onclick="removePackingPhoto(${i+1})">×</button>`; c.insertBefore(div, c.lastChild); });
+}
+function submitPacking(orderId) {
+    const order = orders.find(o => o.id === orderId); if (!order) return;
+    const packer = document.getElementById('packingPacker').value, quantity = parseInt(document.getElementById('packingQuantity').value);
+    if (!packer) { showToast('请选择打包工','error'); return; }
+    if (!quantity || quantity < 1) { showToast('请输入有效数量','error'); return; }
+    order.shipping.packingConfirm = { packer, quantity, photos: packingPhotos.slice() };
+    order.shipping.status = 'packing_confirmed'; order.updatedAt = new Date().toISOString();
+    saveOrders(); showToast('✅ 打包确认完成','success'); packingPhotos = []; loadShippingOrder();
+}
+function renderShippingOutForm(order) {
+    return `<div class="form-group"><label class="form-label">出货数量 <span class="required">*</span> (须等于发票箱数: ${order.shipping.invoice?.boxCount||0})</label><input type="number" class="form-input" id="shippingOutQuantity" placeholder="输入出货数量" min="1"></div>
+        <div class="form-group"><label class="form-label">📸 出货照片</label><div class="photo-upload" id="shippingPhotoPreview"><div class="photo-add-btn" onclick="document.getElementById('shippingPhotoInput').click()">+</div></div><input type="file" id="shippingPhotoInput" class="hidden-input" accept="image/*" capture="environment" multiple onchange="handleShippingPhotos(this)"></div>
+        <button class="btn btn-success" onclick="submitShippingOut('${order.id}')">🚚 确认出货</button>`;
+}
+function handleShippingPhotos(input) {
+    Array.from(input.files).forEach(f => {
+        if (!f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => { shippingOutPhotos.push(e.target.result); const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${e.target.result}"><button class="delete-photo" onclick="removeShippingPhoto(${shippingOutPhotos.length})">×</button>`; document.getElementById('shippingPhotoPreview').insertBefore(div, document.getElementById('shippingPhotoPreview').lastChild); };
+        reader.readAsDataURL(f);
+    });
+    input.value = '';
+}
+function removeShippingPhoto(idx) { shippingOutPhotos.splice(idx-1,1); rebuildShippingPhotos(); }
+function rebuildShippingPhotos() {
+    const c = document.getElementById('shippingPhotoPreview'); c.innerHTML = '<div class="photo-add-btn" onclick="document.getElementById(\'shippingPhotoInput\').click()">+</div>';
+    shippingOutPhotos.forEach((src,i) => { const div = document.createElement('div'); div.className = 'photo-item'; div.innerHTML = `<img src="${src}"><button class="delete-photo" onclick="removeShippingPhoto(${i+1})">×</button>`; c.insertBefore(div, c.lastChild); });
+}
+function submitShippingOut(orderId) {
+    const order = orders.find(o => o.id === orderId); if (!order) return;
+    const quantity = parseInt(document.getElementById('shippingOutQuantity').value), expected = order.shipping.invoice?.boxCount;
+    if (!quantity || quantity < 1) { showToast('请输入出货数量','error'); return; }
+    if (quantity !== expected) { showToast(`出货数量必须等于发票箱数 (${expected})`,'error'); return; }
+    order.shipping.shippingOut = { quantity, photos: shippingOutPhotos.slice() };
+    order.shipping.status = 'shipped'; order.updatedAt = new Date().toISOString();
+    saveOrders(); showToast('✅ 出货完成！','success'); shippingOutPhotos = []; loadShippingOrder();
+}
+
+function showShippedOrders(statusFilter) {
+    const list = orders.filter(o => o.shipping && o.shipping.status === statusFilter);
+    const container = document.getElementById('shippedOrdersList');
+    container.innerHTML = list.length ? list.map(o => {
+        const inv = o.shipping.invoice||{}, ship = o.shipping.shippingOut||{};
+        return `<div class="order-item" style="cursor:pointer;" onclick="viewShippingOrder('${o.id}')"><div class="row"><span class="label">订单号</span><span class="value">${o.orderNo}</span></div><div class="row"><span class="label">客户</span><span class="value">${o.customerName}</span></div><div class="row"><span class="label">发票号</span><span class="value">${inv.number||'-'}</span></div><div class="row"><span class="label">托运公司</span><span class="value">${inv.company||'-'}</span></div><div class="row"><span class="label">出货数量</span><span class="value">${ship.quantity||'-'}</span></div><div style="text-align:right;font-size:12px;color:var(--primary);">点击查看详情 →</div></div>`;
+    }).join('') : '<div class="card" style="text-align:center;color:#9CA3AF;padding:20px;">暂无符合条件的订单</div>';
+    container.style.display = 'block';
+    document.getElementById('shippingInfo').style.display = 'none';
+    window.scrollTo(0, container.offsetTop - 80);
+}
+function viewShippingOrder(id) {
+    const order = orders.find(o => o.id === id);
+    if (order) { document.getElementById('shippingOrderNo').value = order.orderNo; loadShippingOrder(); }
+}
+
+function bindEvents() {
+    document.getElementById('addSalesBtn').addEventListener('click', addSalesPerson);
+    document.getElementById('addPackerBtn').addEventListener('click', addPackerPerson);
+    document.getElementById('newSalesInput').addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); addSalesPerson(); } });
+    document.getElementById('newPackerInput').addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); addPackerPerson(); } });
+    const orderNoInput = document.getElementById('orderNo');
+    orderNoInput.addEventListener('input', function() {
+        clearTimeout(this._checkTimer);
+        const self = this;
+        this._checkTimer = setTimeout(() => { const val = self.value.trim(); if (val !== lastCheckedOrderNo && !isEditMode) { lastCheckedOrderNo = val; checkOrderNo(); } }, 300);
+    });
+    orderNoInput.addEventListener('keydown', function(e) { if (scanMode && e.key==='Enter') { const v = this.value.trim(); if (v) { lastCheckedOrderNo = v; checkOrderNo(); showToast('扫描到: '+v,'success'); } } });
+    document.addEventListener('keydown', e => { if (e.ctrlKey && e.key==='Enter') { e.preventDefault(); submitOrder(); } if (e.key==='F8') { e.preventDefault(); toggleScanMode(); } });
+    document.getElementById('shippingOrderNo').addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); loadShippingOrder(); } });
+}
+
+function init() { loadOrders(); loadPersons(); bindEvents(); refreshAllUI(); updateStats(); updateShippingStats(); }
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+</script>
+</body>
+</html>
