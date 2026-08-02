@@ -8,8 +8,22 @@
     <title>订单管理 · DAFU SHOP</title>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        /* ===== 样式保持与之前完全一致，为节省篇幅此处省略，实际使用时请保留完整样式 ===== */
-        :root { --primary: #81D8D0; --primary-dark: #5FC9C3; --success: #00C48C; --danger: #FF647C; --warning: #FFB946; --edit: #FF8C00; --bg: #F5F6FA; --card-bg: #FFFFFF; --text: #1A1A2E; --text-secondary: #6B7280; --border: #E5E7EB; --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px; }
+        :root {
+            --primary: #81D8D0;
+            --primary-dark: #5FC9C3;
+            --success: #00C48C;
+            --danger: #FF647C;
+            --warning: #FFB946;
+            --edit: #FF8C00;
+            --bg: #F5F6FA;
+            --card-bg: #FFFFFF;
+            --text: #1A1A2E;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: env(safe-area-inset-bottom, 20px); -webkit-font-smoothing: antialiased; }
         .top-bar { background: var(--primary); color: white; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top)); position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(129,216,208,0.3); }
@@ -165,9 +179,10 @@
         .success-message { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
         .success-order-no { font-size: 24px; font-weight: 700; color: var(--primary); margin: 8px 0; letter-spacing: 2px; }
         .lark-sync-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; background: #E8F5FE; border-radius: var(--radius-sm); padding: 8px 14px; flex-wrap: wrap; }
-        .lark-sync-bar input { flex:1; height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; min-width: 80px; }
+        .lark-sync-bar input { flex: 1; height: 36px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font-size: 13px; min-width: 80px; }
         .lark-sync-bar .btn { height: 36px; padding: 0 16px; width: auto; font-size: 13px; }
         .badge-lark { background: #0B5CFF; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
+        .badge-public { background: #059669; color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
         @media (max-width: 480px) { .lark-sync-bar { flex-direction: column; align-items: stretch; } .lark-sync-bar .btn { width: 100%; } }
     </style>
 </head>
@@ -204,7 +219,7 @@
     <div class="card">
         <div class="card-title" id="formTitle">📝 新增订单</div>
         <div class="form-group">
-            <label class="form-label">订单编号  <span class="required">*</span></label>
+            <label class="form-label">订单编号 <span class="required">*</span></label>
             <div class="scan-input-wrap">
                 <input type="text" class="form-input" id="orderNo" placeholder="输入订单编号或扫描" maxlength="8" inputmode="numeric" pattern="[0-9]*" autofocus oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
                 <button class="btn-icon btn-scan" id="scanBtn" onclick="startScanner('orderNo')">📷</button>
@@ -307,17 +322,17 @@
         <button class="btn btn-outline" onclick="importDataPrompt()">📥 导入数据</button>
         <input type="file" id="importFileInput" class="hidden-input" accept=".json" onchange="importData(this)">
     </div>
-    <!-- Lark 同步 - 已绑定您的表格信息 -->
+    <!-- 飞书同步 - 公开链接版 -->
     <div class="card">
-        <div class="card-title">📊 飞书多维表格 <span class="badge-lark">已绑定</span></div>
+        <div class="card-title">📊 飞书多维表格 <span class="badge-public">公开链接</span></div>
         <div class="lark-sync-bar">
             <input type="text" id="larkAppToken" value="FJHaboMy3akszXsAPOHlNs9eg7g" style="flex:2; min-width:100px;">
             <input type="text" id="larkTableId" value="tblfsyrJpH2K98UA" style="flex:2; min-width:100px;">
-            <button class="btn btn-primary btn-sm" onclick="syncToLark()" style="flex:1;">⬆️ 同步到 Lark</button>
-            <button class="btn btn-outline btn-sm" onclick="syncFromLark()" style="flex:1;">⬇️ 从 Lark 拉取</button>
+            <button class="btn btn-primary btn-sm" onclick="syncToLarkPublic()" style="flex:1;">⬆️ 同步到 Lark</button>
+            <button class="btn btn-outline btn-sm" onclick="syncFromLarkPublic()" style="flex:1;">⬇️ 从 Lark 拉取</button>
         </div>
         <div style="font-size:12px; color:#6B7280; margin-top:4px;">
-            ✅ 已绑定表格：<strong>DAFU 未命名多维表格</strong> (app_token: FJHaboMy3akszXsAPOHlNs9eg7g)
+            🌐 公开链接模式：无需飞书应用认证，表格需开启「公开链接-可编辑」权限
         </div>
     </div>
 </div>
@@ -384,10 +399,11 @@ const STORAGE_ORDERS = 'local_orders_v23', STORAGE_PERSONS = 'local_persons_v23'
 let orders = [], salesList = [], packerList = [], deliveryWorkers = [], selectedPhotos = [], isEditMode = false, editingId = null, lastCheckedOrderNo = '';
 let html5QrCode = null, currentScanTarget = 'orderNo';
 
-// ===== 已绑定 Lark 表格信息 =====
+// ===== 飞书表格信息（公开链接版） =====
 const LARK_APP_TOKEN = 'FJHaboMy3akszXsAPOHlNs9eg7g';
 const LARK_TABLE_ID = 'tblfsyrJpH2K98UA';
 
+// ========== 工具函数 ==========
 function showToast(msg, type) {
     const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + (type||'') + ' show';
     clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 3000);
@@ -795,96 +811,213 @@ function importData(input) {
     input.value = '';
 }
 
-// ========== 飞书多维表格同步（已使用绑定常量） ==========
-async function syncToLark() {
-    // 直接使用绑定好的常量，忽略输入框内容
-    const appToken = LARK_APP_TOKEN;
-    const tableId = LARK_TABLE_ID;
-    if (!appToken || !tableId) { showToast('请检查 app_token 和 table_id 绑定','error'); return; }
-    if (!orders.length) { showToast('没有订单可同步','error'); return; }
-    try {
-        showToast('同步中...', '');
-        const records = orders.map(o => ({
-            fields: {
-                '订单号': o.orderNo,
-                '客户': o.customerName,
-                '单位': o.unit || 'CX',
-                '数量': o.quantity,
-                '重量': o.weight || 0,
-                '状态': getCombinedStatus(o),
-                '销售': o.salesPerson,
-                '打包工': o.packer,
-                '备注': o.remark || ''
-            }
-        }));
-        const batchSize = 100;
-        for (let i = 0; i < records.length; i += batchSize) {
-            const batch = records.slice(i, i + batchSize);
-            const res = await fetch(`https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records/batch_create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ records: batch })
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if (data.code !== 0) throw new Error(data.msg || '飞书API错误');
-        }
-        showToast(`✅ 成功同步 ${orders.length} 条订单到飞书多维表格`, 'success');
-    } catch (err) {
-        showToast('❌ 同步失败: ' + err.message, 'error');
-        console.error(err);
-    }
-}
+// ============================================================
+// ========== 飞书公开链接同步（无需 Token 认证） ==========
+// ============================================================
 
-async function syncFromLark() {
+/**
+ * 从飞书多维表格拉取数据（公开链接版）
+ * 要求：表格已开启「公开链接-可编辑」权限
+ */
+async function syncFromLarkPublic() {
     const appToken = LARK_APP_TOKEN;
     const tableId = LARK_TABLE_ID;
-    if (!appToken || !tableId) { showToast('请检查 app_token 和 table_id 绑定','error'); return; }
+    
+    if (!appToken || !tableId) {
+        showToast('请检查 app_token 和 table_id 绑定', 'error');
+        return;
+    }
+
     try {
-        showToast('拉取中...', '');
-        let allRecords = [], pageToken = null;
-        do {
-            let url = `https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records?page_size=100`;
-            if (pageToken) url += `&page_token=${pageToken}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if (data.code !== 0) throw new Error(data.msg || '飞书API错误');
-            allRecords = allRecords.concat(data.data.items || []);
-            pageToken = data.data.page_token || null;
-        } while (pageToken);
-        if (!allRecords.length) { showToast('表格暂无数据','warning'); return; }
-        const imported = allRecords.map(r => {
-            const f = r.fields;
-            return {
-                id: 'lark_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-                orderNo: String(f['订单号'] || '').slice(0,8),
-                customerName: String(f['客户'] || ''),
-                unit: f['单位'] || 'CX',
-                quantity: Number(f['数量']) || 1,
-                weight: Number(f['重量']) || '',
-                salesPerson: String(f['销售'] || ''),
-                packer: String(f['打包工'] || ''),
-                remark: String(f['备注'] || ''),
-                photos: [],
-                delivery: { status:null, address:'', photos:[], startedAt:'', deliveredAt:'', quantity:'', deliveryWorker:'' },
-                pickup: { status:null, quantity:'', photos:[], startedAt:'', pickedAt:'' },
-                shipping: { status:'waiting_invoice', invoicePhotos:[], packingPhotos:[], outPhotos:[], packingConfirmedAt:null },
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-        }).filter(o => o.orderNo.length === 8);
-        if (!imported.length) { showToast('未识别到有效订单号','warning'); return; }
+        showToast('🔄 正在从飞书拉取数据...', '');
+
+        // 构建公开链接的 API 地址（注意：公开链接不需要 token）
+        const baseUrl = `https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records`;
+        
+        let allRecords = [];
+        let pageToken = null;
+        let hasMore = true;
+
+        while (hasMore) {
+            let url = `${baseUrl}?page_size=100`;
+            if (pageToken) {
+                url += `&page_token=${pageToken}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            // 检查飞书 API 返回码
+            if (data.code !== 0) {
+                // 如果是权限错误，提示用户开启公开链接
+                if (data.code === 99991663 || data.msg?.includes('permission')) {
+                    throw new Error('⚠️ 表格未开启公开链接或权限不足\n\n请在飞书中打开此表格，点击右上角「分享」→ 开启「公开链接」→ 选择「可编辑」');
+                }
+                throw new Error(data.msg || `飞书API错误 (code: ${data.code})`);
+            }
+
+            const items = data.data?.items || [];
+            allRecords = allRecords.concat(items);
+            
+            pageToken = data.data?.page_token || null;
+            hasMore = !!pageToken;
+        }
+
+        if (allRecords.length === 0) {
+            showToast('📭 飞书表格中暂无数据', 'warning');
+            return;
+        }
+
+        // 将飞书记录转换为本地订单格式
+        const importedOrders = allRecords
+            .map(record => {
+                const fields = record.fields || {};
+                const orderNo = String(fields['订单号'] || '').trim();
+                
+                // 只导入订单号是8位数字的记录
+                if (!/^\d{8}$/.test(orderNo)) return null;
+
+                return {
+                    id: 'lark_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    orderNo: orderNo,
+                    customerName: String(fields['客户'] || '').trim() || '未知客户',
+                    unit: (fields['单位'] || 'CX').toUpperCase(),
+                    quantity: parseInt(fields['数量']) || 1,
+                    weight: parseFloat(fields['重量']) || '',
+                    salesPerson: String(fields['销售'] || '').trim() || '未指定',
+                    packer: String(fields['打包工'] || '').trim() || '未指定',
+                    remark: String(fields['备注'] || '').trim(),
+                    photos: [],
+                    delivery: { status: null, address: '', photos: [], startedAt: '', deliveredAt: '', quantity: '', deliveryWorker: '' },
+                    pickup: { status: null, quantity: '', photos: [], startedAt: '', pickedAt: '' },
+                    shipping: { status: 'waiting_invoice', invoicePhotos: [], packingPhotos: [], outPhotos: [], packingConfirmedAt: null },
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+            })
+            .filter(o => o !== null);
+
+        if (importedOrders.length === 0) {
+            showToast('⚠️ 未识别到有效的订单号（需要8位数字）', 'warning');
+            return;
+        }
+
+        // 去重：已存在的订单号不覆盖
         const existingNos = new Set(orders.map(o => o.orderNo));
-        const newOrders = imported.filter(o => !existingNos.has(o.orderNo));
-        if (!newOrders.length) { showToast('所有订单已存在','warning'); return; }
+        const newOrders = importedOrders.filter(o => !existingNos.has(o.orderNo));
+
+        if (newOrders.length === 0) {
+            showToast(`✅ 所有 ${importedOrders.length} 条订单已存在，无需导入`, 'success');
+            return;
+        }
+
+        // 添加到本地订单列表
         orders = orders.concat(newOrders);
         saveOrders();
         renderOrderList();
-        showToast(`✅ 成功从 Lark 拉取 ${newOrders.length} 条新订单`, 'success');
-    } catch (err) {
-        showToast('❌ 拉取失败: ' + err.message, 'error');
-        console.error(err);
+        
+        showToast(`✅ 成功从飞书拉取 ${newOrders.length} 条新订单（共 ${importedOrders.length} 条记录）`, 'success');
+        
+    } catch (error) {
+        console.error('拉取失败:', error);
+        showToast('❌ 拉取失败: ' + error.message, 'error');
+    }
+}
+
+/**
+ * 同步订单到飞书多维表格（公开链接版）
+ * 要求：表格已开启「公开链接-可编辑」权限
+ */
+async function syncToLarkPublic() {
+    const appToken = LARK_APP_TOKEN;
+    const tableId = LARK_TABLE_ID;
+    
+    if (!appToken || !tableId) {
+        showToast('请检查 app_token 和 table_id 绑定', 'error');
+        return;
+    }
+
+    if (orders.length === 0) {
+        showToast('📭 本地没有订单可同步', 'warning');
+        return;
+    }
+
+    try {
+        showToast(`🔄 正在同步 ${orders.length} 条订单到飞书...`, '');
+
+        const baseUrl = `https://open.feishu.cn/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records`;
+
+        // 准备要同步的记录
+        const records = orders.map(order => ({
+            fields: {
+                '订单号': order.orderNo,
+                '客户': order.customerName || '未知客户',
+                '单位': order.unit || 'CX',
+                '数量': order.quantity || 1,
+                '重量': order.weight || 0,
+                '状态': getCombinedStatus(order),
+                '销售': order.salesPerson || '未指定',
+                '打包工': order.packer || '未指定',
+                '备注': order.remark || ''
+            }
+        }));
+
+        // 分批同步（每批最多 100 条）
+        const batchSize = 100;
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < records.length; i += batchSize) {
+            const batch = records.slice(i, i + batchSize);
+            
+            try {
+                const response = await fetch(baseUrl + '/batch_create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({ records: batch })
+                });
+
+                const data = await response.json();
+
+                if (data.code !== 0) {
+                    // 检查是否是权限问题
+                    if (data.code === 99991663 || data.msg?.includes('permission')) {
+                        throw new Error('⚠️ 表格未开启公开链接或权限不足\n\n请在飞书中打开此表格，点击右上角「分享」→ 开启「公开链接」→ 选择「可编辑」');
+                    }
+                    throw new Error(data.msg || `飞书API错误 (code: ${data.code})`);
+                }
+
+                successCount += batch.length;
+                showToast(`⏳ 已同步 ${successCount}/${orders.length} 条...`, '');
+                
+            } catch (batchError) {
+                failCount += batch.length;
+                console.error('批次同步失败:', batchError);
+                // 继续尝试下一批
+            }
+        }
+
+        if (failCount === 0) {
+            showToast(`✅ 成功同步全部 ${successCount} 条订单到飞书！`, 'success');
+        } else {
+            showToast(`⚠️ 同步完成：成功 ${successCount} 条，失败 ${failCount} 条`, 'warning');
+        }
+
+    } catch (error) {
+        console.error('同步失败:', error);
+        showToast('❌ 同步失败: ' + error.message, 'error');
     }
 }
 
@@ -1193,15 +1326,34 @@ function bindEvents() {
     document.addEventListener('keydown', e => { if(e.ctrlKey && e.key==='Enter') { e.preventDefault(); submitOrder(); } });
 }
 
+// ========== 初始化 ==========
 function init() {
-    // 预填入 Lark 信息到输入框（方便查看，但实际使用常量）
+    // 预填入 Lark 信息
     document.getElementById('larkAppToken').value = LARK_APP_TOKEN;
     document.getElementById('larkTableId').value = LARK_TABLE_ID;
     
-    loadOrders(); loadPersons(); bindEvents(); refreshAllUI(); updateStats(); switchTab('home');
-    document.addEventListener('visibilitychange', () => { if(document.hidden && html5QrCode && html5QrCode.isScanning) stopScanner(); });
+    loadOrders(); 
+    loadPersons(); 
+    bindEvents(); 
+    refreshAllUI(); 
+    updateStats(); 
+    switchTab('home');
+    
+    document.addEventListener('visibilitychange', () => { 
+        if (document.hidden && html5QrCode && html5QrCode.isScanning) {
+            stopScanner(); 
+        }
+    });
+    
+    console.log('✅ DAFU SHOP 已启动（飞书公开链接模式）');
+    console.log(`📊 表格: ${LARK_APP_TOKEN} / ${LARK_TABLE_ID}`);
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
 </body>
 </html>
