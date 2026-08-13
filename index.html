@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>大福面单 · 手机版</title>
+    <title>大福面单 · 精简版</title>
     <style>
         /* ===== 全局重置 & 移动优先 ===== */
         * {
@@ -23,7 +23,6 @@
             justify-content: center;
         }
 
-        /* ===== 主容器 — 手机卡片 ===== */
         .app-container {
             max-width: 480px;
             width: 100%;
@@ -62,7 +61,6 @@
             color: white;
             font-weight: 700;
             font-size: 18px;
-            letter-spacing: 0.5px;
             flex-shrink: 0;
         }
 
@@ -103,6 +101,14 @@
             box-shadow: 0 4px 10px rgba(10, 186, 181, 0.25);
         }
 
+        /* ===== 页面容器 ===== */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+
         /* ===== 表单区域 ===== */
         .form-section {
             background: #f5fafa;
@@ -132,7 +138,6 @@
         .form-group {
             margin-bottom: 16px;
         }
-
         .form-group:last-child {
             margin-bottom: 0;
         }
@@ -183,71 +188,7 @@
             display: none;
         }
 
-        /* ===== 数量控件 ===== */
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            background: white;
-            border: 2px solid #e0ecec;
-            border-radius: 14px;
-            overflow: hidden;
-        }
-
-        .quantity-btn {
-            width: 54px;
-            height: 54px;
-            background: #f5fafa;
-            border: none;
-            font-size: 26px;
-            font-weight: 600;
-            color: #0ABAB5;
-            cursor: pointer;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            touch-action: manipulation;
-        }
-
-        .quantity-btn:active {
-            background: #e0ecec;
-        }
-
-        .quantity-input {
-            flex: 1;
-            border: none;
-            text-align: center;
-            font-size: 22px;
-            font-weight: 700;
-            padding: 12px 0;
-            background: white;
-            min-width: 40px;
-            color: #1e1e2a;
-        }
-
-        .quantity-input:focus {
-            outline: none;
-            box-shadow: none;
-        }
-
-        .quantity-input::-webkit-outer-spin-button,
-        .quantity-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .quantity-input {
-            -moz-appearance: textfield;
-        }
-
-        .quantity-hint {
-            font-size: 13px;
-            color: #999;
-            margin-top: 6px;
-            text-align: right;
-        }
-
-        /* ===== 按钮组 ===== */
+        /* ===== 按钮 ===== */
         .action-buttons {
             display: flex;
             gap: 12px;
@@ -295,9 +236,125 @@
             transform: scale(0.96);
         }
 
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            transform: none;
+        .btn-success {
+            background: #28a745;
+            color: white;
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.25);
+        }
+        .btn-success:active {
+            transform: scale(0.96);
+            background: #1e7e34;
+        }
+
+        /* ===== 预览页面 ===== */
+        .preview-page {
+            background: #f5fafa;
+            border-radius: 20px;
+            padding: 18px 16px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .preview-header .back-btn {
+            background: none;
+            border: none;
+            color: #0ABAB5;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .preview-header .back-btn:active {
+            opacity: 0.6;
+        }
+
+        .preview-header .info-badge {
+            font-size: 13px;
+            color: #666;
+            background: white;
+            padding: 4px 14px;
+            border-radius: 30px;
+        }
+
+        .preview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-bottom: 8px;
+        }
+
+        /* ===== 标签预览卡片 ===== */
+        .label-card {
+            background: white;
+            border: 2px solid #222;
+            border-radius: 12px;
+            padding: 16px 18px;
+            position: relative;
+            font-family: Arial, sans-serif;
+            min-height: 150px;
+            flex-shrink: 0;
+        }
+
+        .label-card .preview-logo1 {
+            height: 28px;
+            width: auto;
+            object-fit: contain;
+            display: inline-block;
+        }
+
+        .label-card .preview-order {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 6px 0 4px;
+            color: #1e1e2a;
+        }
+
+        .label-card .preview-divider {
+            border-top: 2px dashed #ccc;
+            margin: 8px 0;
+        }
+
+        .label-card .preview-field {
+            font-size: 14px;
+            margin: 4px 0;
+            color: #1e1e2a;
+        }
+
+        .label-card .preview-field.store-field {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0a2a3a;
+        }
+
+        .label-card .preview-page-indicator {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a1a;
+            opacity: 0.7;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .preview-actions .btn {
+            flex: 1;
+            min-width: 100px;
         }
 
         /* ===== 历史记录 ===== */
@@ -305,12 +362,6 @@
             background: #f5fafa;
             border-radius: 20px;
             padding: 18px 16px;
-            margin-bottom: 18px;
-            display: none;
-        }
-
-        .history-section.visible {
-            display: block;
         }
 
         .history-header {
@@ -354,193 +405,7 @@
             margin-top: 8px;
         }
 
-        /* ===== 人员管理 ===== */
-        .management-section {
-            background: #f5fafa;
-            border-radius: 20px;
-            padding: 18px 16px;
-            display: none;
-        }
-
-        .management-section.visible {
-            display: block;
-        }
-
-        .login-form {
-            background: white;
-            border-radius: 16px;
-            padding: 24px 20px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-        }
-
-        .login-title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e1e2a;
-            margin-bottom: 20px;
-        }
-
-        .login-input-group {
-            margin-bottom: 16px;
-        }
-
-        .login-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #444;
-            margin-bottom: 4px;
-        }
-
-        .login-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0ecec;
-            border-radius: 14px;
-            font-size: 16px;
-            background: white;
-        }
-
-        .login-input:focus {
-            outline: none;
-            border-color: #0ABAB5;
-            box-shadow: 0 0 0 4px rgba(10, 186, 181, 0.12);
-        }
-
-        .login-error {
-            color: #ff4757;
-            font-size: 13px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: #0ABAB5;
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 8px;
-        }
-
-        .login-btn:active {
-            transform: scale(0.97);
-            background: #008E9B;
-        }
-
-        .login-note {
-            text-align: center;
-            margin-top: 14px;
-            color: #999;
-            font-size: 13px;
-        }
-
-        .management-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .management-tab {
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            background: #e8f0f0;
-            color: #666;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .management-tab.active {
-            background: #0ABAB5;
-            color: white;
-        }
-
-        .management-content {
-            display: none;
-        }
-        .management-content.active {
-            display: block;
-        }
-
-        .add-person-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .add-person-form input {
-            flex: 1;
-            padding: 12px 14px;
-            border: 2px solid #e0ecec;
-            border-radius: 12px;
-            font-size: 15px;
-        }
-
-        .add-person-form input:focus {
-            border-color: #0ABAB5;
-            outline: none;
-        }
-
-        .add-person-form .btn {
-            flex: 0 0 auto;
-            padding: 12px 20px;
-            font-size: 14px;
-            border-radius: 12px;
-        }
-
-        .person-list {
-            background: white;
-            border-radius: 12px;
-            padding: 8px 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .person-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid #e8f0f0;
-        }
-
-        .person-item:last-child {
-            border-bottom: none;
-        }
-
-        .person-item span {
-            font-size: 15px;
-            color: #1e1e2a;
-        }
-
-        .btn-small {
-            padding: 4px 14px;
-            font-size: 12px;
-            border-radius: 20px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-danger {
-            background: #ff4757;
-            color: white;
-        }
-
-        .btn-danger:active {
-            opacity: 0.7;
-        }
-
-        /* ===== Toast 通知 ===== */
+        /* ===== Toast ===== */
         .toast {
             position: fixed;
             top: 20px;
@@ -582,49 +447,44 @@
             body * {
                 visibility: hidden;
             }
-            .label-preview,
-            .label-preview * {
+            .label-card,
+            .label-card * {
                 visibility: visible;
             }
-            .label-preview {
+            .label-card {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100mm;
                 height: 150mm;
                 border: 2px solid #000;
-                padding: 7.3mm;
+                padding: 7mm;
                 font-family: Arial, sans-serif;
                 background: white;
                 page-break-after: always;
+                border-radius: 0;
             }
-            .preview-logo1 {
+            .label-card .preview-logo1 {
                 height: 12mm;
-                top: 7mm;
-                left: 7mm;
             }
-            .preview-content {
-                margin-top: 32mm;
-            }
-            .preview-order {
+            .label-card .preview-order {
                 font-size: 11mm;
             }
-            .preview-field.store-field {
+            .label-card .preview-field.store-field {
                 font-size: 9mm;
             }
-            .preview-page-indicator {
+            .label-card .preview-page-indicator {
                 font-size: 16mm;
-                bottom: 6mm;
+            }
+            .preview-page .preview-header,
+            .preview-page .preview-actions {
+                display: none !important;
             }
         }
 
-        /* ===== 工具类 ===== */
+        /* ===== 工具 ===== */
         .hidden {
             display: none !important;
-        }
-
-        .mt-8 {
-            margin-top: 8px;
         }
     </style>
 </head>
@@ -644,36 +504,23 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="create" onclick="switchTab('create')">标签</button>
                 <button class="nav-tab" data-tab="history" onclick="switchTab('history')">记录</button>
-                <button class="nav-tab" data-tab="management" onclick="switchTab('management')">管理</button>
             </div>
         </header>
 
-        <!-- ===== 创建标签 ===== -->
-        <div id="tabCreate">
+        <!-- ===== 页面：创建标签 ===== -->
+        <div id="pageCreate" class="page active">
             <div class="form-section">
                 <div class="section-title">订单信息</div>
 
                 <div class="form-group">
-                    <label>订单号 <span class="required">*</span></label>
-                    <input type="text" id="orderNo" placeholder="输入8位数字" maxlength="8" inputmode="numeric">
-                    <div class="error-message" id="orderNoError">订单号须为8位数字</div>
+                    <label>货号 <span class="required">*</span></label>
+                    <input type="text" id="orderNo" placeholder="输入货号" maxlength="20">
+                    <div class="error-message" id="orderNoError">请输入货号</div>
                 </div>
 
                 <div class="form-group">
-                    <label>店面 <span class="required">*</span></label>
-                    <select id="storeSelect">
-                        <option value="">请选择</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>数量 <span class="required">*</span></label>
-                    <div class="quantity-control">
-                        <button class="quantity-btn" onclick="changeQuantity(-1)" aria-label="减少">−</button>
-                        <input type="number" id="quantity" class="quantity-input" value="1" min="1" step="1">
-                        <button class="quantity-btn" onclick="changeQuantity(1)" aria-label="增加">+</button>
-                    </div>
-                    <div class="quantity-hint">共 <span id="quantityDisplay">1</span> 张标签</div>
+                    <label>金额 <span class="required">*</span></label>
+                    <input type="number" id="amount" placeholder="输入金额" step="0.01" min="0">
                 </div>
 
                 <div class="action-buttons">
@@ -683,45 +530,33 @@
             </div>
         </div>
 
-        <!-- ===== 历史记录 ===== -->
-        <div id="tabHistory" class="history-section" style="display:none;">
-            <div class="history-header">
-                <div class="section-title" style="margin-bottom:0;">历史记录</div>
-                <button class="btn btn-secondary" onclick="clearHistory()" style="padding:8px 16px;font-size:13px;border-radius:30px;">清空</button>
-            </div>
-            <div class="history-grid" id="historyGrid">
-                <div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>
+        <!-- ===== 页面：预览 ===== -->
+        <div id="pagePreview" class="page">
+            <div class="preview-page">
+                <div class="preview-header">
+                    <button class="back-btn" onclick="backToCreate()">‹ 返回</button>
+                    <span class="info-badge" id="previewInfo">1 张</span>
+                </div>
+                <div class="preview-list" id="previewList">
+                    <!-- 动态生成 -->
+                </div>
+                <div class="preview-actions">
+                    <button class="btn btn-success" onclick="printPreview()">🖨️ 打印</button>
+                    <button class="btn btn-secondary" onclick="savePreview()">💾 保存</button>
+                </div>
             </div>
         </div>
 
-        <!-- ===== 人员管理 ===== -->
-        <div id="tabManagement" class="management-section" style="display:none;">
-            <!-- 登录 -->
-            <div id="loginForm">
-                <div class="login-form">
-                    <div class="login-title">🔐 管理员登录</div>
-                    <div class="login-input-group">
-                        <label class="login-label">用户名</label>
-                        <input type="text" id="adminUsername" class="login-input" placeholder="admin">
-                    </div>
-                    <div class="login-input-group">
-                        <label class="login-label">密码</label>
-                        <input type="password" id="adminPassword" class="login-input" placeholder="••••••">
-                        <div class="login-error" id="loginError">用户名或密码错误</div>
-                    </div>
-                    <button class="login-btn" onclick="adminLogin()">登录</button>
-                    <div class="login-note">默认 admin / admin</div>
+        <!-- ===== 页面：历史记录 ===== -->
+        <div id="pageHistory" class="page">
+            <div class="history-section">
+                <div class="history-header">
+                    <div class="section-title" style="margin-bottom:0;">历史记录</div>
+                    <button class="btn btn-secondary" onclick="clearHistory()" style="padding:8px 16px;font-size:13px;border-radius:30px;">清空</button>
                 </div>
-            </div>
-
-            <!-- 管理内容 -->
-            <div id="managementContent" style="display:none;">
-                <div class="section-title">店面管理</div>
-                <div class="add-person-form">
-                    <input type="text" id="newPackerName" placeholder="输入店面名称">
-                    <button class="btn btn-primary" onclick="addPacker()" style="flex:0 0 auto;padding:12px 18px;font-size:14px;">添加</button>
+                <div class="history-grid" id="historyGrid">
+                    <div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>
                 </div>
-                <div class="person-list" id="packerList"></div>
             </div>
         </div>
 
@@ -734,34 +569,31 @@
         // ======================== 数据层 ========================
         const appData = {
             labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
-            storeList: JSON.parse(localStorage.getItem('storeList')) || ['DAFU', 'LOJA A', 'LOJA B'],
-            adminCredentials: { username: 'admin', password: 'admin' },
-            isAdminLoggedIn: false,
-            currentPage: 1,
-            totalPages: 1
+            // 预览数据
+            previewData: {
+                orderNo: '',
+                amount: '',
+                dateStr: ''
+            }
         };
 
         // ======================== DOM 引用 ========================
         const $ = id => document.getElementById(id);
         const orderNo = $('orderNo');
-        const storeSelect = $('storeSelect');
-        const quantity = $('quantity');
+        const amount = $('amount');
         const generateBtn = $('generateBtn');
         const toast = $('toast');
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
-            loadStoreOptions();
-            syncQuantityDisplay();
             bindEvents();
             loadHistory();
-            switchTab('create');
+            showPage('create');
         });
 
         function bindEvents() {
             orderNo.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                if (this.value.length > 0 && this.value.length !== 8) {
+                if (this.value.trim().length === 0) {
                     this.classList.add('error');
                     $('orderNoError').style.display = 'block';
                 } else {
@@ -771,235 +603,38 @@
                 validateForm();
             });
 
-            storeSelect.addEventListener('change', validateForm);
-            quantity.addEventListener('input', function() {
-                let val = parseInt(this.value) || 1;
-                if (val < 1) val = 1;
-                this.value = val;
-                syncQuantityDisplay();
+            amount.addEventListener('input', function() {
                 validateForm();
             });
         }
 
-        // ======================== 店面选项 ========================
-        function loadStoreOptions() {
-            storeSelect.innerHTML = '<option value="">请选择</option>';
-            appData.storeList.forEach(store => {
-                const opt = document.createElement('option');
-                opt.value = store;
-                opt.textContent = store;
-                storeSelect.appendChild(opt);
-            });
+        // ======================== 页面切换 ========================
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+            if (target) target.classList.add('active');
+
+            const tabMap = { create: 'create', preview: 'create', history: 'history' };
+            const tabName = tabMap[page] || 'create';
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.nav-tab[data-tab="${tabName}"]`)?.classList.add('active');
         }
 
-        // ======================== 数量 ========================
-        function changeQuantity(delta) {
-            let val = parseInt(quantity.value) || 1;
-            val = Math.max(1, val + delta);
-            quantity.value = val;
-            syncQuantityDisplay();
-            validateForm();
+        function switchTab(tab) {
+            if (tab === 'create') showPage('create');
+            else if (tab === 'history') { showPage('history');
+                loadHistory(); }
         }
 
-        function syncQuantityDisplay() {
-            let val = parseInt(quantity.value) || 1;
-            if (val < 1) val = 1;
-            quantity.value = val;
-            $('quantityDisplay').textContent = val;
+        function backToCreate() {
+            showPage('create');
         }
 
         // ======================== 表单验证 ========================
         function validateForm() {
-            const valid = orderNo.value.length === 8 && storeSelect.value && parseInt(quantity.value) > 0;
+            const valid = orderNo.value.trim().length > 0 && amount.value.trim().length > 0 && parseFloat(amount.value) >= 0;
             generateBtn.disabled = !valid;
             return valid;
-        }
-
-        // ======================== 生成标签 — 弹出预览页面 ========================
-        function generateLabel() {
-            if (!validateForm()) {
-                showToast('请完整填写必填信息');
-                return;
-            }
-
-            const total = parseInt(quantity.value) || 1;
-            const no = orderNo.value;
-            const storeName = storeSelect.options[storeSelect.selectedIndex]?.text || '—';
-            const dateStr = getDateStr();
-
-            // 构建所有标签的HTML
-            let labelsHTML = '';
-            for (let p = 1; p <= total; p++) {
-                labelsHTML += `
-                    <div class="label-preview">
-                        <div class="preview-logo1-container">
-                            <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
-                            <div style="position:absolute;top:7mm;left:7mm;font-size:7mm;font-weight:bold;color:#0ABAB5;display:none;">DAFU</div>
-                        </div>
-                        <div class="preview-content">
-                            <div class="preview-order">№: ${no}</div>
-                            <div class="preview-divider"></div>
-                            <div class="preview-field store-field">Loja: ${storeName}</div>
-                            <div class="preview-field">Data: ${dateStr}</div>
-                            <div class="preview-divider"></div>
-                        </div>
-                        <div class="preview-page-indicator">${p}/${total}</div>
-                    </div>
-                `;
-            }
-
-            // 打开新窗口作为预览/打印
-            const win = window.open('', '_blank', 'width=400,height=700');
-            if (!win) {
-                showToast('⚠️ 请允许弹出窗口');
-                return;
-            }
-
-            win.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>预览 · ${no}</title>
-                    <style>
-                        * { margin:0; padding:0; box-sizing:border-box; }
-                        body { 
-                            background: #f5fafa; 
-                            padding: 16px; 
-                            display: flex; 
-                            flex-direction: column; 
-                            align-items: center; 
-                            font-family: Arial, sans-serif;
-                        }
-                        @page { margin:0; size:100mm 150mm; }
-                        .label-preview {
-                            width: 100mm;
-                            height: 150mm;
-                            border: 2px solid #000;
-                            padding: 7mm;
-                            position: relative;
-                            background: white;
-                            margin: 0 auto 12px;
-                            page-break-after: always;
-                            font-family: Arial, sans-serif;
-                            box-sizing: border-box;
-                        }
-                        .preview-logo1 {
-                            position: absolute;
-                            top: 7mm;
-                            left: 7mm;
-                            height: 12mm;
-                            width: auto;
-                            object-fit: contain;
-                        }
-                        .preview-content {
-                            margin-top: 32mm;
-                        }
-                        .preview-order {
-                            font-size: 11mm;
-                            font-weight: bold;
-                            margin-bottom: 4mm;
-                        }
-                        .preview-divider {
-                            border-top: 1mm dashed #999;
-                            margin: 3mm 0;
-                        }
-                        .preview-field {
-                            font-size: 5.5mm;
-                            margin: 2mm 0;
-                        }
-                        .preview-field.store-field {
-                            font-size: 9mm;
-                            font-weight: bold;
-                            margin: 3mm 0;
-                        }
-                        .preview-page-indicator {
-                            position: absolute;
-                            bottom: 6mm;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            font-size: 16mm;
-                            font-weight: bold;
-                            opacity: 0.8;
-                            background: rgba(255,255,255,0.4);
-                            padding: 0 3mm;
-                            border-radius: 2mm;
-                        }
-                        .toolbar {
-                            display: flex;
-                            gap: 12px;
-                            margin-bottom: 16px;
-                            flex-wrap: wrap;
-                            justify-content: center;
-                            width: 100%;
-                            max-width: 400px;
-                        }
-                        .toolbar button {
-                            padding: 12px 28px;
-                            border: none;
-                            border-radius: 30px;
-                            font-size: 16px;
-                            font-weight: 700;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                            touch-action: manipulation;
-                        }
-                        .btn-print {
-                            background: #0ABAB5;
-                            color: white;
-                            box-shadow: 0 4px 12px rgba(10,186,181,0.3);
-                        }
-                        .btn-print:active { transform: scale(0.96); background: #008E9B; }
-                        .btn-close {
-                            background: #e8f0f0;
-                            color: #0ABAB5;
-                        }
-                        .btn-close:active { transform: scale(0.96); background: #d0e6e6; }
-                        .info-bar {
-                            font-size: 14px;
-                            color: #666;
-                            margin-bottom: 12px;
-                            background: white;
-                            padding: 8px 20px;
-                            border-radius: 30px;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-                        }
-                        @media print {
-                            body { background: white; padding: 0; }
-                            .toolbar, .info-bar { display: none; }
-                            .label-preview { margin: 0 auto; border: 2px solid #000; box-shadow: none; }
-                        }
-                        @media (max-width: 480px) {
-                            .label-preview { width: 80vw; height: calc(80vw * 1.5); }
-                            .preview-order { font-size: 9mm; }
-                            .preview-field.store-field { font-size: 7mm; }
-                            .preview-page-indicator { font-size: 13mm; }
-                            .preview-content { margin-top: 26mm; }
-                            .preview-logo1 { height: 10mm; }
-                            .toolbar button { padding: 10px 20px; font-size: 14px; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="info-bar">📄 共 ${total} 张 · ${no}</div>
-                    <div class="toolbar">
-                        <button class="btn-print" onclick="window.print()">🖨️ 打印</button>
-                        <button class="btn-close" onclick="window.close()">✕ 关闭</button>
-                    </div>
-                    ${labelsHTML}
-                    <script>
-                        // 自动打印（可选）
-                        // setTimeout(function() { window.print(); }, 800);
-                    <\/script>
-                </body>
-                </html>
-            `);
-            win.document.close();
-
-            // 保存到历史
-            saveToHistory(no, storeName, total);
-            showToast(`✅ 已生成 ${total} 张标签`);
         }
 
         // ======================== 获取日期字符串 ========================
@@ -1014,131 +649,78 @@
             return `${day} ${month} ${year} ${h}:${m}`;
         }
 
+        // ======================== 生成标签 → 切换到预览页面 ========================
+        function generateLabel() {
+            if (!validateForm()) {
+                showToast('请完整填写必填信息');
+                return;
+            }
+
+            const no = orderNo.value.trim();
+            const amt = amount.value.trim();
+
+            // 保存预览数据
+            appData.previewData = { orderNo: no, amount: amt, dateStr: getDateStr() };
+
+            // 渲染预览
+            renderPreview();
+
+            // 切换到预览页面
+            showPage('preview');
+            showToast('✅ 标签已生成');
+        }
+
+        function renderPreview() {
+            const { orderNo: no, amount: amt, dateStr } = appData.previewData;
+            const container = $('previewList');
+            $('previewInfo').textContent = `1 张 · ${no}`;
+
+            container.innerHTML = `
+                <div class="label-card">
+                    <div>
+                        <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
+                    </div>
+                    <div class="preview-order">货号: ${no}</div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-field store-field">金额: ${amt}</div>
+                    <div class="preview-field">日期: ${dateStr}</div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-page-indicator">1/1</div>
+                </div>
+            `;
+        }
+
+        // ======================== 打印预览 ========================
+        function printPreview() {
+            window.print();
+            showToast('🖨️ 正在打印');
+        }
+
+        // ======================== 保存预览 ========================
+        function savePreview() {
+            const { orderNo: no, amount: amt } = appData.previewData;
+            if (!no) { showToast('请先生成标签'); return; }
+            saveToHistory(no, amt);
+            showToast('💾 已保存到历史');
+        }
+
         // ======================== 保存历史 ========================
-        function saveToHistory(no, storeName, total) {
+        function saveToHistory(no, amt) {
             const data = {
                 id: Date.now(),
                 orderNo: no,
-                customer: storeName,
-                quantity: total,
-                createTime: new Date().toLocaleString('zh-CN'),
-                totalPages: total
+                amount: amt,
+                createTime: new Date().toLocaleString('zh-CN')
             };
             appData.labelHistory.unshift(data);
             localStorage.setItem('labelHistory', JSON.stringify(appData.labelHistory));
         }
 
-        function saveLabel() {
-            if (!validateForm()) { showToast('请先生成标签'); return; }
-            const no = orderNo.value;
-            const storeName = storeSelect.options[storeSelect.selectedIndex]?.text || '—';
-            const total = parseInt(quantity.value) || 1;
-            saveToHistory(no, storeName, total);
-            showToast('💾 已保存到历史');
-        }
-
         function resetForm() {
             orderNo.value = '';
-            storeSelect.selectedIndex = 0;
-            quantity.value = '1';
-            syncQuantityDisplay();
+            amount.value = '';
             validateForm();
             showToast('🔄 已重置');
-        }
-
-        // ======================== 管理员 ========================
-        function adminLogin() {
-            const user = $('adminUsername').value.trim();
-            const pass = $('adminPassword').value;
-            const err = $('loginError');
-            if (user === appData.adminCredentials.username && pass === appData.adminCredentials.password) {
-                appData.isAdminLoggedIn = true;
-                $('loginForm').style.display = 'none';
-                $('managementContent').style.display = 'block';
-                renderPackerList();
-                showToast('✅ 登录成功');
-            } else {
-                err.style.display = 'block';
-                $('adminPassword').value = '';
-                setTimeout(() => err.style.display = 'none', 3000);
-            }
-        }
-
-        function renderPackerList() {
-            const container = $('packerList');
-            container.innerHTML = '';
-            if (appData.storeList.length === 0) {
-                container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">暂无店面</div>';
-                return;
-            }
-            appData.storeList.forEach((name, idx) => {
-                const div = document.createElement('div');
-                div.className = 'person-item';
-                div.innerHTML = `
-                    <span>${name}</span>
-                    <button class="btn-small btn-danger" onclick="deletePacker(${idx})">删除</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function addPacker() {
-            if (!appData.isAdminLoggedIn) { showToast('请先登录'); return; }
-            const name = $('newPackerName').value.trim();
-            if (!name) { showToast('请输入店面名称'); return; }
-            if (appData.storeList.includes(name)) { showToast('已存在'); return; }
-            appData.storeList.push(name);
-            localStorage.setItem('storeList', JSON.stringify(appData.storeList));
-            $('newPackerName').value = '';
-            loadStoreOptions();
-            renderPackerList();
-            showToast('✅ 已添加');
-        }
-
-        function deletePacker(index) {
-            if (!appData.isAdminLoggedIn) { showToast('请先登录'); return; }
-            if (confirm('确定删除？')) {
-                appData.storeList.splice(index, 1);
-                localStorage.setItem('storeList', JSON.stringify(appData.storeList));
-                loadStoreOptions();
-                renderPackerList();
-                showToast('已删除');
-            }
-        }
-
-        // ======================== 切换标签页 ========================
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.nav-tab[data-tab="${tab}"]`)?.classList.add('active');
-
-            const create = $('tabCreate');
-            const history = $('tabHistory');
-            const management = $('tabManagement');
-
-            create.style.display = 'none';
-            history.style.display = 'none';
-            management.style.display = 'none';
-
-            if (tab === 'create') {
-                create.style.display = 'block';
-            } else if (tab === 'history') {
-                history.style.display = 'block';
-                history.classList.add('visible');
-                loadHistory();
-            } else if (tab === 'management') {
-                management.style.display = 'block';
-                management.classList.add('visible');
-                if (!appData.isAdminLoggedIn) {
-                    $('loginForm').style.display = 'block';
-                    $('managementContent').style.display = 'none';
-                    $('adminUsername').value = '';
-                    $('adminPassword').value = '';
-                } else {
-                    $('loginForm').style.display = 'none';
-                    $('managementContent').style.display = 'block';
-                    renderPackerList();
-                }
-            }
         }
 
         // ======================== 历史记录 ========================
@@ -1151,9 +733,9 @@
             }
             grid.innerHTML = history.map(item => `
                 <div class="history-card">
-                    <div class="history-order">📦 ${item.orderNo}</div>
-                    <div class="history-customer">🏪 ${item.customer || '—'}</div>
-                    <div class="history-meta"><span>${item.quantity} 张</span><span>${item.createTime}</span></div>
+                    <div class="history-order">📦 货号: ${item.orderNo}</div>
+                    <div class="history-customer">💰 金额: ${item.amount}</div>
+                    <div class="history-meta"><span>${item.createTime}</span></div>
                 </div>
             `).join('');
         }
@@ -1181,13 +763,11 @@
 
         // ======================== 对外暴露 ========================
         window.switchTab = switchTab;
-        window.changeQuantity = changeQuantity;
         window.generateLabel = generateLabel;
-        window.saveLabel = saveLabel;
+        window.printPreview = printPreview;
+        window.savePreview = savePreview;
+        window.backToCreate = backToCreate;
         window.resetForm = resetForm;
-        window.adminLogin = adminLogin;
-        window.addPacker = addPacker;
-        window.deletePacker = deletePacker;
         window.clearHistory = clearHistory;
         window.showToast = showToast;
     </script>
