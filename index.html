@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>大福面单 · 精简版</title>
+    <title>大福面单 · 手机版</title>
     <style>
         /* ===== 全局重置 & 移动优先 ===== */
         * {
@@ -44,35 +44,28 @@
             margin-bottom: 20px;
         }
 
-        .logo-area {
+        .logo {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .logo-icon {
-            width: 44px;
-            height: 44px;
-            background: #0ABAB5;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
+        .logo-image {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
             flex-shrink: 0;
         }
 
         .logo-text h1 {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             color: #1e1e2a;
             line-height: 1.2;
         }
 
-        .logo-text .sub {
-            font-size: 11px;
+        .logo-text .subtitle {
+            font-size: 10px;
             color: #888;
             font-weight: 400;
         }
@@ -155,8 +148,7 @@
             margin-left: 2px;
         }
 
-        input,
-        select {
+        input {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #e0ecec;
@@ -170,8 +162,7 @@
             color: #1e1e2a;
         }
 
-        input:focus,
-        select:focus {
+        input:focus {
             outline: none;
             border-color: #0ABAB5;
             box-shadow: 0 0 0 4px rgba(10, 186, 181, 0.12);
@@ -244,6 +235,16 @@
         .btn-success:active {
             transform: scale(0.96);
             background: #1e7e34;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #1e1e2a;
+            box-shadow: 0 6px 16px rgba(255, 193, 7, 0.25);
+        }
+        .btn-warning:active {
+            transform: scale(0.96);
+            background: #e0a800;
         }
 
         /* ===== 预览页面 ===== */
@@ -354,7 +355,7 @@
 
         .preview-actions .btn {
             flex: 1;
-            min-width: 100px;
+            min-width: 80px;
         }
 
         /* ===== 历史记录 ===== */
@@ -494,11 +495,11 @@
 
         <!-- ===== 头部 ===== -->
         <header class="header">
-            <div class="logo-area">
-                <div class="logo-icon">大福</div>
+            <div class="logo">
+                <img src="images/form-logonova.png" alt="dafu pano Logo" class="logo-image">
                 <div class="logo-text">
-                    <h1>面单打印</h1>
-                    <div class="sub">DAFU Label</div>
+                    <h1>面单打印小程序</h1>
+                    <div class="subtitle">DAFU Label Printing System</div>
                 </div>
             </div>
             <div class="nav-tabs">
@@ -542,6 +543,7 @@
                 </div>
                 <div class="preview-actions">
                     <button class="btn btn-success" onclick="printPreview()">🖨️ 打印</button>
+                    <button class="btn btn-warning" onclick="sharePreview()">📤 分享</button>
                     <button class="btn btn-secondary" onclick="savePreview()">💾 保存</button>
                 </div>
             </div>
@@ -569,7 +571,6 @@
         // ======================== 数据层 ========================
         const appData = {
             labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
-            // 预览数据
             previewData: {
                 orderNo: '',
                 amount: '',
@@ -649,7 +650,7 @@
             return `${day} ${month} ${year} ${h}:${m}`;
         }
 
-        // ======================== 生成标签 → 切换到预览页面 ========================
+        // ======================== 生成标签 ========================
         function generateLabel() {
             if (!validateForm()) {
                 showToast('请完整填写必填信息');
@@ -659,13 +660,8 @@
             const no = orderNo.value.trim();
             const amt = amount.value.trim();
 
-            // 保存预览数据
             appData.previewData = { orderNo: no, amount: amt, dateStr: getDateStr() };
-
-            // 渲染预览
             renderPreview();
-
-            // 切换到预览页面
             showPage('preview');
             showToast('✅ 标签已生成');
         }
@@ -690,13 +686,42 @@
             `;
         }
 
-        // ======================== 打印预览 ========================
+        // ======================== 打印（调用浏览器打印） ========================
         function printPreview() {
             window.print();
-            showToast('🖨️ 正在打印');
+            showToast('🖨️ 正在打开打印...');
         }
 
-        // ======================== 保存预览 ========================
+        // ======================== 分享（生成图片/PDF） ========================
+        function sharePreview() {
+            const { orderNo: no, amount: amt, dateStr } = appData.previewData;
+            if (!no) { showToast('请先生成标签'); return; }
+
+            // 构建分享内容
+            const shareText = `📦 大福面单\n货号: ${no}\n金额: ${amt}\n日期: ${dateStr}`;
+
+            // 使用 Web Share API (移动端支持)
+            if (navigator.share) {
+                navigator.share({
+                    title: '大福面单',
+                    text: shareText,
+                }).then(() => {
+                    showToast('📤 分享成功');
+                }).catch(() => {
+                    // 用户取消分享
+                });
+            } else {
+                // 降级方案：复制到剪贴板
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showToast('📋 已复制到剪贴板');
+                }).catch(() => {
+                    // 最终降级：使用 prompt
+                    prompt('复制以下内容分享：', shareText);
+                });
+            }
+        }
+
+        // ======================== 保存 ========================
         function savePreview() {
             const { orderNo: no, amount: amt } = appData.previewData;
             if (!no) { showToast('请先生成标签'); return; }
@@ -704,7 +729,6 @@
             showToast('💾 已保存到历史');
         }
 
-        // ======================== 保存历史 ========================
         function saveToHistory(no, amt) {
             const data = {
                 id: Date.now(),
@@ -765,6 +789,7 @@
         window.switchTab = switchTab;
         window.generateLabel = generateLabel;
         window.printPreview = printPreview;
+        window.sharePreview = sharePreview;
         window.savePreview = savePreview;
         window.backToCreate = backToCreate;
         window.resetForm = resetForm;
