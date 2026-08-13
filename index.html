@@ -247,6 +247,18 @@
             background: #e0a800;
         }
 
+        .btn-print-guide {
+            background: #17a2b8;
+            color: white;
+            box-shadow: 0 6px 16px rgba(23, 162, 184, 0.25);
+            flex: 0 0 auto;
+            padding: 16px 20px;
+        }
+        .btn-print-guide:active {
+            transform: scale(0.96);
+            background: #138496;
+        }
+
         /* ===== 预览页面 ===== */
         .preview-page {
             background: #f5fafa;
@@ -358,6 +370,108 @@
             min-width: 80px;
         }
 
+        /* ===== 打印引导弹窗 ===== */
+        .print-guide-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .print-guide-overlay.show {
+            display: flex;
+        }
+
+        .print-guide-modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 400px;
+            width: 100%;
+            padding: 28px 24px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .print-guide-modal .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e1e2a;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .print-guide-modal .modal-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .print-guide-modal .guide-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .print-guide-modal .guide-step:last-child {
+            border-bottom: none;
+        }
+
+        .print-guide-modal .step-num {
+            width: 28px;
+            height: 28px;
+            background: #0ABAB5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .print-guide-modal .step-text {
+            font-size: 15px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .print-guide-modal .step-text strong {
+            color: #0ABAB5;
+        }
+
+        .print-guide-modal .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .print-guide-modal .modal-actions .btn {
+            flex: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         /* ===== 历史记录 ===== */
         .history-section {
             background: #f5fafa;
@@ -443,56 +557,135 @@
             }
         }
 
-        /* ===== 打印专用隐藏 iframe ===== */
-        .print-iframe {
+        /* ===== 打印专用页面 ===== */
+        .print-page {
+            display: none;
             position: fixed;
-            left: -9999px;
-            top: -9999px;
-            width: 0;
-            height: 0;
-            border: none;
-            visibility: hidden;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        /* ===== 打印样式 ===== */
+        .print-page.show {
+            display: block;
+        }
+
+        .print-page .print-close {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 12px 0;
+            border-bottom: 1px solid #e8f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .print-page .print-close button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #e8f0f0;
+            color: #0ABAB5;
+        }
+
+        .print-page .print-close button:active {
+            background: #d0e6e6;
+        }
+
+        .print-page .print-label {
+            width: 100mm;
+            height: 150mm;
+            border: 2px solid #000;
+            padding: 7mm;
+            background: white;
+            font-family: Arial, sans-serif;
+            margin: 16px auto;
+            position: relative;
+        }
+
+        .print-page .print-label .preview-logo1 {
+            height: 12mm;
+            width: auto;
+            object-fit: contain;
+            display: inline-block;
+        }
+
+        .print-page .print-label .preview-order {
+            font-size: 11mm;
+            font-weight: bold;
+            margin: 4mm 0 3mm 0;
+            color: #1e1e2a;
+        }
+
+        .print-page .print-label .preview-divider {
+            border-top: 1mm dashed #ccc;
+            margin: 3mm 0;
+        }
+
+        .print-page .print-label .preview-field {
+            font-size: 5.5mm;
+            margin: 2mm 0;
+            color: #1e1e2a;
+        }
+
+        .print-page .print-label .preview-field.store-field {
+            font-size: 9mm;
+            font-weight: bold;
+            color: #0a2a3a;
+            margin: 3mm 0;
+        }
+
+        .print-page .print-label .preview-page-indicator {
+            position: absolute;
+            bottom: 6mm;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16mm;
+            font-weight: bold;
+            color: #1a1a1a;
+            opacity: 0.7;
+        }
+
+        .print-page .print-tip {
+            text-align: center;
+            padding: 16px;
+            color: #666;
+            font-size: 14px;
+            background: #f5fafa;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .print-page .print-tip strong {
+            color: #0ABAB5;
+        }
+
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .label-card,
-            .label-card * {
-                visibility: visible;
-            }
-            .label-card {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100mm;
-                height: 150mm;
-                border: 2px solid #000;
-                padding: 7mm;
-                font-family: Arial, sans-serif;
-                background: white;
-                page-break-after: always;
-                border-radius: 0;
-            }
-            .label-card .preview-logo1 {
-                height: 12mm;
-            }
-            .label-card .preview-order {
-                font-size: 11mm;
-            }
-            .label-card .preview-field.store-field {
-                font-size: 9mm;
-            }
-            .label-card .preview-page-indicator {
-                font-size: 16mm;
-            }
-            .preview-page .preview-header,
-            .preview-page .preview-actions {
+            .print-page .print-close,
+            .print-page .print-tip {
                 display: none !important;
             }
-            .print-iframe {
+            .print-page {
+                position: static;
+                padding: 0;
+                background: white;
+            }
+            .print-page .print-label {
+                margin: 0 auto;
+                border: 2px solid #000;
+                page-break-after: always;
+            }
+            body .app-container {
                 display: none !important;
             }
         }
@@ -556,7 +749,7 @@
                     <!-- 动态生成 -->
                 </div>
                 <div class="preview-actions">
-                    <button class="btn btn-success" onclick="printPreview()">🖨️ 打印</button>
+                    <button class="btn btn-success" onclick="openPrintPage()">🖨️ 打印</button>
                     <button class="btn btn-warning" onclick="sharePreview()">📤 分享</button>
                     <button class="btn btn-secondary" onclick="savePreview()">💾 保存</button>
                 </div>
@@ -578,8 +771,17 @@
 
     </div>
 
-    <!-- ===== 隐藏的 iframe 用于打印 ===== -->
-    <iframe id="printIframe" class="print-iframe"></iframe>
+    <!-- ===== 打印专用页面 ===== -->
+    <div class="print-page" id="printPage">
+        <div class="print-close">
+            <span style="font-weight:600;font-size:16px;">📄 打印预览</span>
+            <button onclick="closePrintPage()">✕ 关闭</button>
+        </div>
+        <div id="printContent"></div>
+        <div class="print-tip">
+            💡 <strong>提示</strong>：点击右上角浏览器菜单，选择「打印」或「分享」-「打印」即可打印标签
+        </div>
+    </div>
 
     <!-- ===== Toast ===== -->
     <div id="toast" class="toast"></div>
@@ -601,7 +803,8 @@
         const amount = $('amount');
         const generateBtn = $('generateBtn');
         const toast = $('toast');
-        const printIframe = $('printIframe');
+        const printPage = $('printPage');
+        const printContent = $('printContent');
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
@@ -704,157 +907,40 @@
             `;
         }
 
-        // ======================== 打印（通过 iframe 方式，兼容手机） ========================
-        function printPreview() {
+        // ======================== 打开打印专用页面 ========================
+        function openPrintPage() {
             const { orderNo: no, amount: amt, dateStr } = appData.previewData;
             if (!no) {
                 showToast('请先生成标签');
                 return;
             }
 
-            showToast('🖨️ 正在准备打印...');
-
             // 构建打印内容
-            const printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>大福面单 - ${no}</title>
-                    <style>
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body {
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            min-height: 100vh;
-                            background: #f5f5f5;
-                            font-family: Arial, sans-serif;
-                            padding: 20px;
-                        }
-                        .label-card {
-                            width: 100mm;
-                            height: 150mm;
-                            border: 2px solid #000;
-                            padding: 7mm;
-                            background: white;
-                            font-family: Arial, sans-serif;
-                            box-sizing: border-box;
-                            position: relative;
-                        }
-                        .preview-logo1 {
-                            height: 12mm;
-                            width: auto;
-                            object-fit: contain;
-                            display: inline-block;
-                        }
-                        .preview-order {
-                            font-size: 11mm;
-                            font-weight: bold;
-                            margin: 4mm 0 3mm 0;
-                            color: #1e1e2a;
-                        }
-                        .preview-divider {
-                            border-top: 1mm dashed #ccc;
-                            margin: 3mm 0;
-                        }
-                        .preview-field {
-                            font-size: 5.5mm;
-                            margin: 2mm 0;
-                            color: #1e1e2a;
-                        }
-                        .preview-field.store-field {
-                            font-size: 9mm;
-                            font-weight: bold;
-                            color: #0a2a3a;
-                            margin: 3mm 0;
-                        }
-                        .preview-page-indicator {
-                            position: absolute;
-                            bottom: 6mm;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            font-size: 16mm;
-                            font-weight: bold;
-                            color: #1a1a1a;
-                            opacity: 0.7;
-                        }
-                        @page {
-                            margin: 0;
-                            size: 100mm 150mm;
-                        }
-                        @media print {
-                            body { background: white; padding: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="label-card">
-                        <div>
-                            <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
-                        </div>
-                        <div class="preview-order">货号: ${no}</div>
-                        <div class="preview-divider"></div>
-                        <div class="preview-field store-field">金额: ${amt}</div>
-                        <div class="preview-field">日期: ${dateStr}</div>
-                        <div class="preview-divider"></div>
-                        <div class="preview-page-indicator">1/1</div>
+            printContent.innerHTML = `
+                <div class="print-label">
+                    <div>
+                        <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
                     </div>
-                    <script>
-                        // 页面加载后自动打印
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 500);
-                        };
-                    <\/script>
-                </body>
-                </html>
+                    <div class="preview-order">货号: ${no}</div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-field store-field">金额: ${amt}</div>
+                    <div class="preview-field">日期: ${dateStr}</div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-page-indicator">1/1</div>
+                </div>
             `;
 
-            // 方法1: 使用 iframe 打印（兼容性最好）
-            try {
-                const iframe = printIframe;
-                const doc = iframe.contentWindow.document;
-                doc.open();
-                doc.write(printContent);
-                doc.close();
+            // 显示打印页面
+            printPage.classList.add('show');
+            document.body.style.overflow = 'hidden';
 
-                // 监听 iframe 加载完成
-                iframe.onload = function() {
-                    setTimeout(function() {
-                        iframe.contentWindow.print();
-                        showToast('🖨️ 打印对话框已打开');
-                    }, 600);
-                };
+            showToast('📄 已打开打印预览');
+        }
 
-                // 如果 iframe 已经加载完成，直接打印
-                setTimeout(function() {
-                    if (iframe.contentWindow && iframe.contentWindow.document && iframe.contentWindow.document.body) {
-                        iframe.contentWindow.print();
-                        showToast('🖨️ 打印对话框已打开');
-                    }
-                }, 800);
-
-            } catch (e) {
-                // 方法2: 降级方案 - 使用新窗口
-                try {
-                    const win = window.open('', '_blank', 'width=400,height=600');
-                    if (win) {
-                        win.document.write(printContent);
-                        win.document.close();
-                        setTimeout(function() {
-                            win.print();
-                            showToast('🖨️ 打印对话框已打开');
-                        }, 500);
-                    } else {
-                        showToast('⚠️ 请允许弹出窗口');
-                    }
-                } catch (e2) {
-                    showToast('⚠️ 打印失败，请使用"分享"功能');
-                }
-            }
+        // ======================== 关闭打印页面 ========================
+        function closePrintPage() {
+            printPage.classList.remove('show');
+            document.body.style.overflow = '';
         }
 
         // ======================== 分享 ========================
@@ -947,7 +1033,8 @@
         // ======================== 对外暴露 ========================
         window.switchTab = switchTab;
         window.generateLabel = generateLabel;
-        window.printPreview = printPreview;
+        window.openPrintPage = openPrintPage;
+        window.closePrintPage = closePrintPage;
         window.sharePreview = sharePreview;
         window.savePreview = savePreview;
         window.backToCreate = backToCreate;
