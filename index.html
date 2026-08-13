@@ -247,14 +247,12 @@
             background: #e0a800;
         }
 
-        .btn-print-guide {
+        .btn-info {
             background: #17a2b8;
             color: white;
             box-shadow: 0 6px 16px rgba(23, 162, 184, 0.25);
-            flex: 0 0 auto;
-            padding: 16px 20px;
         }
-        .btn-print-guide:active {
+        .btn-info:active {
             transform: scale(0.96);
             background: #138496;
         }
@@ -370,6 +368,115 @@
             min-width: 80px;
         }
 
+        /* ===== 打印引导弹窗 ===== */
+        .print-guide-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .print-guide-overlay.show {
+            display: flex;
+        }
+
+        .print-guide-modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 400px;
+            width: 100%;
+            padding: 28px 24px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .print-guide-modal .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e1e2a;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .print-guide-modal .modal-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .print-guide-modal .modal-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .print-guide-modal .guide-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .print-guide-modal .guide-step:last-child {
+            border-bottom: none;
+        }
+
+        .print-guide-modal .step-num {
+            width: 28px;
+            height: 28px;
+            background: #0ABAB5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .print-guide-modal .step-text {
+            font-size: 15px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .print-guide-modal .step-text strong {
+            color: #0ABAB5;
+        }
+
+        .print-guide-modal .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .print-guide-modal .modal-actions .btn {
+            flex: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         /* ===== 历史记录 ===== */
         .history-section {
             background: #f5fafa;
@@ -455,7 +562,7 @@
             }
         }
 
-        /* ===== 打印页面 - 独立全屏 ===== */
+        /* ===== 打印页面 ===== */
         .print-page {
             display: none;
             position: fixed;
@@ -483,14 +590,8 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
-        }
-
-        .print-page .print-toolbar .left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .print-page .print-toolbar .title {
@@ -500,10 +601,10 @@
         }
 
         .print-page .print-toolbar button {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border: none;
             border-radius: 30px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -528,13 +629,13 @@
             background: #008E9B;
         }
 
-        .print-page .print-toolbar .btn-share-print {
-            background: #ffc107;
-            color: #1e1e2a;
+        .print-page .print-toolbar .btn-wifi-print {
+            background: #28a745;
+            color: white;
         }
-        .print-page .print-toolbar .btn-share-print:active {
+        .print-page .print-toolbar .btn-wifi-print:active {
             transform: scale(0.96);
-            background: #e0a800;
+            background: #1e7e34;
         }
 
         .print-page .print-label-wrapper {
@@ -600,22 +701,26 @@
 
         .print-page .print-tip {
             text-align: center;
-            padding: 16px 20px;
-            color: #666;
+            padding: 14px 16px;
+            color: #444;
             font-size: 14px;
             background: white;
             border-radius: 12px;
             margin: 0 0 16px 0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            line-height: 1.6;
+            line-height: 1.8;
         }
 
         .print-page .print-tip strong {
             color: #0ABAB5;
         }
 
-        .print-page .print-tip .icon {
-            font-size: 20px;
+        .print-page .print-tip .highlight {
+            background: #e8f8f7;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 2px 0;
         }
 
         /* ===== 打印样式 ===== */
@@ -650,11 +755,14 @@
         .hidden {
             display: none !important;
         }
+        .text-center {
+            text-align: center;
+        }
         .mt-8 {
             margin-top: 8px;
         }
-        .text-center {
-            text-align: center;
+        .flex-1 {
+            flex: 1;
         }
     </style>
 </head>
@@ -712,7 +820,7 @@
                 </div>
                 <div class="preview-actions">
                     <button class="btn btn-success" onclick="openPrintPage()">🖨️ 打印</button>
-                    <button class="btn btn-warning" onclick="sharePreview()">📤 分享</button>
+                    <button class="btn btn-info" onclick="showPrintGuide()">📖 打印指南</button>
                     <button class="btn btn-secondary" onclick="savePreview()">💾 保存</button>
                 </div>
             </div>
@@ -733,29 +841,73 @@
 
     </div>
 
-    <!-- ===== 打印专用页面 ===== -->
+    <!-- ===== 打印页面 ===== -->
     <div class="print-page" id="printPage">
         <div class="print-toolbar">
-            <div class="left">
-                <span class="title">📄 打印预览</span>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn-share-print" onclick="sharePrint()">📤 分享打印</button>
-                <button class="btn-print-now" onclick="doPrint()">🖨️ 立即打印</button>
-                <button class="btn-close" onclick="closePrintPage()">✕ 关闭</button>
+            <span class="title">📄 打印预览</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="btn-wifi-print" onclick="sharePrint()">📤 分享</button>
+                <button class="btn-print-now" onclick="doPrint()">🖨️ 打印</button>
+                <button class="btn-close" onclick="closePrintPage()">✕</button>
             </div>
         </div>
 
         <div class="print-tip">
-            <span class="icon">📱</span> 
-            <strong>手机打印方法：</strong><br>
-            ① 点击「立即打印」→ ② 在打印预览中选择「<strong>保存为PDF</strong>」或连接打印机 → ③ 完成打印<br>
-            <span style="font-size:13px;color:#999;">💡 若无法打印，可使用「分享打印」发送到电脑或微信</span>
+            <strong>📱 手机打印方法</strong><br>
+            ① 点击 <span class="highlight">「打印」</span> 按钮 → ② 在系统打印界面选择 <strong>Wi-Fi打印机</strong> 或 <strong>蓝牙打印机</strong><br>
+            ③ 调整打印设置 → ④ 点击打印完成<br>
+            <span style="font-size:13px;color:#999;">💡 若找不到打印机，可选择「保存为PDF」再发送到电脑打印</span>
         </div>
 
         <div class="print-label-wrapper">
             <div class="print-label" id="printLabelContent">
                 <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 打印指南弹窗 ===== -->
+    <div class="print-guide-overlay" id="printGuideOverlay">
+        <div class="print-guide-modal">
+            <div class="modal-icon">🖨️</div>
+            <div class="modal-title">连接打印机指南</div>
+            <div class="modal-subtitle">支持 Wi-Fi 和蓝牙打印机</div>
+
+            <div class="guide-step">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    <strong>确保打印机已开启</strong><br>
+                    检查打印机电源，确保处于就绪状态
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    <strong>连接方式</strong><br>
+                    📶 <strong>Wi-Fi</strong>：手机连接与打印机相同的Wi-Fi网络<br>
+                    📶 <strong>蓝牙</strong>：在手机设置中配对打印机
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    <strong>打印标签</strong><br>
+                    点击 <strong>「打印」</strong> 按钮，在系统打印界面选择已连接的打印机
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="step-num">4</div>
+                <div class="step-text">
+                    <strong>备用方案</strong><br>
+                    若无打印机，选择 <strong>「保存为PDF」</strong>，通过微信/邮件发送到电脑打印
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closePrintGuide()">我知道了</button>
             </div>
         </div>
     </div>
@@ -782,29 +934,13 @@
         const toast = $('toast');
         const printPage = $('printPage');
         const printLabelContent = $('printLabelContent');
+        const printGuideOverlay = $('printGuideOverlay');
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
             bindEvents();
             loadHistory();
             showPage('create');
-
-            // 检测是否在打印页面中
-            if (window.location.search.includes('print=1')) {
-                // 尝试恢复打印数据
-                const saved = sessionStorage.getItem('printData');
-                if (saved) {
-                    try {
-                        const data = JSON.parse(saved);
-                        appData.previewData = data;
-                        renderPrintLabel();
-                        document.querySelector('.app-container').style.display = 'none';
-                        printPage.classList.add('show');
-                        // 延迟自动打印
-                        setTimeout(doPrint, 800);
-                    } catch (e) {}
-                }
-            }
         });
 
         function bindEvents() {
@@ -919,24 +1055,20 @@
 
         // ======================== 打开打印页面 ========================
         function openPrintPage() {
-            const { orderNo: no, amount: amt } = appData.previewData;
+            const { orderNo: no } = appData.previewData;
             if (!no) {
                 showToast('请先生成标签');
                 return;
             }
 
-            // 保存打印数据到 sessionStorage
-            sessionStorage.setItem('printData', JSON.stringify(appData.previewData));
-
             renderPrintLabel();
             printPage.classList.add('show');
             document.body.style.overflow = 'hidden';
-
             showToast('📄 已打开打印预览');
 
-            // 延迟自动弹出打印对话框（部分浏览器支持）
+            // 延迟弹出打印对话框
             setTimeout(function() {
-                // 不自动弹出，让用户手动点击
+                // 部分浏览器支持自动弹出
             }, 500);
         }
 
@@ -944,21 +1076,19 @@
         function closePrintPage() {
             printPage.classList.remove('show');
             document.body.style.overflow = '';
-            sessionStorage.removeItem('printData');
         }
 
         // ======================== 执行打印 ========================
         function doPrint() {
             showToast('🖨️ 正在打开打印...');
-            // 直接调用 window.print()，此时打印页面可见
+            // 直接调用系统打印
             window.print();
-            // 部分浏览器需要延迟
             setTimeout(function() {
-                showToast('🖨️ 打印对话框已打开');
-            }, 500);
+                showToast('🖨️ 请选择打印机');
+            }, 800);
         }
 
-        // ======================== 分享打印（通过系统分享） ========================
+        // ======================== 分享打印 ========================
         function sharePrint() {
             const { orderNo: no, amount: amt, dateStr } = appData.previewData;
             if (!no) { showToast('请先生成标签'); return; }
@@ -973,11 +1103,9 @@
                     showToast('📤 已分享');
                 }).catch(() => {});
             } else {
-                // 复制到剪贴板
                 navigator.clipboard.writeText(shareText).then(() => {
-                    showToast('📋 已复制，可粘贴到微信或邮件');
+                    showToast('📋 已复制，可发送到电脑打印');
                 }).catch(() => {
-                    // 降级：弹出复制框
                     const textarea = document.createElement('textarea');
                     textarea.value = shareText;
                     document.body.appendChild(textarea);
@@ -993,27 +1121,13 @@
             }
         }
 
-        // ======================== 分享 ========================
-        function sharePreview() {
-            const { orderNo: no, amount: amt, dateStr } = appData.previewData;
-            if (!no) { showToast('请先生成标签'); return; }
+        // ======================== 打印指南 ========================
+        function showPrintGuide() {
+            printGuideOverlay.classList.add('show');
+        }
 
-            const shareText = `📦 大福面单\n货号: ${no}\n金额: ${amt}\n日期: ${dateStr}`;
-
-            if (navigator.share) {
-                navigator.share({
-                    title: '大福面单',
-                    text: shareText,
-                }).then(() => {
-                    showToast('📤 分享成功');
-                }).catch(() => {});
-            } else {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    showToast('📋 已复制到剪贴板');
-                }).catch(() => {
-                    prompt('复制以下内容分享：', shareText);
-                });
-            }
+        function closePrintGuide() {
+            printGuideOverlay.classList.remove('show');
         }
 
         // ======================== 保存 ========================
@@ -1087,7 +1201,8 @@
         window.closePrintPage = closePrintPage;
         window.doPrint = doPrint;
         window.sharePrint = sharePrint;
-        window.sharePreview = sharePreview;
+        window.showPrintGuide = showPrintGuide;
+        window.closePrintGuide = closePrintGuide;
         window.savePreview = savePreview;
         window.backToCreate = backToCreate;
         window.resetForm = resetForm;
