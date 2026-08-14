@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>大福面单 · 手机版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>大福面单 · 蓝牙打印</title>
     <style>
-        /* ===== 全局重置 & 移动优先 ===== */
+        /* ============================================================
+           完整样式定义
+           ============================================================ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-        }
-
-        html, body {
-            height: 100%;
-            overflow-x: hidden;
         }
 
         body {
@@ -39,11 +34,9 @@
             overflow: hidden;
             padding: 18px 16px 28px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1;
         }
 
-        /* ===== 头部 ===== */
+        /* ----- 头部 ----- */
         .header {
             display: flex;
             align-items: center;
@@ -65,7 +58,6 @@
             height: 32px;
             width: auto;
             object-fit: contain;
-            flex-shrink: 0;
         }
 
         .logo-text h1 {
@@ -95,15 +87,11 @@
             color: #666;
             transition: all 0.2s;
             cursor: pointer;
-            white-space: nowrap;
             border: none;
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: manipulation;
-            position: relative;
-            z-index: 2;
         }
 
         .nav-tab:active {
@@ -116,7 +104,7 @@
             box-shadow: 0 4px 10px rgba(10, 186, 181, 0.25);
         }
 
-        /* ===== 页面容器 ===== */
+        /* ----- 页面 ----- */
         .page {
             display: none;
         }
@@ -130,7 +118,7 @@
             to { opacity: 1; }
         }
 
-        /* ===== 表单区域 ===== */
+        /* ----- 表单 ----- */
         .form-section {
             background: #f5fafa;
             border-radius: 20px;
@@ -176,7 +164,7 @@
             margin-left: 2px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #e0ecec;
@@ -191,7 +179,7 @@
             min-height: 52px;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #0ABAB5;
             box-shadow: 0 0 0 4px rgba(10, 186, 181, 0.12);
@@ -208,7 +196,7 @@
             display: none;
         }
 
-        /* ===== 按钮 ===== */
+        /* ----- 按钮 ----- */
         .action-buttons {
             display: flex;
             gap: 12px;
@@ -225,10 +213,7 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
-            touch-action: manipulation;
             min-height: 54px;
-            position: relative;
-            z-index: 2;
         }
 
         .btn:active {
@@ -240,11 +225,9 @@
             color: #fff;
             box-shadow: 0 6px 16px rgba(10, 186, 181, 0.25);
         }
-
         .btn-primary:disabled {
             background: #ccc;
             box-shadow: none;
-            transform: none;
             opacity: 0.6;
             cursor: not-allowed;
         }
@@ -253,18 +236,8 @@
             background: #e8f0f0;
             color: #0ABAB5;
         }
-
         .btn-secondary:active {
             background: #d0e6e6;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: #fff;
-            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.25);
-        }
-        .btn-success:active {
-            background: #1e7e34;
         }
 
         .btn-pdf {
@@ -282,7 +255,131 @@
             cursor: not-allowed;
         }
 
-        /* ===== 预览页面 ===== */
+        .btn-bluetooth {
+            background: #007AFF;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(0, 122, 255, 0.25);
+        }
+        .btn-bluetooth:active {
+            background: #0055CC;
+        }
+        .btn-bluetooth:disabled {
+            background: #ccc;
+            box-shadow: none;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.25);
+        }
+        .btn-success:active {
+            background: #1e7e34;
+        }
+
+        /* ----- 蓝牙状态 ----- */
+        .bluetooth-status {
+            background: #f5fafa;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #e8f0f0;
+        }
+
+        .bluetooth-status .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .bluetooth-status .dot.disconnected {
+            background: #ff4757;
+        }
+
+        .bluetooth-status .dot.connecting {
+            background: #ffc107;
+            animation: pulse 0.8s infinite;
+        }
+
+        .bluetooth-status .dot.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .bluetooth-status .info {
+            flex: 1;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .bluetooth-status .info .device-name {
+            font-weight: 600;
+            color: #1e1e2a;
+        }
+
+        /* ----- 设备列表 ----- */
+        .device-list {
+            background: #f5fafa;
+            border-radius: 16px;
+            padding: 12px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e8f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .device-item:active {
+            background: #e8f0f0;
+        }
+
+        .device-item:last-child {
+            border-bottom: none;
+        }
+
+        .device-item .name {
+            font-size: 14px;
+            color: #1e1e2a;
+        }
+
+        .device-item .rssi {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .device-item .connect-btn {
+            padding: 4px 14px;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #0ABAB5;
+            color: #fff;
+        }
+        .device-item .connect-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ----- 预览卡片 ----- */
         .preview-page {
             background: #f5fafa;
             border-radius: 20px;
@@ -309,7 +406,6 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            touch-action: manipulation;
             min-height: 44px;
         }
         .preview-header .back-btn:active {
@@ -334,13 +430,11 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* ===== 标签预览卡片 ===== */
         .label-card {
             background: #fff;
             border: 2px solid #222;
             border-radius: 12px;
             padding: 16px 18px;
-            position: relative;
             font-family: Arial, sans-serif;
             min-height: 150px;
             flex-shrink: 0;
@@ -395,10 +489,10 @@
 
         .preview-actions .btn {
             flex: 1;
-            min-width: 100px;
+            min-width: 80px;
         }
 
-        /* ===== 历史记录 ===== */
+        /* ----- 历史记录 ----- */
         .history-section {
             background: #f5fafa;
             border-radius: 20px;
@@ -433,13 +527,11 @@
             color: #1e1e2a;
             font-size: 15px;
         }
-
         .history-customer {
             color: #666;
             font-size: 14px;
             margin-top: 2px;
         }
-
         .history-meta {
             display: flex;
             justify-content: space-between;
@@ -450,7 +542,7 @@
             gap: 4px;
         }
 
-        /* ===== Toast ===== */
+        /* ----- Toast ----- */
         .toast {
             position: fixed;
             top: 20px;
@@ -487,24 +579,24 @@
             }
         }
 
-        /* ===== PDF生成进度 ===== */
-        .pdf-progress {
+        /* ----- 进度 ----- */
+        .progress-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 99998;
             justify-content: center;
             align-items: center;
             flex-direction: column;
         }
-        .pdf-progress.show {
+        .progress-overlay.show {
             display: flex;
         }
-        .pdf-progress .spinner {
+        .progress-overlay .spinner {
             width: 48px;
             height: 48px;
             border: 4px solid #fff;
@@ -512,22 +604,19 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        .pdf-progress .label {
+        .progress-overlay .label {
             color: #fff;
             font-size: 16px;
             font-weight: 600;
             margin-top: 16px;
         }
+        .progress-overlay .sub-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-top: 6px;
+        }
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        /* ===== 工具 ===== */
-        .hidden {
-            display: none !important;
-        }
-        .text-center {
-            text-align: center;
         }
     </style>
 </head>
@@ -540,12 +629,13 @@
             <div class="logo">
                 <img src="images/form-logonova.png" alt="Logo" class="logo-image" onerror="this.style.display='none'">
                 <div class="logo-text">
-                    <h1>面单打印小程序</h1>
-                    <div class="subtitle">DAFU Label Printing System</div>
+                    <h1>面单打印</h1>
+                    <div class="subtitle">蓝牙 · DAFU</div>
                 </div>
             </div>
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="create">标签</button>
+                <button class="nav-tab" data-tab="bluetooth">蓝牙</button>
                 <button class="nav-tab" data-tab="history">记录</button>
             </div>
         </header>
@@ -554,6 +644,18 @@
         <div id="pageCreate" class="page active">
             <div class="form-section">
                 <div class="section-title">订单信息</div>
+
+                <!-- 蓝牙状态 -->
+                <div class="bluetooth-status" id="btStatus">
+                    <div class="dot disconnected" id="btDot"></div>
+                    <div class="info">
+                        <span id="btStatusText">未连接</span>
+                        <span class="device-name" id="btDeviceName"></span>
+                    </div>
+                    <button class="btn btn-bluetooth" id="btQuickConnect" style="flex:0 0 auto;padding:8px 16px;font-size:13px;min-height:36px;border-radius:30px;">
+                        📶 连接
+                    </button>
+                </div>
 
                 <div class="form-group">
                     <label>货号 <span class="required">*</span></label>
@@ -573,6 +675,39 @@
             </div>
         </div>
 
+        <!-- ===== 页面：蓝牙 ===== -->
+        <div id="pageBluetooth" class="page">
+            <div class="form-section">
+                <div class="section-title">蓝牙打印机</div>
+
+                <div class="bluetooth-status" style="margin-bottom:16px;">
+                    <div class="dot disconnected" id="btDot2"></div>
+                    <div class="info">
+                        <span id="btStatusText2">未连接</span>
+                        <span class="device-name" id="btDeviceName2"></span>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-bottom:16px;">
+                    <button class="btn btn-bluetooth" id="scanBtn" style="flex:1;">🔍 扫描设备</button>
+                    <button class="btn btn-secondary" id="disconnectBtn" style="flex:1;">断开连接</button>
+                </div>
+
+                <div class="device-list" id="deviceList">
+                    <div style="text-align:center;padding:20px;color:#999;font-size:14px;">
+                        点击「扫描设备」搜索附近的蓝牙打印机
+                    </div>
+                </div>
+
+                <div style="font-size:13px;color:#999;padding:8px 4px;line-height:1.6;">
+                    💡 <strong>提示：</strong><br>
+                    • 确保打印机已开启并处于可发现模式<br>
+                    • 部分打印机需要配对后才能连接<br>
+                    • 支持 BLE (低功耗蓝牙) 打印机
+                </div>
+            </div>
+        </div>
+
         <!-- ===== 页面：预览 ===== -->
         <div id="pagePreview" class="page">
             <div class="preview-page">
@@ -580,11 +715,10 @@
                     <button class="back-btn" id="backBtn">‹ 返回</button>
                     <span class="info-badge" id="previewInfo">1 张</span>
                 </div>
-                <div class="preview-list" id="previewList">
-                    <!-- 动态生成 -->
-                </div>
+                <div class="preview-list" id="previewList"></div>
                 <div class="preview-actions">
                     <button class="btn btn-pdf" id="downloadPdfBtn">📄 下载PDF</button>
+                    <button class="btn btn-success" id="btPrintBtn" disabled>🖨️ 蓝牙打印</button>
                     <button class="btn btn-secondary" id="saveBtn">💾 保存</button>
                 </div>
             </div>
@@ -605,319 +739,937 @@
 
     </div>
 
-    <!-- ===== PDF 生成进度 ===== -->
-    <div class="pdf-progress" id="pdfProgress">
+    <!-- ===== 进度 ===== -->
+    <div class="progress-overlay" id="progressOverlay">
         <div class="spinner"></div>
-        <div class="label">⏳ 正在生成PDF...</div>
+        <div class="label" id="progressLabel">⏳ 正在处理...</div>
+        <div class="sub-label" id="progressSubLabel">请稍候</div>
     </div>
 
     <!-- ===== Toast ===== -->
     <div id="toast" class="toast"></div>
 
     <script>
-        // ======================== 数据层 ========================
-        let appData = {
-            labelHistory: [],
-            previewData: {
-                orderNo: '',
-                amount: '',
-                dateStr: ''
+        // ============================================================
+        // 蓝牙打印管理器
+        // ============================================================
+        var BluetoothManager = (function() {
+            var _device = null;
+            var _server = null;
+            var _service = null;
+            var _characteristic = null;
+            var _isConnected = false;
+            var _callbacks = {};
+
+            // 常见蓝牙打印机服务UUID
+            var PRINTER_SERVICE_UUID = '000018f0-0000-1000-8000-00805f9b34fb';
+            var PRINTER_CHARACTERISTIC_UUID = '00002af1-0000-1000-8000-00805f9b34fb';
+
+            // 其他常见服务
+            var COMMON_SERVICES = [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                '0000fee7-0000-1000-8000-00805f9b34fb',
+                '0000fff0-0000-1000-8000-00805f9b34fb',
+                '0000ff00-0000-1000-8000-00805f9b34fb'
+            ];
+
+            function _log(msg) {
+                console.log('[Bluetooth]', msg);
+                if (_callbacks.onLog) _callbacks.onLog(msg);
             }
-        };
 
-        // 安全读取 localStorage
-        function safeGetStorage(key, def) {
-            try {
-                const v = localStorage.getItem(key);
-                return v ? JSON.parse(v) : def;
-            } catch { return def; }
-        }
-        function safeSetStorage(key, val) {
-            try {
-                localStorage.setItem(key, JSON.stringify(val));
-            } catch { /* 静默失败 */ }
-        }
-
-        // ======================== DOM 引用 ========================
-        const $ = id => document.getElementById(id);
-        const orderNo = $('orderNo');
-        const amount = $('amount');
-        const generateBtn = $('generateBtn');
-        const toast = $('toast');
-        const pdfProgress = $('pdfProgress');
-
-        // ======================== 初始化 ========================
-        document.addEventListener('DOMContentLoaded', function() {
-            appData.labelHistory = safeGetStorage('labelHistory', []);
-            bindEvents();
-            loadHistory();
-            showPage('create');
-            validateForm();
-        });
-
-        function bindEvents() {
-            // 标签页切换
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const name = tab.getAttribute('data-tab');
-                    switchTab(name);
-                });
-            });
-
-            // 输入验证
-            orderNo.addEventListener('input', function() {
-                if (this.value.trim().length === 0) {
-                    this.classList.add('error');
-                    $('orderNoError').style.display = 'block';
-                } else {
-                    this.classList.remove('error');
-                    $('orderNoError').style.display = 'none';
+            function _updateStatus(status, deviceName) {
+                if (_callbacks.onStatusChange) {
+                    _callbacks.onStatusChange(status, deviceName);
                 }
+                _isConnected = (status === 'connected');
+            }
+
+            // ----- 检查浏览器支持 -----
+            function isSupported() {
+                return !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
+            }
+
+            // ----- 扫描设备 -----
+            function scanDevices(callback) {
+                if (!isSupported()) {
+                    _log('浏览器不支持 Web Bluetooth API');
+                    callback([]);
+                    return;
+                }
+
+                _log('开始扫描蓝牙设备...');
+
+                // 尝试使用特定的服务UUID过滤
+                var options = {
+                    filters: [
+                        { services: [PRINTER_SERVICE_UUID] },
+                        { namePrefix: 'PRINTER' },
+                        { namePrefix: 'BT' },
+                        { namePrefix: 'BLE' }
+                    ],
+                    optionalServices: COMMON_SERVICES,
+                    acceptAllDevices: false
+                };
+
+                // 如果过滤条件太严格，回退到扫描所有设备
+                navigator.bluetooth.requestDevice(options)
+                    .then(function(device) {
+                        _log('找到设备: ' + (device.name || '未知设备'));
+                        callback([device]);
+                    })
+                    .catch(function(error) {
+                        _log('扫描失败: ' + error.message);
+                        // 尝试扫描所有设备
+                        navigator.bluetooth.requestDevice({
+                            acceptAllDevices: true,
+                            optionalServices: COMMON_SERVICES
+                        }).then(function(device) {
+                            _log('找到设备(全扫描): ' + (device.name || '未知设备'));
+                            callback([device]);
+                        }).catch(function(err) {
+                            _log('全扫描失败: ' + err.message);
+                            callback([]);
+                        });
+                    });
+            }
+
+            // ----- 连接设备 -----
+            function connect(device, callback) {
+                if (!device) {
+                    _log('设备无效');
+                    if (callback) callback(false);
+                    return;
+                }
+
+                _log('正在连接: ' + (device.name || '未知设备'));
+                _updateStatus('connecting', device.name || '未知设备');
+
+                device.gatt.connect()
+                    .then(function(server) {
+                        _server = server;
+                        _device = device;
+                        _log('连接成功，获取服务...');
+
+                        return server.getPrimaryServices();
+                    })
+                    .then(function(services) {
+                        _log('找到 ' + services.length + ' 个服务');
+                        // 查找打印服务
+                        var found = false;
+                        for (var i = 0; i < services.length; i++) {
+                            var svc = services[i];
+                            _log('服务: ' + svc.uuid);
+                            // 检查是否匹配打印服务
+                            if (COMMON_SERVICES.indexOf(svc.uuid) !== -1 ||
+                                svc.uuid.toLowerCase().indexOf('f0') !== -1 ||
+                                svc.uuid.toLowerCase().indexOf('ff') !== -1) {
+                                _service = svc;
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found && services.length > 0) {
+                            _service = services[0];
+                        }
+
+                        if (!_service) {
+                            throw new Error('未找到打印服务');
+                        }
+
+                        _log('使用服务: ' + _service.uuid);
+                        return _service.getCharacteristics();
+                    })
+                    .then(function(characteristics) {
+                        _log('找到 ' + characteristics.length + ' 个特征');
+                        // 查找可写特征
+                        for (var i = 0; i < characteristics.length; i++) {
+                            var char = characteristics[i];
+                            _log('特征: ' + char.uuid + ' properties: ' + char.properties);
+                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                                _characteristic = char;
+                                break;
+                            }
+                        }
+
+                        if (!_characteristic) {
+                            throw new Error('未找到可写特征');
+                        }
+
+                        _isConnected = true;
+                        _updateStatus('connected', _device.name || '未知设备');
+                        _log('✅ 蓝牙打印机连接成功');
+                        if (callback) callback(true);
+                    })
+                    .catch(function(error) {
+                        _log('❌ 连接失败: ' + error.message);
+                        _updateStatus('disconnected', '');
+                        if (callback) callback(false);
+                    });
+            }
+
+            // ----- 断开连接 -----
+            function disconnect() {
+                if (_server && _server.connected) {
+                    try {
+                        _server.disconnect();
+                        _log('已断开连接');
+                    } catch (e) {
+                        _log('断开连接失败: ' + e.message);
+                    }
+                }
+                _device = null;
+                _server = null;
+                _service = null;
+                _characteristic = null;
+                _isConnected = false;
+                _updateStatus('disconnected', '');
+            }
+
+            // ----- 打印数据 -----
+            function printData(data) {
+                return new Promise(function(resolve, reject) {
+                    if (!_isConnected || !_characteristic) {
+                        reject(new Error('未连接蓝牙打印机'));
+                        return;
+                    }
+
+                    // 确保数据是 Uint8Array
+                    var byteData;
+                    if (typeof data === 'string') {
+                        // 文本转字节 (使用 GBK/UTF-8 编码)
+                        var encoder = new TextEncoder();
+                        byteData = encoder.encode(data);
+                    } else if (data instanceof Uint8Array) {
+                        byteData = data;
+                    } else if (Array.isArray(data)) {
+                        byteData = new Uint8Array(data);
+                    } else {
+                        reject(new Error('不支持的数据格式'));
+                        return;
+                    }
+
+                    _log('发送数据: ' + byteData.length + ' 字节');
+
+                    _characteristic.writeValue(byteData)
+                        .then(function() {
+                            _log('✅ 数据发送成功');
+                            resolve(true);
+                        })
+                        .catch(function(error) {
+                            _log('❌ 数据发送失败: ' + error.message);
+                            reject(error);
+                        });
+                });
+            }
+
+            // ----- 打印文本 (ESC/POS 格式) -----
+            function printText(text) {
+                var encoder = new TextEncoder();
+                // 添加 ESC/POS 命令: 初始化打印机
+                var init = new Uint8Array([0x1B, 0x40]);
+                // 换行
+                var newline = new Uint8Array([0x0A]);
+                // 打印并走纸
+                var printAndFeed = new Uint8Array([0x1B, 0x64, 0x05]);
+
+                var textData = encoder.encode(text);
+
+                // 合并所有数据
+                var totalLength = init.length + textData.length + newline.length + printAndFeed.length;
+                var combined = new Uint8Array(totalLength);
+                var offset = 0;
+
+                combined.set(init, offset);
+                offset += init.length;
+
+                combined.set(textData, offset);
+                offset += textData.length;
+
+                combined.set(newline, offset);
+                offset += newline.length;
+
+                combined.set(printAndFeed, offset);
+
+                return printData(combined);
+            }
+
+            // ----- 设置回调 -----
+            function onStatusChange(callback) {
+                _callbacks.onStatusChange = callback;
+            }
+
+            function onLog(callback) {
+                _callbacks.onLog = callback;
+            }
+
+            // ----- 获取状态 -----
+            function getStatus() {
+                return {
+                    connected: _isConnected,
+                    deviceName: _device ? _device.name : null,
+                    deviceId: _device ? _device.id : null
+                };
+            }
+
+            // ----- 公开 API -----
+            return {
+                isSupported: isSupported,
+                scanDevices: scanDevices,
+                connect: connect,
+                disconnect: disconnect,
+                printData: printData,
+                printText: printText,
+                onStatusChange: onStatusChange,
+                onLog: onLog,
+                getStatus: getStatus,
+                isConnected: function() { return _isConnected; },
+                getDeviceName: function() { return _device ? _device.name : null; }
+            };
+        })();
+
+
+        // ============================================================
+        // 应用逻辑
+        // ============================================================
+
+        (function() {
+            // ----- 数据 -----
+            var appData = {
+                labelHistory: [],
+                previewData: { orderNo: '', amount: '', dateStr: '' },
+                connectedDevice: null
+            };
+
+            // ----- 存储 -----
+            function safeGetStorage(key, def) {
+                try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; }
+            }
+
+            function safeSetStorage(key, val) {
+                try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+            }
+
+            // ----- DOM 引用 -----
+            var $ = function(id) { return document.getElementById(id); };
+            var orderNo = $('orderNo');
+            var amount = $('amount');
+            var generateBtn = $('generateBtn');
+            var toast = $('toast');
+            var progressOverlay = $('progressOverlay');
+            var progressLabel = $('progressLabel');
+            var progressSubLabel = $('progressSubLabel');
+
+            // ----- 蓝牙状态更新 -----
+            function updateBluetoothStatus(status, deviceName) {
+                var dots = document.querySelectorAll('.dot');
+                var statusTexts = [
+                    document.getElementById('btStatusText'),
+                    document.getElementById('btStatusText2')
+                ];
+                var nameEls = [
+                    document.getElementById('btDeviceName'),
+                    document.getElementById('btDeviceName2')
+                ];
+                var quickBtn = $('btQuickConnect');
+
+                var statusMap = {
+                    'disconnected': { dot: 'disconnected', text: '未连接', name: '' },
+                    'connecting': { dot: 'connecting', text: '连接中...', name: deviceName ? ' (' + deviceName + ')' : '' },
+                    'connected': { dot: 'connected', text: '已连接', name: deviceName ? ' ' + deviceName : '' }
+                };
+
+                var state = statusMap[status] || statusMap['disconnected'];
+
+                dots.forEach(function(d) {
+                    d.className = 'dot ' + state.dot;
+                });
+
+                statusTexts.forEach(function(el) {
+                    if (el) el.textContent = state.text;
+                });
+
+                nameEls.forEach(function(el) {
+                    if (el) el.textContent = state.name;
+                });
+
+                if (quickBtn) {
+                    quickBtn.textContent = status === 'connected' ? '✅ 已连接' : '📶 连接';
+                    quickBtn.style.background = status === 'connected' ? '#28a745' : '';
+                }
+
+                // 更新打印按钮
+                var btPrintBtn = $('btPrintBtn');
+                if (btPrintBtn) {
+                    btPrintBtn.disabled = status !== 'connected';
+                }
+            }
+
+            // ----- 蓝牙日志 -----
+            function bluetoothLog(msg) {
+                console.log('[BT]', msg);
+            }
+
+            // ----- 初始化蓝牙 -----
+            function initBluetooth() {
+                BluetoothManager.onStatusChange(updateBluetoothStatus);
+                BluetoothManager.onLog(bluetoothLog);
+
+                // 快速连接按钮
+                var quickBtn = $('btQuickConnect');
+                if (quickBtn) {
+                    quickBtn.addEventListener('click', function() {
+                        if (BluetoothManager.isConnected()) {
+                            showToast('✅ 已连接: ' + BluetoothManager.getDeviceName());
+                            return;
+                        }
+                        // 跳转到蓝牙页面
+                        switchTab('bluetooth');
+                        // 自动扫描
+                        setTimeout(scanDevices, 300);
+                    });
+                }
+
+                // 扫描按钮
+                var scanBtn = $('scanBtn');
+                if (scanBtn) {
+                    scanBtn.addEventListener('click', scanDevices);
+                }
+
+                // 断开按钮
+                var disconnectBtn = $('disconnectBtn');
+                if (disconnectBtn) {
+                    disconnectBtn.addEventListener('click', function() {
+                        BluetoothManager.disconnect();
+                        showToast('已断开蓝牙连接');
+                        renderDeviceList([]);
+                    });
+                }
+
+                // 蓝牙打印按钮
+                var btPrintBtn = $('btPrintBtn');
+                if (btPrintBtn) {
+                    btPrintBtn.addEventListener('click', bluetoothPrint);
+                }
+
+                // 检查支持
+                if (!BluetoothManager.isSupported()) {
+                    showToast('⚠️ 浏览器不支持蓝牙，请使用 Chrome 或 Edge');
+                    var statusTexts = document.querySelectorAll('#btStatusText, #btStatusText2');
+                    statusTexts.forEach(function(el) {
+                        if (el) el.textContent = '不支持';
+                    });
+                }
+
+                // 恢复状态
+                updateBluetoothStatus('disconnected', '');
+            }
+
+            // ----- 扫描设备 -----
+            function scanDevices() {
+                if (!BluetoothManager.isSupported()) {
+                    showToast('⚠️ 浏览器不支持蓝牙');
+                    return;
+                }
+
+                showProgress('🔍 正在扫描...', '请确保打印机已开启');
+
+                BluetoothManager.scanDevices(function(devices) {
+                    hideProgress();
+                    if (devices && devices.length > 0) {
+                        renderDeviceList(devices);
+                        showToast('✅ 找到 ' + devices.length + ' 个设备');
+                    } else {
+                        renderDeviceList([]);
+                        showToast('❌ 未找到设备，请确保打印机已开启');
+                    }
+                });
+            }
+
+            // ----- 渲染设备列表 -----
+            function renderDeviceList(devices) {
+                var container = $('deviceList');
+                if (!container) return;
+
+                if (!devices || devices.length === 0) {
+                    container.innerHTML =
+                        '<div style="text-align:center;padding:20px;color:#999;font-size:14px;">' +
+                        '未找到设备，点击「扫描设备」重新搜索' +
+                        '</div>';
+                    return;
+                }
+
+                var html = '';
+                for (var i = 0; i < devices.length; i++) {
+                    var d = devices[i];
+                    var name = d.name || '未知设备';
+                    var id = d.id || '';
+
+                    // 检查是否已连接
+                    var isConnected = BluetoothManager.isConnected() &&
+                        BluetoothManager.getDeviceName() === name;
+
+                    html +=
+                        '<div class="device-item">' +
+                        '<div>' +
+                        '<div class="name">' + name + '</div>' +
+                        '<div style="font-size:11px;color:#999;">' + id + '</div>' +
+                        '</div>' +
+                        '<button class="connect-btn" data-device-id="' + i + '">' +
+                        (isConnected ? '✅ 已连接' : '连接') +
+                        '</button>' +
+                        '</div>';
+                }
+                container.innerHTML = html;
+
+                // 绑定连接按钮事件
+                container.querySelectorAll('.connect-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var idx = parseInt(this.getAttribute('data-device-id'));
+                        var device = devices[idx];
+                        if (device) {
+                            connectDevice(device);
+                        }
+                    });
+                });
+            }
+
+            // ----- 连接设备 -----
+            function connectDevice(device) {
+                if (!device) return;
+
+                showProgress('🔗 正在连接...', device.name || '未知设备');
+
+                BluetoothManager.connect(device, function(success) {
+                    hideProgress();
+                    if (success) {
+                        showToast('✅ 连接成功: ' + (device.name || '未知设备'));
+                        // 刷新设备列表
+                        scanDevices();
+                        // 切换到标签页
+                        switchTab('create');
+                        updateBluetoothStatus('connected', device.name || '未知设备');
+                    } else {
+                        showToast('❌ 连接失败，请重试');
+                    }
+                });
+            }
+
+            // ----- 蓝牙打印 -----
+            function bluetoothPrint() {
+                var data = appData.previewData;
+                if (!data.orderNo) {
+                    showToast('请先生成标签');
+                    return;
+                }
+
+                if (!BluetoothManager.isConnected()) {
+                    showToast('⚠️ 请先连接蓝牙打印机');
+                    return;
+                }
+
+                showProgress('🖨️ 正在打印...', '发送数据到打印机');
+
+                // 构建打印内容
+                var printContent =
+                    '\n' +
+                    '━━━━━━━━━━━━━━━━━━━━\n' +
+                    '  大福面单\n' +
+                    '━━━━━━━━━━━━━━━━━━━━\n' +
+                    '  货号: ' + data.orderNo + '\n' +
+                    '  金额: ' + data.amount + '\n' +
+                    '  日期: ' + data.dateStr + '\n' +
+                    '━━━━━━━━━━━━━━━━━━━━\n' +
+                    '\n\n\n\n';
+
+                BluetoothManager.printText(printContent)
+                    .then(function() {
+                        hideProgress();
+                        showToast('✅ 打印成功！');
+                        saveToHistory(data.orderNo, data.amount);
+                    })
+                    .catch(function(error) {
+                        hideProgress();
+                        showToast('❌ 打印失败: ' + error.message);
+                    });
+            }
+
+            // ============================================================
+            // 页面切换
+            // ============================================================
+            function showPage(page) {
+                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+                var target = $('page' + page.charAt(0).toUpperCase() + page.slice(1));
+                if (target) target.classList.add('active');
+
+                var tabMap = { create: 'create', preview: 'create', bluetooth: 'bluetooth', history: 'history' };
+                var tabName = tabMap[page] || 'create';
+                document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+                var activeTab = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+                if (activeTab) activeTab.classList.add('active');
+            }
+
+            function switchTab(tab) {
+                if (tab === 'create') showPage('create');
+                else if (tab === 'bluetooth') showPage('bluetooth');
+                else if (tab === 'history') { showPage('history');
+                    loadHistory(); }
+            }
+
+            function backToCreate() {
+                showPage('create');
+            }
+
+            // ============================================================
+            // 表单与标签
+            // ============================================================
+            function validateForm() {
+                var valid = orderNo.value.trim().length > 0 &&
+                    amount.value.trim().length > 0 &&
+                    !isNaN(parseFloat(amount.value)) &&
+                    parseFloat(amount.value) >= 0;
+                if (generateBtn) generateBtn.disabled = !valid;
+                return valid;
+            }
+
+            function getDateStr() {
+                var now = new Date();
+                var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                var day = String(now.getDate()).padStart(2, '0');
+                var month = months[now.getMonth()];
+                var year = now.getFullYear();
+                var h = String(now.getHours()).padStart(2, '0');
+                var m = String(now.getMinutes()).padStart(2, '0');
+                return day + ' ' + month + ' ' + year + ' ' + h + ':' + m;
+            }
+
+            function escapeHtml(s) {
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function generateLabel() {
+                if (!validateForm()) {
+                    showToast('请完整填写必填信息');
+                    return;
+                }
+
+                var no = orderNo.value.trim();
+                var amt = amount.value.trim();
+
+                appData.previewData = { orderNo: no, amount: amt, dateStr: getDateStr() };
+                renderPreview();
+                showPage('preview');
+                showToast('✅ 标签已生成');
+
+                // 更新蓝牙打印按钮状态
+                var btPrintBtn = $('btPrintBtn');
+                if (btPrintBtn) {
+                    btPrintBtn.disabled = !BluetoothManager.isConnected();
+                }
+            }
+
+            function renderPreview() {
+                var data = appData.previewData;
+                var container = $('previewList');
+                $('previewInfo').textContent = '1 张 · ' + data.orderNo;
+
+                container.innerHTML =
+                    '<div class="label-card">' +
+                    '<div>' +
+                    '<img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display=\'none\'">' +
+                    '</div>' +
+                    '<div class="preview-order">货号: ' + escapeHtml(data.orderNo) + '</div>' +
+                    '<div class="preview-divider"></div>' +
+                    '<div class="preview-field store-field">金额: ' + escapeHtml(data.amount) + '</div>' +
+                    '<div class="preview-field">日期: ' + escapeHtml(data.dateStr) + '</div>' +
+                    '<div class="preview-divider"></div>' +
+                    '<div class="preview-page-indicator">1/1</div>' +
+                    '</div>';
+            }
+
+            function resetForm() {
+                orderNo.value = '';
+                amount.value = '';
+                validateForm();
+                showToast('🔄 已重置');
+            }
+
+            // ============================================================
+            // PDF 生成 (简化版)
+            // ============================================================
+            function downloadPdf() {
+                var data = appData.previewData;
+                if (!data.orderNo) {
+                    showToast('请先生成标签');
+                    return;
+                }
+
+                showProgress('📄 正在生成PDF...', '请稍候');
+
+                // 使用 Canvas 生成 PDF
+                var canvas = document.createElement('canvas');
+                var mmToPx = 3.78;
+                var w = 100 * mmToPx;
+                var h = 150 * mmToPx;
+                canvas.width = w;
+                canvas.height = h;
+
+                var ctx = canvas.getContext('2d');
+
+                // 背景
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 边框
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+                var pad = 7 * mmToPx;
+                var x = pad;
+                var y = pad;
+
+                // Logo
+                ctx.fillStyle = '#0ABAB5';
+                ctx.font = 'bold ' + (8 * mmToPx) + 'px Arial';
+                ctx.fillText('DAFU', x, y + 8 * mmToPx);
+
+                // 货号
+                y += 6 * mmToPx;
+                ctx.fillStyle = '#1e1e2a';
+                ctx.font = 'bold ' + (11 * mmToPx) + 'px Arial';
+                ctx.fillText('货号: ' + escapeHtml(data.orderNo), x, y + 11 * mmToPx);
+
+                // 分隔线
+                y += 4 * mmToPx;
+                ctx.strokeStyle = '#cccccc';
+                ctx.setLineDash([1 * mmToPx, 2 * mmToPx]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, y + 1 * mmToPx);
+                ctx.lineTo(canvas.width - pad, y + 1 * mmToPx);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 金额
+                y += 4 * mmToPx;
+                ctx.fillStyle = '#0a2a3a';
+                ctx.font = 'bold ' + (9 * mmToPx) + 'px Arial';
+                ctx.fillText('金额: ' + escapeHtml(data.amount), x, y + 9 * mmToPx);
+
+                // 日期
+                y += 3 * mmToPx;
+                ctx.fillStyle = '#1e1e2a';
+                ctx.font = (5.5 * mmToPx) + 'px Arial';
+                ctx.fillText('日期: ' + escapeHtml(data.dateStr), x, y + 5.5 * mmToPx);
+
+                // 分隔线
+                y += 3 * mmToPx;
+                ctx.strokeStyle = '#cccccc';
+                ctx.setLineDash([1 * mmToPx, 2 * mmToPx]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, y + 1 * mmToPx);
+                ctx.lineTo(canvas.width - pad, y + 1 * mmToPx);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 页码
+                var pageY = canvas.height - 6 * mmToPx;
+                ctx.fillStyle = '#1a1a1a';
+                ctx.globalAlpha = 0.7;
+                ctx.font = 'bold ' + (16 * mmToPx) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('1/1', canvas.width / 2, pageY + 16 * mmToPx);
+                ctx.textAlign = 'left';
+                ctx.globalAlpha = 1.0;
+
+                // 下载
+                var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                var imgData = dataUrl.split(',')[1];
+
+                var pdfContent = [
+                    '%PDF-1.3',
+                    '1 0 obj',
+                    '<< /Type /Catalog /Pages 2 0 R >>',
+                    'endobj',
+                    '2 0 obj',
+                    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+                    'endobj',
+                    '3 0 obj',
+                    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 283 425] /Contents 4 0 R /Resources << /ProcSet [/PDF /ImageC] /XObject << /I1 5 0 R >> >> >>',
+                    'endobj',
+                    '4 0 obj',
+                    '<< /Length 66 >>',
+                    'stream',
+                    'q',
+                    '283 0 0 425 0 0 cm',
+                    '/I1 Do',
+                    'Q',
+                    'endstream',
+                    'endobj',
+                    '5 0 obj',
+                    '<< /Type /XObject /Subtype /Image /Width ' + canvas.width + ' /Height ' + canvas.height +
+                    ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + imgData.length +
+                    ' >>',
+                    'stream',
+                    imgData,
+                    'endstream',
+                    'endobj',
+                    'xref',
+                    '0 6',
+                    '0000000000 65535 f',
+                    '0000000010 00000 n',
+                    '0000000056 00000 n',
+                    '0000000111 00000 n',
+                    '0000000239 00000 n',
+                    '0000000341 00000 n',
+                    'trailer',
+                    '<< /Size 6 /Root 1 0 R >>',
+                    'startxref',
+                    '5000',
+                    '%%EOF'
+                ].join('\n');
+
+                var blob = new Blob([pdfContent], { type: 'application/pdf' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '面单_' + data.orderNo + '.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+
+                hideProgress();
+                showToast('✅ PDF 下载成功！');
+                saveToHistory(data.orderNo, data.amount);
+            }
+
+            // ============================================================
+            // 保存与历史
+            // ============================================================
+            function savePreview() {
+                var data = appData.previewData;
+                if (!data.orderNo) { showToast('请先生成标签'); return; }
+                saveToHistory(data.orderNo, data.amount);
+                showToast('💾 已保存到历史');
+            }
+
+            function saveToHistory(no, amt) {
+                var data = {
+                    id: Date.now(),
+                    orderNo: no,
+                    amount: amt,
+                    createTime: new Date().toLocaleString('zh-CN')
+                };
+                appData.labelHistory.unshift(data);
+                safeSetStorage('labelHistory', appData.labelHistory);
+            }
+
+            function loadHistory() {
+                var grid = $('historyGrid');
+                var history = appData.labelHistory;
+                if (history.length === 0) {
+                    grid.innerHTML = '<div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < history.length; i++) {
+                    var item = history[i];
+                    html +=
+                        '<div class="history-card">' +
+                        '<div class="history-order">📦 货号: ' + escapeHtml(item.orderNo) + '</div>' +
+                        '<div class="history-customer">💰 金额: ' + escapeHtml(item.amount) + '</div>' +
+                        '<div class="history-meta"><span>' + escapeHtml(item.createTime) + '</span></div>' +
+                        '</div>';
+                }
+                grid.innerHTML = html;
+            }
+
+            function clearHistory() {
+                if (confirm('确定清空所有历史记录？')) {
+                    appData.labelHistory = [];
+                    safeSetStorage('labelHistory', []);
+                    loadHistory();
+                    showToast('已清空');
+                }
+            }
+
+            // ============================================================
+            // 进度与Toast
+            // ============================================================
+            function showProgress(label, subLabel) {
+                if (progressLabel) progressLabel.textContent = label || '⏳ 正在处理...';
+                if (progressSubLabel) progressSubLabel.textContent = subLabel || '请稍候';
+                if (progressOverlay) progressOverlay.classList.add('show');
+            }
+
+            function hideProgress() {
+                if (progressOverlay) progressOverlay.classList.remove('show');
+            }
+
+            var toastTimer = null;
+
+            function showToast(msg) {
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+            }
+
+            // ============================================================
+            // 事件绑定与初始化
+            // ============================================================
+            document.addEventListener('DOMContentLoaded', function() {
+                appData.labelHistory = safeGetStorage('labelHistory', []);
+
+                // 绑定事件
+                document.querySelectorAll('.nav-tab').forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        var name = this.getAttribute('data-tab');
+                        switchTab(name);
+                    });
+                });
+
+                orderNo.addEventListener('input', function() {
+                    if (this.value.trim().length === 0) {
+                        this.classList.add('error');
+                        $('orderNoError').style.display = 'block';
+                    } else {
+                        this.classList.remove('error');
+                        $('orderNoError').style.display = 'none';
+                    }
+                    validateForm();
+                });
+
+                amount.addEventListener('input', validateForm);
+
+                $('generateBtn').addEventListener('click', generateLabel);
+                $('resetBtn').addEventListener('click', resetForm);
+                $('backBtn').addEventListener('click', backToCreate);
+                $('downloadPdfBtn').addEventListener('click', downloadPdf);
+                $('saveBtn').addEventListener('click', savePreview);
+                $('clearHistoryBtn').addEventListener('click', clearHistory);
+
+                // 初始化蓝牙
+                initBluetooth();
+
+                // 加载历史
+                loadHistory();
+                showPage('create');
                 validateForm();
             });
 
-            amount.addEventListener('input', validateForm);
-
-            // 按钮事件
-            $('generateBtn').addEventListener('click', generateLabel);
-            $('resetBtn').addEventListener('click', resetForm);
-            $('backBtn').addEventListener('click', backToCreate);
-            $('downloadPdfBtn').addEventListener('click', downloadPdf);
-            $('saveBtn').addEventListener('click', savePreview);
-            $('clearHistoryBtn').addEventListener('click', clearHistory);
-        }
-
-        // ======================== 页面切换 ========================
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = $('page' + page.charAt(0).toUpperCase() + page.slice(1));
-            if (target) target.classList.add('active');
-
-            const tabMap = { create: 'create', preview: 'create', history: 'history' };
-            const tabName = tabMap[page] || 'create';
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.nav-tab[data-tab="${tabName}"]`)?.classList.add('active');
-        }
-
-        function switchTab(tab) {
-            if (tab === 'create') showPage('create');
-            else if (tab === 'history') { showPage('history'); loadHistory(); }
-        }
-
-        function backToCreate() {
-            showPage('create');
-        }
-
-        // ======================== 表单验证 ========================
-        function validateForm() {
-            const valid = orderNo.value.trim().length > 0 
-                       && amount.value.trim().length > 0 
-                       && !isNaN(parseFloat(amount.value)) 
-                       && parseFloat(amount.value) >= 0;
-            if (generateBtn) generateBtn.disabled = !valid;
-            // 同时更新PDF按钮状态
-            const pdfBtn = $('downloadPdfBtn');
-            if (pdfBtn) pdfBtn.disabled = !valid;
-            return valid;
-        }
-
-        // ======================== 获取日期字符串 ========================
-        function getDateStr() {
-            const now = new Date();
-            const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-            const day = String(now.getDate()).padStart(2,'0');
-            const month = months[now.getMonth()];
-            const year = now.getFullYear();
-            const h = String(now.getHours()).padStart(2,'0');
-            const m = String(now.getMinutes()).padStart(2,'0');
-            return `${day} ${month} ${year} ${h}:${m}`;
-        }
-
-        // ======================== 生成标签 ========================
-        function generateLabel() {
-            if (!validateForm()) {
-                showToast('请完整填写必填信息');
-                return;
-            }
-
-            const no = orderNo.value.trim();
-            const amt = amount.value.trim();
-
-            appData.previewData = { orderNo: no, amount: amt, dateStr: getDateStr() };
-            renderPreview();
-            showPage('preview');
-            showToast('✅ 标签已生成');
-        }
-
-        function renderPreview() {
-            const { orderNo: no, amount: amt, dateStr } = appData.previewData;
-            const container = $('previewList');
-            $('previewInfo').textContent = `1 张 · ${no}`;
-
-            container.innerHTML = `
-                <div class="label-card">
-                    <div>
-                        <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
-                    </div>
-                    <div class="preview-order">货号: ${escapeHtml(no)}</div>
-                    <div class="preview-divider"></div>
-                    <div class="preview-field store-field">金额: ${escapeHtml(amt)}</div>
-                    <div class="preview-field">日期: ${escapeHtml(dateStr)}</div>
-                    <div class="preview-divider"></div>
-                    <div class="preview-page-indicator">1/1</div>
-                </div>
-            `;
-        }
-
-        function escapeHtml(s) {
-            return String(s)
-              .replace(/&/g,'&amp;')
-              .replace(/</g,'&lt;')
-              .replace(/>/g,'&gt;')
-              .replace(/"/g,'&quot;')
-              .replace(/'/g,'&#039;');
-        }
-
-        // ======================== 生成并下载 PDF ========================
-        function downloadPdf() {
-            const { orderNo: no, amount: amt, dateStr } = appData.previewData;
-            if (!no) {
-                showToast('请先生成标签');
-                return;
-            }
-
-            // 显示进度
-            pdfProgress.classList.add('show');
-
-            // 构建PDF内容
-            const pdfContent = `
-                <div style="width:100mm;height:150mm;padding:7mm;font-family:Arial,sans-serif;position:relative;border:2px solid #000;box-sizing:border-box;">
-                    <div>
-                        <img src="images/preview-logo1.png" alt="DAFU" style="height:12mm;width:auto;object-fit:contain;display:inline-block;" onerror="this.style.display='none'">
-                    </div>
-                    <div style="font-size:11mm;font-weight:bold;margin:4mm 0 3mm 0;color:#1e1e2a;">货号: ${escapeHtml(no)}</div>
-                    <div style="border-top:1mm dashed #ccc;margin:3mm 0;"></div>
-                    <div style="font-size:9mm;font-weight:bold;color:#0a2a3a;margin:3mm 0;">金额: ${escapeHtml(amt)}</div>
-                    <div style="font-size:5.5mm;margin:2mm 0;color:#1e1e2a;">日期: ${escapeHtml(dateStr)}</div>
-                    <div style="border-top:1mm dashed #ccc;margin:3mm 0;"></div>
-                    <div style="position:absolute;bottom:6mm;left:50%;transform:translateX(-50%);font-size:16mm;font-weight:bold;color:#1a1a1a;opacity:0.7;">1/1</div>
-                </div>
-            `;
-
-            // 创建临时容器
-            const container = document.createElement('div');
-            container.style.position = 'fixed';
-            container.style.left = '-9999px';
-            container.style.top = '-9999px';
-            container.style.width = '100mm';
-            container.style.height = '150mm';
-            container.style.background = '#fff';
-            container.style.padding = '0';
-            container.style.margin = '0';
-            container.style.zIndex = '-1';
-            container.innerHTML = pdfContent;
-            document.body.appendChild(container);
-
-            // 使用 html2pdf 生成 PDF
-            const opt = {
-                margin: 0,
-                filename: `面单_${escapeHtml(no)}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true,
-                    letterRendering: true,
-                    width: 100 * 3.78, // mm to px (1mm ≈ 3.78px)
-                    height: 150 * 3.78
-                },
-                jsPDF: { 
-                    unit: 'mm', 
-                    format: [100, 150], 
-                    orientation: 'portrait' 
-                },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-            };
-
-            html2pdf()
-                .set(opt)
-                .from(container)
-                .save()
-                .then(() => {
-                    document.body.removeChild(container);
-                    pdfProgress.classList.remove('show');
-                    showToast('✅ PDF 下载成功！');
-                    // 自动保存到历史
-                    saveToHistory(no, amt);
-                })
-                .catch((err) => {
-                    console.error('PDF生成失败:', err);
-                    document.body.removeChild(container);
-                    pdfProgress.classList.remove('show');
-                    showToast('⚠️ PDF生成失败，请重试');
-                });
-        }
-
-        // ======================== 保存 ========================
-        function savePreview() {
-            const { orderNo: no, amount: amt } = appData.previewData;
-            if (!no) { showToast('请先生成标签'); return; }
-            saveToHistory(no, amt);
-            showToast('💾 已保存到历史');
-        }
-
-        function saveToHistory(no, amt) {
-            const data = {
-                id: Date.now(),
-                orderNo: no,
-                amount: amt,
-                createTime: new Date().toLocaleString('zh-CN')
-            };
-            appData.labelHistory.unshift(data);
-            safeSetStorage('labelHistory', appData.labelHistory);
-        }
-
-        function resetForm() {
-            orderNo.value = '';
-            amount.value = '';
-            validateForm();
-            showToast('🔄 已重置');
-        }
-
-        // ======================== 历史记录 ========================
-        function loadHistory() {
-            const grid = $('historyGrid');
-            const history = appData.labelHistory;
-            if (history.length === 0) {
-                grid.innerHTML = '<div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>';
-                return;
-            }
-            grid.innerHTML = history.map(item => `
-                <div class="history-card">
-                    <div class="history-order">📦 货号: ${escapeHtml(item.orderNo)}</div>
-                    <div class="history-customer">💰 金额: ${escapeHtml(item.amount)}</div>
-                    <div class="history-meta"><span>${escapeHtml(item.createTime)}</span></div>
-                </div>
-            `).join('');
-        }
-
-        function clearHistory() {
-            if (confirm('确定清空所有历史记录？')) {
-                appData.labelHistory = [];
-                safeSetStorage('labelHistory', []);
-                loadHistory();
-                showToast('已清空');
-            }
-        }
-
-        // ======================== Toast ========================
-        let toastTimer = null;
-        function showToast(msg) {
-            if (!toast) return;
-            toast.textContent = msg;
-            toast.classList.add('show');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 2500);
-        }
+            // 暴露切换功能
+            window.switchTab = switchTab;
+        })();
     </script>
 
 </body>
