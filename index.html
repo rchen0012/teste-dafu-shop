@@ -266,6 +266,15 @@
             background: #1e7e34;
         }
 
+        .btn-pdf {
+            background: #dc3545;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.25);
+        }
+        .btn-pdf:active {
+            background: #c82333;
+        }
+
         /* ===== 预览页面 ===== */
         .preview-page {
             background: #f5fafa;
@@ -471,8 +480,8 @@
             }
         }
 
-        /* ===== 打印专用页面 ===== */
-        .print-page {
+        /* ===== PDF 专用页面 ===== */
+        .pdf-page {
             display: none;
             position: fixed;
             top: 0;
@@ -486,11 +495,11 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .print-page.show {
+        .pdf-page.show {
             display: block;
         }
 
-        .print-page .print-toolbar {
+        .pdf-page .pdf-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -504,19 +513,19 @@
             border-bottom: 1px solid #e8f0f0;
         }
 
-        .print-page .print-toolbar .title {
+        .pdf-page .pdf-toolbar .title {
             font-size: 16px;
             font-weight: 700;
             color: #1e1e2a;
         }
 
-        .print-page .print-toolbar .right-btns {
+        .pdf-page .pdf-toolbar .right-btns {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
 
-        .print-page .print-toolbar button {
+        .pdf-page .pdf-toolbar button {
             padding: 10px 18px;
             border: none;
             border-radius: 30px;
@@ -528,31 +537,31 @@
             min-height: 44px;
         }
 
-        .print-page .print-toolbar .btn-close {
+        .pdf-page .pdf-toolbar .btn-close {
             background: #e8f0f0;
             color: #0ABAB5;
         }
-        .print-page .print-toolbar .btn-close:active {
+        .pdf-page .pdf-toolbar .btn-close:active {
             background: #d0e6e6;
         }
 
-        .print-page .print-toolbar .btn-print-now {
-            background: #0ABAB5;
+        .pdf-page .pdf-toolbar .btn-pdf-save {
+            background: #dc3545;
             color: #fff;
-            box-shadow: 0 4px 12px rgba(10, 186, 181, 0.3);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
-        .print-page .print-toolbar .btn-print-now:active {
+        .pdf-page .pdf-toolbar .btn-pdf-save:active {
             transform: scale(0.96);
-            background: #008E9B;
+            background: #c82333;
         }
 
-        .print-page .print-label-wrapper {
+        .pdf-page .pdf-label-wrapper {
             display: flex;
             justify-content: center;
             padding: 16px 0 30px 0;
         }
 
-        .print-page .print-label {
+        .pdf-page .pdf-label {
             width: 100mm;
             max-width: 100%;
             min-height: 150mm;
@@ -565,39 +574,39 @@
             flex-shrink: 0;
         }
 
-        .print-page .print-label .preview-logo1 {
+        .pdf-page .pdf-label .preview-logo1 {
             height: 12mm;
             width: auto;
             object-fit: contain;
             display: inline-block;
         }
 
-        .print-page .print-label .preview-order {
+        .pdf-page .pdf-label .preview-order {
             font-size: 11mm;
             font-weight: bold;
             margin: 4mm 0 3mm 0;
             color: #1e1e2a;
         }
 
-        .print-page .print-label .preview-divider {
+        .pdf-page .pdf-label .preview-divider {
             border-top: 1mm dashed #ccc;
             margin: 3mm 0;
         }
 
-        .print-page .print-label .preview-field {
+        .pdf-page .pdf-label .preview-field {
             font-size: 5.5mm;
             margin: 2mm 0;
             color: #1e1e2a;
         }
 
-        .print-page .print-label .preview-field.store-field {
+        .pdf-page .pdf-label .preview-field.store-field {
             font-size: 9mm;
             font-weight: bold;
             color: #0a2a3a;
             margin: 3mm 0;
         }
 
-        .print-page .print-label .preview-page-indicator {
+        .pdf-page .pdf-label .preview-page-indicator {
             position: absolute;
             bottom: 6mm;
             left: 50%;
@@ -608,7 +617,7 @@
             opacity: 0.7;
         }
 
-        .print-page .print-tip {
+        .pdf-page .pdf-tip {
             text-align: center;
             padding: 14px 16px;
             color: #555;
@@ -620,25 +629,25 @@
             line-height: 1.7;
         }
 
-        .print-page .print-tip strong {
-            color: #0ABAB5;
+        .pdf-page .pdf-tip strong {
+            color: #dc3545;
         }
 
-        /* ===== 打印样式 ===== */
+        /* ===== PDF 打印样式 ===== */
         @media print {
-            .print-page .print-toolbar,
-            .print-page .print-tip {
+            .pdf-page .pdf-toolbar,
+            .pdf-page .pdf-tip {
                 display: none !important;
             }
-            .print-page {
+            .pdf-page {
                 background: #fff !important;
                 padding: 0 !important;
                 position: static !important;
             }
-            .print-page .print-label-wrapper {
+            .pdf-page .pdf-label-wrapper {
                 padding: 0 !important;
             }
-            .print-page .print-label {
+            .pdf-page .pdf-label {
                 margin: 0 auto;
                 border: 2px solid #000;
                 page-break-after: always;
@@ -713,7 +722,7 @@
                     <!-- 动态生成 -->
                 </div>
                 <div class="preview-actions">
-                    <button class="btn btn-success" id="openPrintBtn">🖨️ 打印</button>
+                    <button class="btn btn-pdf" id="openPdfBtn">📄 生成PDF</button>
                     <button class="btn btn-secondary" id="saveBtn">💾 保存</button>
                 </div>
             </div>
@@ -734,25 +743,25 @@
 
     </div>
 
-    <!-- ===== 打印页面 ===== -->
-    <div class="print-page" id="printPage">
-        <div class="print-toolbar">
-            <span class="title">📄 打印预览</span>
+    <!-- ===== PDF 页面 ===== -->
+    <div class="pdf-page" id="pdfPage">
+        <div class="pdf-toolbar">
+            <span class="title">📄 PDF 预览</span>
             <div class="right-btns">
-                <button class="btn-print-now" id="doPrintBtn">🖨️ 立即打印</button>
-                <button class="btn-close" id="closePrintBtn">✕ 关闭</button>
+                <button class="btn-pdf-save" id="savePdfBtn">💾 保存为PDF</button>
+                <button class="btn-close" id="closePdfBtn">✕ 关闭</button>
             </div>
         </div>
 
-        <div class="print-tip">
+        <div class="pdf-tip">
             <span>📱</span> 
-            <strong>手机打印方法</strong><br>
-            点击 <strong>「立即打印」</strong> → 在系统打印界面选择 <strong>Wi-Fi/蓝牙打印机</strong><br>
-            若无打印机，可选择 <strong>「保存为PDF」</strong> 发送到电脑打印
+            <strong>生成PDF方法</strong><br>
+            点击 <strong>「保存为PDF」</strong> → 在系统打印界面选择 <strong>「保存为PDF」</strong><br>
+            或点击浏览器菜单 → <strong>「打印」</strong> → 选择 <strong>「另存为PDF」</strong>
         </div>
 
-        <div class="print-label-wrapper">
-            <div class="print-label" id="printLabelContent">
+        <div class="pdf-label-wrapper">
+            <div class="pdf-label" id="pdfLabelContent">
                 <!-- 动态生成 -->
             </div>
         </div>
@@ -798,8 +807,8 @@
         const amount = $('amount');
         const generateBtn = $('generateBtn');
         const toast = $('toast');
-        const printPage = $('printPage');
-        const printLabelContent = $('printLabelContent');
+        const pdfPage = $('pdfPage');
+        const pdfLabelContent = $('pdfLabelContent');
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
@@ -807,7 +816,7 @@
             bindEvents();
             loadHistory();
             showPage('create');
-            validateForm(); // 初始禁用生成按钮
+            validateForm();
         });
 
         function bindEvents() {
@@ -837,11 +846,11 @@
             $('generateBtn').addEventListener('click', generateLabel);
             $('resetBtn').addEventListener('click', resetForm);
             $('backBtn').addEventListener('click', backToCreate);
-            $('openPrintBtn').addEventListener('click', openPrintPage);
+            $('openPdfBtn').addEventListener('click', openPdfPage);
             $('saveBtn').addEventListener('click', savePreview);
             $('clearHistoryBtn').addEventListener('click', clearHistory);
-            $('doPrintBtn').addEventListener('click', doPrint);
-            $('closePrintBtn').addEventListener('click', closePrintPage);
+            $('savePdfBtn').addEventListener('click', saveAsPdf);
+            $('closePdfBtn').addEventListener('click', closePdfPage);
         }
 
         // ======================== 页面切换 ========================
@@ -932,10 +941,10 @@
               .replace(/'/g,'&#039;');
         }
 
-        // ======================== 渲染打印标签 ========================
-        function renderPrintLabel() {
+        // ======================== 渲染PDF标签 ========================
+        function renderPdfLabel() {
             const { orderNo: no, amount: amt, dateStr } = appData.previewData;
-            printLabelContent.innerHTML = `
+            pdfLabelContent.innerHTML = `
                 <div>
                     <img src="images/preview-logo1.png" alt="DAFU" class="preview-logo1" onerror="this.style.display='none'">
                 </div>
@@ -948,49 +957,45 @@
             `;
         }
 
-        // ======================== 打开打印页面 ========================
-        function openPrintPage() {
+        // ======================== 打开PDF页面 ========================
+        function openPdfPage() {
             const { orderNo: no } = appData.previewData;
             if (!no) {
                 showToast('请先生成标签');
                 return;
             }
-            renderPrintLabel();
-            printPage.classList.add('show');
+            renderPdfLabel();
+            pdfPage.classList.add('show');
             document.body.style.overflow = 'hidden';
-            showToast('📄 已打开打印预览');
+            showToast('📄 已打开PDF预览');
         }
 
-        // ======================== 关闭打印页面 ========================
-        function closePrintPage() {
-            printPage.classList.remove('show');
+        // ======================== 关闭PDF页面 ========================
+        function closePdfPage() {
+            pdfPage.classList.remove('show');
             document.body.style.overflow = '';
         }
 
-        // ======================== 执行打印 ========================
-        function doPrint() {
-            const ua = navigator.userAgent;
-            const isMobile = /Android|iPhone|iPad|iPod/.test(ua);
+        // ======================== 保存为PDF ========================
+        function saveAsPdf() {
             const { orderNo: no } = appData.previewData;
             if (!no) { showToast('请先生成标签'); return; }
 
             try {
-                if (isMobile && !window.print) {
-                    throw new Error('不支持');
-                }
+                // 方式1：调用 window.print()，用户可选择"另存为PDF"
                 window.print();
-                showToast('🖨️ 正在打开打印...');
+                showToast('📄 请在打印界面选择「另存为PDF」');
             } catch (e) {
-                // 降级方案：新窗口
+                // 方式2：降级方案 - 新窗口
                 try {
-                    renderPrintLabel();
-                    const content = printLabelContent.innerHTML;
+                    renderPdfLabel();
+                    const content = pdfLabelContent.innerHTML;
                     const win = window.open('', '_blank', 'width=400,height=650,scrollbars=yes');
                     if (!win) { showToast('⚠️ 请允许弹出窗口'); return; }
-                    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>面单打印</title><style>
+                    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>面单 - PDF</title><style>
                         *{margin:0;padding:0;box-sizing:border-box}
                         body{display:flex;justify-content:center;align-items:flex-start;min-height:100vh;background:#fff;padding:10px}
-                        .print-label{width:100mm;max-width:100%;min-height:150mm;border:2px solid #000;padding:7mm;background:#fff;font-family:Arial,sans-serif;position:relative;margin:0 auto}
+                        .pdf-label{width:100mm;max-width:100%;min-height:150mm;border:2px solid #000;padding:7mm;background:#fff;font-family:Arial,sans-serif;position:relative;margin:0 auto}
                         .preview-logo1{height:12mm;width:auto;object-fit:contain;display:inline-block}
                         .preview-order{font-size:11mm;font-weight:bold;margin:4mm 0 3mm 0;color:#1e1e2a}
                         .preview-divider{border-top:1mm dashed #ccc;margin:3mm 0}
@@ -999,16 +1004,16 @@
                         .preview-page-indicator{position:absolute;bottom:6mm;left:50%;transform:translateX(-50%);font-size:16mm;font-weight:bold;color:#1a1a1a;opacity:0.7}
                         p{text-align:center;margin:15px 0 5px;font-size:14px;color:#555}
                         @page{size:100mm 150mm;margin:0}
-                        @media print{body{padding:0}.print-label{margin:0 auto;border:2px solid #000;box-shadow:none;page-break-after:always}p{display:none}}
+                        @media print{body{padding:0}.pdf-label{margin:0 auto;border:2px solid #000;box-shadow:none;page-break-after:always}p{display:none}}
                     </style></head><body>
-                        <p>请选择浏览器菜单 → 打印 / 导出为PDF</p>
-                        <div class="print-label">${content}</div>
+                        <p>请选择浏览器菜单 → 打印 → 另存为PDF</p>
+                        <div class="pdf-label">${content}</div>
                         <script>window.onload=function(){setTimeout(function(){window&&window.print?window.print():null},600)}<\/script>
                     </body></html>`);
                     win.document.close();
-                    showToast('📄 新窗口已打开，请打印');
+                    showToast('📄 新窗口已打开，请保存为PDF');
                 } catch (err) {
-                    showToast('⚠️ 浏览器不支持打印，请截图或分享为PDF');
+                    showToast('⚠️ 无法生成PDF，请截图或分享');
                 }
             }
         }
