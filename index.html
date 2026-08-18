@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>大福面单 · 50x40mm</title>
+    <title>大福面单 · 安卓小程序</title>
     <style>
         /* ============================================================
-           完整样式定义 - 飞书兼容
+           安卓小程序风格样式
            ============================================================ */
         * {
             margin: 0;
@@ -17,135 +17,144 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #0ABAB5 0%, #008E9B 100%);
+            background: #f5f5f5;
             min-height: 100vh;
-            padding: 12px;
+            padding: 0;
             display: flex;
             align-items: flex-start;
             justify-content: center;
+            background: #f0f2f5;
         }
 
+        /* ----- 小程序容器 ----- */
         .app-container {
-            max-width: 480px;
+            max-width: 420px;
             width: 100%;
-            background: #fff;
-            border-radius: 28px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-            overflow: hidden;
-            padding: 18px 16px 28px;
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 0 0 80px 0;
             margin: 0 auto;
+            position: relative;
         }
 
-        /* ----- 头部 ----- */
-        .header {
+        /* ----- 状态栏占位 (安卓风格) ----- */
+        .status-bar {
+            height: 32px;
+            background: #0ABAB5;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e8f0f0;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-image {
-            height: 32px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .logo-text h1 {
-            font-size: 17px;
-            font-weight: 700;
-            color: #1e1e2a;
-            line-height: 1.2;
-        }
-
-        .logo-text .subtitle {
-            font-size: 10px;
-            color: #888;
-            font-weight: 400;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 6px;
-        }
-
-        .nav-tab {
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 600;
-            background: #f0f6f6;
-            color: #666;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: none;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-tab:active {
-            transform: scale(0.96);
-        }
-
-        .nav-tab.active {
-            background: #0ABAB5;
+            padding: 0 16px;
             color: #fff;
-            box-shadow: 0 4px 10px rgba(10, 186, 181, 0.25);
+            font-size: 11px;
+            font-weight: 500;
         }
 
-        /* ----- 页面 ----- */
+        .status-bar .time {
+            font-weight: 600;
+        }
+        .status-bar .icons {
+            display: flex;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        /* ----- 顶部导航 (小程序风格) ----- */
+        .nav-bar {
+            background: #fff;
+            padding: 12px 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e8ecf0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-bar .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #333;
+            cursor: pointer;
+            padding: 0 4px;
+            display: none;
+            min-width: 36px;
+        }
+        .nav-bar .back-btn.show {
+            display: block;
+        }
+
+        .nav-bar .title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1e1e2a;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-bar .right-btn {
+            font-size: 14px;
+            color: #0ABAB5;
+            background: none;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 4px 8px;
+            min-width: 36px;
+            text-align: right;
+        }
+        .nav-bar .right-btn:active {
+            opacity: 0.6;
+        }
+
+        /* ----- 页面切换 ----- */
         .page {
             display: none;
+            padding: 12px 16px 20px;
+            animation: slideUp 0.25s ease;
         }
         .page.active {
             display: block;
-            animation: fadeIn 0.2s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ----- 卡片组件 (安卓Material风格) ----- */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e1e2a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-title .badge {
+            font-size: 10px;
+            background: #0ABAB5;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
         }
 
         /* ----- 表单 ----- */
-        .form-section {
-            background: #f5fafa;
-            border-radius: 20px;
-            padding: 18px 16px;
-            margin-bottom: 18px;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e1e2a;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 18px;
-            background: #0ABAB5;
-            border-radius: 4px;
-        }
-
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
         .form-group:last-child {
             margin-bottom: 0;
@@ -153,36 +162,36 @@
 
         label {
             display: block;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: #444;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         label .required {
             color: #ff4757;
-            margin-left: 2px;
         }
 
         input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0ecec;
-            border-radius: 14px;
-            font-size: 16px;
-            background: #fff;
+            padding: 12px 14px;
+            border: 1.5px solid #e0e4e8;
+            border-radius: 10px;
+            font-size: 15px;
+            background: #fafbfc;
             transition: border-color 0.2s, box-shadow 0.2s;
             -webkit-appearance: none;
             appearance: none;
             font-family: inherit;
             color: #1e1e2a;
-            min-height: 52px;
+            min-height: 46px;
         }
 
         input:focus {
             outline: none;
             border-color: #0ABAB5;
-            box-shadow: 0 0 0 4px rgba(10, 186, 181, 0.12);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
         }
 
         input.error {
@@ -191,207 +200,115 @@
 
         .error-message {
             color: #ff4757;
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 11px;
+            margin-top: 4px;
             display: none;
         }
 
-        /* ----- 按钮 ----- */
-        .action-buttons {
+        /* ----- 按钮 (安卓风格) ----- */
+        .btn-group {
             display: flex;
-            gap: 12px;
-            margin-top: 18px;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         .btn {
             flex: 1;
-            padding: 16px 10px;
+            padding: 12px 10px;
             border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
-            min-height: 54px;
+            min-height: 46px;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn:active {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
 
         .btn-primary {
             background: #0ABAB5;
             color: #fff;
-            box-shadow: 0 6px 16px rgba(10, 186, 181, 0.25);
+            box-shadow: 0 2px 8px rgba(10, 186, 181, 0.25);
         }
         .btn-primary:disabled {
-            background: #ccc;
+            background: #c5c8cc;
             box-shadow: none;
             opacity: 0.6;
             cursor: not-allowed;
         }
 
         .btn-secondary {
-            background: #e8f0f0;
-            color: #0ABAB5;
+            background: #e8ecf0;
+            color: #333;
         }
         .btn-secondary:active {
-            background: #d0e6e6;
+            background: #d5d9df;
         }
 
-        .btn-pdf {
+        .btn-danger {
             background: #dc3545;
             color: #fff;
-            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.25);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
         }
-        .btn-pdf:active {
+        .btn-danger:active {
             background: #c82333;
         }
 
         .btn-success {
             background: #28a745;
             color: #fff;
-            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.25);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
         }
         .btn-success:active {
             background: #1e7e34;
         }
 
-        /* ----- 蓝牙状态 ----- */
-        .bluetooth-status {
-            background: #f5fafa;
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid #e8f0f0;
-            flex-wrap: wrap;
-        }
-
-        .bluetooth-status .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .bluetooth-status .dot.disconnected {
-            background: #ff4757;
-        }
-        .bluetooth-status .dot.connected {
-            background: #28a745;
-        }
-        .bluetooth-status .dot.unsupported {
-            background: #ffc107;
-        }
-
-        .bluetooth-status .info {
-            flex: 1;
-            font-size: 13px;
-            color: #444;
-            min-width: 80px;
-        }
-
-        .bluetooth-status .info .device-name {
-            font-weight: 600;
-            color: #1e1e2a;
-        }
-
-        .bluetooth-status .info .unsupported-text {
-            color: #ff6b00;
-            font-size: 12px;
-        }
-
-        .btn-bluetooth {
-            background: #007AFF;
+        .btn-warning {
+            background: #ff6b35;
             color: #fff;
-            box-shadow: 0 6px 16px rgba(0, 122, 255, 0.25);
-            padding: 8px 16px;
-            font-size: 13px;
-            min-height: 36px;
-            border-radius: 30px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            flex: 0 0 auto;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
         }
-        .btn-bluetooth:active {
-            transform: scale(0.96);
-            background: #0055CC;
-        }
-        .btn-bluetooth:disabled {
-            background: #999;
-            cursor: not-allowed;
-            opacity: 0.6;
+        .btn-warning:active {
+            background: #e55a2b;
         }
 
-        /* ----- 预览 ----- */
-        .preview-page {
-            background: #f5fafa;
-            border-radius: 20px;
-            padding: 18px 16px;
-        }
-
-        .preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .preview-header .back-btn {
-            background: none;
-            border: none;
+        .btn-outline {
+            background: transparent;
             color: #0ABAB5;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 10px 14px;
-            min-height: 44px;
+            border: 1.5px solid #0ABAB5;
         }
-        .preview-header .back-btn:active {
-            opacity: 0.6;
+        .btn-outline:active {
+            background: rgba(10, 186, 181, 0.08);
         }
 
-        .preview-header .info-badge {
-            font-size: 13px;
-            color: #666;
-            background: #fff;
-            padding: 6px 14px;
-            border-radius: 30px;
-        }
-
-        .preview-list {
+        /* ----- 预览面单 (50x40mm) ----- */
+        .label-preview-container {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: 65vh;
-            overflow-y: auto;
-            padding-bottom: 8px;
-            -webkit-overflow-scrolling: touch;
+            justify-content: center;
+            padding: 8px 0;
         }
 
-        /* ===== 面单样式 - 50x40mm ===== */
         .label-card {
             background: #fff;
             border: 2px solid #222;
-            border-radius: 8px;
-            padding: 6px 10px;
+            border-radius: 6px;
+            padding: 8px 12px;
             font-family: Arial, sans-serif;
             width: 100%;
-            max-width: 300px;
+            max-width: 280px;
             aspect-ratio: 50/40;
-            margin: 0 auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
         }
 
         .label-card .label-top {
@@ -409,14 +326,14 @@
         }
 
         .label-card .label-order {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             font-weight: 600;
         }
 
         .label-card .label-divider {
             border-top: 1px dashed #ccc;
-            margin: 3px 0;
+            margin: 2px 0;
         }
 
         .label-card .label-main {
@@ -428,13 +345,13 @@
         }
 
         .label-card .label-field {
-            font-size: 13px;
+            font-size: 12px;
             color: #333;
         }
 
         .label-card .label-field .value {
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
             color: #1e1e2a;
         }
 
@@ -448,22 +365,257 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 2px;
-            font-size: 9px;
+            font-size: 8px;
             color: #999;
         }
 
-        .label-card .label-bottom .date {
-            font-size: 9px;
+        /* ----- 预览操作按钮 ----- */
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .preview-actions .btn {
+            flex: 1;
+            min-width: 70px;
+            font-size: 13px;
+            padding: 10px 8px;
+            min-height: 40px;
+        }
+
+        /* ----- 历史记录 ----- */
+        .history-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            border-left: 3px solid #0ABAB5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item .info .order {
+            font-weight: 600;
+            color: #1e1e2a;
+            font-size: 14px;
+        }
+
+        .history-item .info .price {
+            font-size: 13px;
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .history-item .info .date {
+            font-size: 11px;
             color: #999;
         }
 
-        /* 打印专用 - 50x40mm */
+        .history-item .actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .history-item .actions .btn-sm {
+            padding: 4px 12px;
+            font-size: 11px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            min-height: 28px;
+        }
+
+        .history-item .actions .btn-sm-reprint {
+            background: #0ABAB5;
+            color: #fff;
+        }
+        .history-item .actions .btn-sm-reprint:active {
+            background: #008E9B;
+        }
+        .history-item .actions .btn-sm-delete {
+            background: #fee;
+            color: #dc3545;
+        }
+        .history-item .actions .btn-sm-delete:active {
+            background: #fdd;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 30px 0;
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* ----- 底部安全区 ----- */
+        .bottom-safe {
+            height: 20px;
+        }
+
+        /* ----- Toast ----- */
+        .toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 42, 0.92);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+            z-index: 99999;
+            animation: slideDown 0.35s ease;
+            max-width: 85%;
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(8px);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* ----- 打印指南弹窗 (安卓风格) ----- */
+        .guide-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .guide-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .guide-modal {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 360px;
+            width: 100%;
+            padding: 24px 20px 20px;
+            animation: modalSlideUp 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .guide-modal .icon {
+            text-align: center;
+            font-size: 44px;
+            margin-bottom: 6px;
+        }
+
+        .guide-modal h3 {
+            text-align: center;
+            font-size: 18px;
+            color: #1e1e2a;
+            margin-bottom: 2px;
+        }
+
+        .guide-modal .sub {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .guide-modal .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .guide-modal .step:last-child {
+            border-bottom: none;
+        }
+
+        .guide-modal .step .num {
+            width: 24px;
+            height: 24px;
+            background: #0ABAB5;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .guide-modal .step .text strong {
+            color: #0ABAB5;
+        }
+
+        .guide-modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .guide-modal .modal-actions .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        /* ----- 打印专用 ----- */
         @media print {
             body { background: #fff; padding: 0; }
-            .app-container { box-shadow: none; border-radius: 0; padding: 0; }
-            .header, .nav-tabs, .action-buttons, .preview-actions,
-            .preview-header, .bluetooth-status, .bt-unsupported-banner,
-            .form-section .action-buttons { display: none !important; }
+            .app-container { background: #fff; padding: 0; }
+            .nav-bar, .status-bar, .page > .card:first-child,
+            .preview-actions, .btn-group, .bottom-safe,
+            .guide-overlay, .toast { display: none !important; }
+            .page { display: block !important; padding: 0 !important; }
+            #pagePreview { display: block !important; }
+            #pageCreate, #pageHistory { display: none !important; }
             .label-card {
                 width: 50mm;
                 height: 40mm;
@@ -475,260 +627,41 @@
                 page-break-after: avoid;
                 box-shadow: none;
             }
-            .label-card .label-logo { font-size: 7mm; }
-            .label-card .label-order { font-size: 5mm; }
-            .label-card .label-field { font-size: 6mm; }
-            .label-card .label-field .value { font-size: 7mm; }
-            .label-card .label-field .value.price { font-size: 9mm; }
-            .label-card .label-bottom { font-size: 4mm; }
             .preview-page { background: #fff; padding: 0; }
-            .preview-list { max-height: none; }
-            .page { display: block !important; }
-            .page.active { display: block !important; }
-            #pagePreview { display: block !important; }
-            #pageCreate, #pageHistory { display: none !important; }
+            .label-preview-container { padding: 0; }
         }
 
-        .preview-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        .preview-actions .btn {
-            flex: 1;
-            min-width: 80px;
-        }
-
-        /* ----- 历史记录 ----- */
-        .history-section {
-            background: #f5fafa;
-            border-radius: 20px;
-            padding: 18px 16px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .history-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .history-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 16px;
-            border-left: 4px solid #0ABAB5;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-
-        .history-order {
-            font-weight: 600;
-            color: #1e1e2a;
-            font-size: 15px;
-        }
-        .history-customer {
-            color: #666;
-            font-size: 14px;
-            margin-top: 2px;
-        }
-        .history-meta {
-            display: flex;
-            justify-content: space-between;
-            color: #999;
-            font-size: 12px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        /* ----- Toast ----- */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e1e2a;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 15px;
-            font-weight: 500;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-            z-index: 99999;
-            animation: slideDown 0.35s ease;
-            max-width: 90%;
-            text-align: center;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateX(-50%) translateY(-30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* ----- 进度 ----- */
-        .progress-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 99998;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        .progress-overlay.show {
-            display: flex;
-        }
-        .progress-overlay .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #fff;
-            border-top: 4px solid #0ABAB5;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        .progress-overlay .label {
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 16px;
-        }
-        .progress-overlay .sub-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            margin-top: 6px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* 蓝牙不支持提示 */
-        .bt-unsupported-banner {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            color: #856404;
-            line-height: 1.6;
-            display: none;
-        }
-
-        .bt-unsupported-banner.show {
-            display: block;
-        }
-
-        .bt-unsupported-banner strong {
-            color: #dc3545;
-        }
-
-        .bt-unsupported-banner .solution {
-            margin-top: 6px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .bt-unsupported-banner .solution .browser {
-            display: inline-block;
-            background: #e8f0f0;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 11px;
-            margin: 2px 2px;
-        }
-
-        /* ----- 飞书兼容 - 安全区域 ----- */
-        @supports (padding: max(0px)) {
-            .app-container {
-                padding-left: max(16px, env(safe-area-inset-left));
-                padding-right: max(16px, env(safe-area-inset-right));
-                padding-bottom: max(28px, env(safe-area-inset-bottom));
-            }
-        }
-
-        /* 飞书内置浏览器优化 */
-        .feishu-optimize {
-            display: none;
-        }
+        /* ----- 工具 ----- */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-muted { color: #999; font-size: 12px; }
+        .mt-8 { margin-top: 8px; }
+        .flex-1 { flex: 1; }
     </style>
 </head>
 <body>
 
     <div class="app-container" id="app">
 
-        <!-- ===== 头部 ===== -->
-        <header class="header">
-            <div class="logo">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230ABAB5'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16' font-weight='bold' fill='white' font-family='Arial'%3EDF%3C/text%3E%3C/svg%3E" alt="Logo" class="logo-image">
-                <div class="logo-text">
-                    <h1>面单打印</h1>
-                    <div class="subtitle">50x40mm · DAFU</div>
-                </div>
-            </div>
-            <div class="nav-tabs">
-                <button class="nav-tab active" data-tab="create">标签</button>
-                <button class="nav-tab" data-tab="history">记录</button>
-            </div>
-        </header>
+        <!-- ===== 状态栏 (安卓风格) ===== -->
+        <div class="status-bar" id="statusBar">
+            <span class="time" id="statusTime">12:00</span>
+            <span class="icons">📶 📶 🔋</span>
+        </div>
+
+        <!-- ===== 导航栏 ===== -->
+        <div class="nav-bar">
+            <button class="back-btn" id="navBackBtn">‹</button>
+            <span class="title" id="navTitle">面单打印</span>
+            <button class="right-btn" id="navRightBtn">历史</button>
+        </div>
 
         <!-- ===== 页面：创建标签 ===== -->
         <div id="pageCreate" class="page active">
-            <div class="form-section">
-                <div class="section-title">订单信息</div>
-
-                <!-- 蓝牙状态 -->
-                <div class="bluetooth-status" id="btStatus">
-                    <div class="dot disconnected" id="btDot"></div>
-                    <div class="info">
-                        <span id="btStatusText">未连接蓝牙</span>
-                        <span class="device-name" id="btDeviceName"></span>
-                        <div class="unsupported-text" id="btUnsupportedText" style="display:none;">
-                            ⚠️ 当前浏览器不支持蓝牙
-                        </div>
-                    </div>
-                    <button class="btn-bluetooth" id="btConnectBtn">📶 连接</button>
-                </div>
-
-                <!-- 蓝牙不支持提示 -->
-                <div class="bt-unsupported-banner" id="btUnsupportedBanner">
-                    <strong>⚠️ 当前浏览器不支持蓝牙</strong>
-                    <div>请使用以下浏览器打开：</div>
-                    <div class="solution">
-                        <span class="browser">Chrome 80+</span>
-                        <span class="browser">Edge 80+</span>
-                        <span class="browser">Opera 67+</span>
-                        <div style="margin-top:4px;font-size:12px;color:#999;">
-                            💡 或使用「下载PDF」功能替代蓝牙打印
-                        </div>
-                    </div>
+            <div class="card">
+                <div class="card-title">
+                    📋 订单信息
+                    <span class="badge">50×40mm</span>
                 </div>
 
                 <div class="form-group">
@@ -742,49 +675,110 @@
                     <input type="number" id="amount" placeholder="输入价格" step="0.01" min="0">
                 </div>
 
-                <div class="action-buttons">
+                <div class="btn-group">
                     <button class="btn btn-primary" id="generateBtn">生成标签</button>
                     <button class="btn btn-secondary" id="resetBtn">重置</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:8px;">
+                <div class="card-title" style="font-size:13px;color:#666;margin-bottom:4px;">
+                    💡 快速上手
+                </div>
+                <div style="font-size:12px;color:#999;line-height:1.8;">
+                    1. 输入货号和价格 → 2. 点击「生成标签」<br>
+                    3. 预览确认 → 4. 点击「打印」或「保存」
                 </div>
             </div>
         </div>
 
         <!-- ===== 页面：预览 ===== -->
         <div id="pagePreview" class="page">
-            <div class="preview-page">
-                <div class="preview-header">
-                    <button class="back-btn" id="backBtn">‹ 返回</button>
-                    <span class="info-badge" id="previewInfo">1 张</span>
+            <div class="card">
+                <div class="card-title">
+                    🏷️ 标签预览
+                    <span class="badge" id="previewBadge">1张</span>
                 </div>
-                <div class="preview-list" id="previewList"></div>
+
+                <div class="label-preview-container">
+                    <div class="label-card" id="labelCard">
+                        <div class="label-top">
+                            <span class="label-logo">DAFU</span>
+                            <span class="label-order" id="previewOrderTag">#________</span>
+                        </div>
+                        <div class="label-divider"></div>
+                        <div class="label-main">
+                            <span class="label-field">货号</span>
+                            <span class="label-field"><span class="value" id="previewOrderValue">________</span></span>
+                        </div>
+                        <div class="label-main">
+                            <span class="label-field">价格</span>
+                            <span class="label-field"><span class="value price" id="previewPriceValue">¥0.00</span></span>
+                        </div>
+                        <div class="label-divider"></div>
+                        <div class="label-bottom">
+                            <span id="previewDate">-- --- ----</span>
+                            <span>大福面单</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="preview-actions">
-                    <button class="btn btn-pdf" id="downloadPdfBtn">📄 下载PDF</button>
-                    <button class="btn btn-success" id="printBtn">🖨️ 打印</button>
+                    <button class="btn btn-warning" id="printBtn">🖨️ 打印</button>
+                    <button class="btn btn-danger" id="downloadPdfBtn">📄 下载</button>
                     <button class="btn btn-secondary" id="saveBtn">💾 保存</button>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:#999;text-align:center;">
+                    💡 点击「打印」使用系统打印，或「下载」保存为图片
                 </div>
             </div>
         </div>
 
         <!-- ===== 页面：历史记录 ===== -->
         <div id="pageHistory" class="page">
-            <div class="history-section">
-                <div class="history-header">
-                    <div class="section-title" style="margin-bottom:0;">历史记录</div>
-                    <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 16px;font-size:13px;border-radius:30px;">清空</button>
+            <div class="card">
+                <div class="card-title">
+                    📦 历史记录
+                    <span class="badge" id="historyCount">0</span>
                 </div>
-                <div class="history-grid" id="historyGrid">
-                    <div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>
+                <div id="historyList">
+                    <div class="history-empty">暂无记录</div>
+                </div>
+                <div style="margin-top:12px;text-align:center;">
+                    <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 20px;font-size:12px;min-height:32px;flex:none;width:auto;">清空全部</button>
                 </div>
             </div>
         </div>
 
+        <!-- ===== 底部安全区 ===== -->
+        <div class="bottom-safe"></div>
     </div>
 
-    <!-- ===== 进度 ===== -->
-    <div class="progress-overlay" id="progressOverlay">
-        <div class="spinner"></div>
-        <div class="label" id="progressLabel">⏳ 正在处理...</div>
-        <div class="sub-label" id="progressSubLabel">请稍候</div>
+    <!-- ===== 打印指南弹窗 ===== -->
+    <div class="guide-overlay" id="guideOverlay">
+        <div class="guide-modal">
+            <div class="icon">📱</div>
+            <h3>快速打印指南</h3>
+            <div class="sub">3步完成手机打印</div>
+
+            <div class="step">
+                <span class="num">1</span>
+                <div class="text"><strong>点击「打印」</strong><br>使用系统打印功能</div>
+            </div>
+            <div class="step">
+                <span class="num">2</span>
+                <div class="text"><strong>选择「另存为PDF」</strong><br>或选择已连接的打印机</div>
+            </div>
+            <div class="step">
+                <span class="num">3</span>
+                <div class="text"><strong>完成打印</strong><br>调整设置后点击打印</div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="guideGotIt">我知道了</button>
+                <button class="btn btn-warning" id="guidePrint">🖨️ 去打印</button>
+            </div>
+        </div>
     </div>
 
     <!-- ===== Toast ===== -->
@@ -792,23 +786,23 @@
 
     <script>
         // ============================================================
-        // 应用逻辑 - 飞书兼容版本
+        // 安卓小程序应用逻辑
         // ============================================================
 
         (function() {
             'use strict';
 
-            // ----- 检测飞书环境 -----
+            // ----- 检测环境 -----
             var isFeishu = /Lark|Feishu|LarkMobile/i.test(navigator.userAgent);
-            if (isFeishu) {
-                console.log('📱 飞书环境检测到，已启用兼容模式');
-                document.body.classList.add('feishu-mode');
-            }
+            var isWechat = /MicroMessenger/i.test(navigator.userAgent);
+            var isAndroid = /Android/i.test(navigator.userAgent);
+            var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
             // ----- 数据 -----
             var appData = {
                 labelHistory: [],
-                previewData: { orderNo: '', amount: '', dateStr: '' }
+                previewData: { orderNo: '', amount: '', dateStr: '' },
+                currentPage: 'create'
             };
 
             // ----- 存储 -----
@@ -826,79 +820,57 @@
             var amount = $('amount');
             var generateBtn = $('generateBtn');
             var toast = $('toast');
-            var progressOverlay = $('progressOverlay');
-            var progressLabel = $('progressLabel');
-            var progressSubLabel = $('progressSubLabel');
-
-            // ----- 蓝牙状态 -----
-            var btDot = $('btDot');
-            var btStatusText = $('btStatusText');
-            var btDeviceName = $('btDeviceName');
-            var btUnsupportedText = $('btUnsupportedText');
-            var btUnsupportedBanner = $('btUnsupportedBanner');
-            var btConnectBtn = $('btConnectBtn');
-
-            var isBluetoothSupported = false;
-            var isBluetoothConnected = false;
-
-            // ----- 检查蓝牙支持 (飞书兼容) -----
-            function checkBluetoothSupport() {
-                try {
-                    // 飞书内置浏览器可能不支持蓝牙，但我们要正确检测
-                    isBluetoothSupported = !!(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
-                } catch (e) {
-                    isBluetoothSupported = false;
-                }
-
-                // 飞书环境下默认显示不支持（除非明确支持）
-                if (isFeishu && !/Chrome/i.test(navigator.userAgent)) {
-                    isBluetoothSupported = false;
-                }
-
-                if (isBluetoothSupported) {
-                    btDot.className = 'dot disconnected';
-                    btStatusText.textContent = '未连接蓝牙';
-                    btDeviceName.textContent = '';
-                    btUnsupportedText.style.display = 'none';
-                    btUnsupportedBanner.classList.remove('show');
-                    btConnectBtn.disabled = false;
-                    btConnectBtn.textContent = '📶 连接';
-                } else {
-                    btDot.className = 'dot unsupported';
-                    btStatusText.textContent = '⚠️ 不支持蓝牙';
-                    btDeviceName.textContent = '';
-                    btUnsupportedText.style.display = 'block';
-                    btUnsupportedBanner.classList.add('show');
-                    btConnectBtn.disabled = true;
-                    btConnectBtn.textContent = '❌ 不支持';
-                }
-
-                return isBluetoothSupported;
-            }
 
             // ============================================================
-            // 页面切换
+            // 状态栏时间
+            // ============================================================
+            function updateStatusTime() {
+                var now = new Date();
+                var h = String(now.getHours()).padStart(2, '0');
+                var m = String(now.getMinutes()).padStart(2, '0');
+                var timeEl = $('statusTime');
+                if (timeEl) timeEl.textContent = h + ':' + m;
+            }
+            updateStatusTime();
+            setInterval(updateStatusTime, 30000);
+
+            // ============================================================
+            // 页面切换 (小程序风格)
             // ============================================================
             function showPage(page) {
-                document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+                appData.currentPage = page;
+
+                // 隐藏所有页面
+                document.querySelectorAll('.page').forEach(function(p) {
+                    p.classList.remove('active');
+                });
+
                 var target = $('page' + page.charAt(0).toUpperCase() + page.slice(1));
                 if (target) target.classList.add('active');
 
-                var tabMap = { create: 'create', preview: 'create', history: 'history' };
-                var tabName = tabMap[page] || 'create';
-                document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
-                var activeTab = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
-                if (activeTab) activeTab.classList.add('active');
-            }
+                // 更新导航
+                var navTitle = $('navTitle');
+                var navBackBtn = $('navBackBtn');
+                var navRightBtn = $('navRightBtn');
 
-            function switchTab(tab) {
-                if (tab === 'create') showPage('create');
-                else if (tab === 'history') { showPage('history');
-                    loadHistory(); }
-            }
-
-            function backToCreate() {
-                showPage('create');
+                if (page === 'create') {
+                    navTitle.textContent = '面单打印';
+                    navBackBtn.classList.remove('show');
+                    navRightBtn.textContent = '历史';
+                    navRightBtn.onclick = function() { showPage('history'); };
+                } else if (page === 'preview') {
+                    navTitle.textContent = '标签预览';
+                    navBackBtn.classList.add('show');
+                    navBackBtn.onclick = function() { showPage('create'); };
+                    navRightBtn.textContent = '打印';
+                    navRightBtn.onclick = function() { doPrint(); };
+                } else if (page === 'history') {
+                    navTitle.textContent = '历史记录';
+                    navBackBtn.classList.add('show');
+                    navBackBtn.onclick = function() { showPage('create'); };
+                    navRightBtn.textContent = '清空';
+                    navRightBtn.onclick = function() { clearHistory(); };
+                }
             }
 
             // ============================================================
@@ -946,35 +918,16 @@
                 showToast('✅ 标签已生成');
             }
 
-            // ===== 面单渲染 - 50x40mm =====
+            // ===== 面单渲染 =====
             function renderPreview() {
                 var data = appData.previewData;
-                var container = $('previewList');
-                $('previewInfo').textContent = '1 张 · ' + data.orderNo;
-
                 var priceDisplay = parseFloat(data.amount).toFixed(2);
 
-                container.innerHTML =
-                    '<div class="label-card">' +
-                    '  <div class="label-top">' +
-                    '    <span class="label-logo">DAFU</span>' +
-                    '    <span class="label-order">#' + escapeHtml(data.orderNo) + '</span>' +
-                    '  </div>' +
-                    '  <div class="label-divider"></div>' +
-                    '  <div class="label-main">' +
-                    '    <span class="label-field">货号</span>' +
-                    '    <span class="label-field"><span class="value">' + escapeHtml(data.orderNo) + '</span></span>' +
-                    '  </div>' +
-                    '  <div class="label-main">' +
-                    '    <span class="label-field">价格</span>' +
-                    '    <span class="label-field"><span class="value price">¥' + escapeHtml(priceDisplay) + '</span></span>' +
-                    '  </div>' +
-                    '  <div class="label-divider"></div>' +
-                    '  <div class="label-bottom">' +
-                    '    <span>' + escapeHtml(data.dateStr) + '</span>' +
-                    '    <span>大福面单</span>' +
-                    '  </div>' +
-                    '</div>';
+                $('previewBadge').textContent = '1张';
+                $('previewOrderTag').textContent = '#' + escapeHtml(data.orderNo);
+                $('previewOrderValue').textContent = escapeHtml(data.orderNo);
+                $('previewPriceValue').textContent = '¥' + escapeHtml(priceDisplay);
+                $('previewDate').textContent = escapeHtml(data.dateStr);
             }
 
             function resetForm() {
@@ -985,37 +938,42 @@
             }
 
             // ============================================================
-            // 打印 (浏览器打印)
+            // 打印功能
             // ============================================================
-            function printLabel() {
+            function doPrint() {
                 var data = appData.previewData;
                 if (!data.orderNo) {
                     showToast('请先生成标签');
                     return;
                 }
-                // 飞书环境提示
-                if (isFeishu) {
-                    showToast('🖨️ 请点击右上角「...」选择打印');
-                    setTimeout(function() {
-                        window.print();
-                    }, 300);
-                } else {
-                    window.print();
-                }
+
+                // 显示打印指南（移动端友好）
+                showGuide();
+            }
+
+            function showGuide() {
+                $('guideOverlay').classList.add('show');
+            }
+
+            function hideGuide() {
+                $('guideOverlay').classList.remove('show');
+            }
+
+            function directPrint() {
+                hideGuide();
+                window.print();
                 showToast('🖨️ 正在打开打印...');
             }
 
             // ============================================================
-            // PDF 生成 (飞书兼容)
+            // 下载图片 (安卓兼容)
             // ============================================================
-            function downloadPdf() {
+            function downloadImage() {
                 var data = appData.previewData;
                 if (!data.orderNo) {
                     showToast('请先生成标签');
                     return;
                 }
-
-                showProgress('📄 正在生成PDF...', '请稍候');
 
                 try {
                     var mmToPx = 3.78;
@@ -1028,11 +986,9 @@
 
                     var ctx = canvas.getContext('2d');
 
-                    // 背景
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // 边框
                     ctx.strokeStyle = '#000000';
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
@@ -1041,7 +997,6 @@
                     var x = pad;
                     var y = pad;
 
-                    // 顶部: Logo + 货号
                     ctx.fillStyle = '#0ABAB5';
                     ctx.font = 'bold ' + (5 * mmToPx) + 'px Arial';
                     ctx.fillText('DAFU', x, y + 5 * mmToPx);
@@ -1052,7 +1007,6 @@
                     ctx.fillText('#' + escapeHtml(data.orderNo), canvas.width - pad, y + 5 * mmToPx);
                     ctx.textAlign = 'left';
 
-                    // 分隔线
                     y += 5 * mmToPx + 1 * mmToPx;
                     ctx.strokeStyle = '#cccccc';
                     ctx.setLineDash([1 * mmToPx, 1.5 * mmToPx]);
@@ -1063,7 +1017,6 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
 
-                    // 货号行
                     y += 2 * mmToPx;
                     ctx.fillStyle = '#333';
                     ctx.font = (4.5 * mmToPx) + 'px Arial';
@@ -1075,7 +1028,6 @@
                     ctx.fillText(escapeHtml(data.orderNo), canvas.width - pad, y + 4.5 * mmToPx);
                     ctx.textAlign = 'left';
 
-                    // 价格行
                     y += 5 * mmToPx + 1 * mmToPx;
                     ctx.fillStyle = '#333';
                     ctx.font = (4.5 * mmToPx) + 'px Arial';
@@ -1088,7 +1040,6 @@
                     ctx.fillText('¥' + escapeHtml(priceDisplay), canvas.width - pad, y + 4.5 * mmToPx);
                     ctx.textAlign = 'left';
 
-                    // 分隔线
                     y += 5 * mmToPx + 1 * mmToPx;
                     ctx.strokeStyle = '#cccccc';
                     ctx.setLineDash([1 * mmToPx, 1.5 * mmToPx]);
@@ -1099,7 +1050,6 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
 
-                    // 底部
                     y += 2 * mmToPx;
                     ctx.fillStyle = '#999';
                     ctx.font = (3.5 * mmToPx) + 'px Arial';
@@ -1109,40 +1059,26 @@
                     ctx.fillText('大福面单', canvas.width - pad, y + 3.5 * mmToPx);
                     ctx.textAlign = 'left';
 
-                    // 生成 PDF (使用DataURL方式，飞书兼容)
-                    var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-                    // 飞书环境使用下载链接
+                    // 下载
                     var link = document.createElement('a');
-                    link.href = dataUrl;
-                    link.download = '面单_' + data.orderNo + '.jpg';
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = '面单_' + data.orderNo + '.png';
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
 
-                    hideProgress();
-                    showToast('✅ 图片已下载，可保存为PDF');
-
-                    // 保存到历史
+                    showToast('✅ 图片已下载');
                     saveToHistory(data.orderNo, data.amount);
 
                 } catch (e) {
-                    hideProgress();
-                    showToast('⚠️ 生成失败: ' + e.message);
-                    console.error('PDF生成错误:', e);
+                    showToast('⚠️ 下载失败: ' + e.message);
+                    console.error('下载错误:', e);
                 }
             }
 
             // ============================================================
             // 保存与历史
             // ============================================================
-            function savePreview() {
-                var data = appData.previewData;
-                if (!data.orderNo) { showToast('请先生成标签'); return; }
-                saveToHistory(data.orderNo, data.amount);
-                showToast('💾 已保存到历史');
-            }
-
             function saveToHistory(no, amt) {
                 var data = {
                     id: Date.now(),
@@ -1152,26 +1088,66 @@
                 };
                 appData.labelHistory.unshift(data);
                 safeSetStorage('labelHistory', appData.labelHistory);
+                loadHistory();
             }
 
             function loadHistory() {
-                var grid = $('historyGrid');
+                var list = $('historyList');
+                var count = $('historyCount');
                 var history = appData.labelHistory;
+
+                if (count) count.textContent = history.length;
+
                 if (history.length === 0) {
-                    grid.innerHTML = '<div style="text-align:center;padding:30px 0;color:#999;">暂无记录</div>';
+                    list.innerHTML = '<div class="history-empty">暂无记录</div>';
                     return;
                 }
+
                 var html = '';
                 for (var i = 0; i < history.length; i++) {
                     var item = history[i];
                     html +=
-                        '<div class="history-card">' +
-                        '<div class="history-order">📦 货号: ' + escapeHtml(item.orderNo) + '</div>' +
-                        '<div class="history-customer">💰 价格: ' + escapeHtml(item.amount) + '</div>' +
-                        '<div class="history-meta"><span>' + escapeHtml(item.createTime) + '</span></div>' +
+                        '<div class="history-item">' +
+                        '  <div class="info">' +
+                        '    <div class="order">📦 货号: ' + escapeHtml(item.orderNo) + '</div>' +
+                        '    <div class="price">💰 ' + escapeHtml(item.amount) + '</div>' +
+                        '    <div class="date">' + escapeHtml(item.createTime) + '</div>' +
+                        '  </div>' +
+                        '  <div class="actions">' +
+                        '    <button class="btn-sm btn-sm-reprint" data-id="' + i + '">重印</button>' +
+                        '    <button class="btn-sm btn-sm-delete" data-id="' + i + '">删除</button>' +
+                        '  </div>' +
                         '</div>';
                 }
-                grid.innerHTML = html;
+                list.innerHTML = html;
+
+                // 重印事件
+                list.querySelectorAll('.btn-sm-reprint').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var idx = parseInt(this.getAttribute('data-id'));
+                        var item = appData.labelHistory[idx];
+                        if (item) {
+                            orderNo.value = item.orderNo;
+                            amount.value = item.amount;
+                            validateForm();
+                            generateLabel();
+                            showToast('🔄 已加载订单');
+                        }
+                    });
+                });
+
+                // 删除事件
+                list.querySelectorAll('.btn-sm-delete').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var idx = parseInt(this.getAttribute('data-id'));
+                        if (confirm('确定删除该记录？')) {
+                            appData.labelHistory.splice(idx, 1);
+                            safeSetStorage('labelHistory', appData.labelHistory);
+                            loadHistory();
+                            showToast('已删除');
+                        }
+                    });
+                });
             }
 
             function clearHistory() {
@@ -1184,18 +1160,8 @@
             }
 
             // ============================================================
-            // 进度与Toast
+            // Toast
             // ============================================================
-            function showProgress(label, subLabel) {
-                if (progressLabel) progressLabel.textContent = label || '⏳ 正在处理...';
-                if (progressSubLabel) progressSubLabel.textContent = subLabel || '请稍候';
-                if (progressOverlay) progressOverlay.classList.add('show');
-            }
-
-            function hideProgress() {
-                if (progressOverlay) progressOverlay.classList.remove('show');
-            }
-
             var toastTimer = null;
 
             function showToast(msg) {
@@ -1203,63 +1169,7 @@
                 toast.textContent = msg;
                 toast.classList.add('show');
                 clearTimeout(toastTimer);
-                toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
-            }
-
-            // ============================================================
-            // 蓝牙连接 (飞书兼容)
-            // ============================================================
-            function connectBluetooth() {
-                if (!isBluetoothSupported) {
-                    showToast('⚠️ 当前浏览器不支持蓝牙，请使用Chrome/Edge');
-                    return;
-                }
-
-                showProgress('🔍 正在搜索蓝牙设备...', '请确保打印机已开启');
-
-                try {
-                    navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true,
-                        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
-                    })
-                    .then(function(device) {
-                        hideProgress();
-                        var name = device.name || '未知设备';
-                        isBluetoothConnected = true;
-                        btDot.className = 'dot connected';
-                        btStatusText.textContent = '已连接';
-                        btDeviceName.textContent = name;
-                        btConnectBtn.textContent = '✅ 已连接';
-                        showToast('✅ 蓝牙已连接: ' + name);
-                        safeSetStorage('btDevice', name);
-                    })
-                    .catch(function(error) {
-                        hideProgress();
-                        if (error.message && error.message.includes('cancelled')) {
-                            showToast('⏹ 已取消连接');
-                        } else {
-                            showToast('❌ 连接失败: ' + (error.message || '未知错误'));
-                        }
-                    });
-                } catch (e) {
-                    hideProgress();
-                    showToast('❌ 蓝牙错误: ' + e.message);
-                }
-            }
-
-            // ----- 断开/切换蓝牙 -----
-            function toggleBluetooth() {
-                if (isBluetoothConnected) {
-                    isBluetoothConnected = false;
-                    btDot.className = 'dot disconnected';
-                    btStatusText.textContent = '未连接蓝牙';
-                    btDeviceName.textContent = '';
-                    btConnectBtn.textContent = '📶 连接';
-                    safeSetStorage('btDevice', null);
-                    showToast('🔌 已断开蓝牙');
-                } else {
-                    connectBluetooth();
-                }
+                toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2200);
             }
 
             // ============================================================
@@ -1268,27 +1178,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 appData.labelHistory = safeGetStorage('labelHistory', []);
 
-                // 检查蓝牙支持
-                checkBluetoothSupport();
-
-                // 恢复蓝牙状态
-                var savedDevice = safeGetStorage('btDevice', null);
-                if (savedDevice && isBluetoothSupported) {
-                    isBluetoothConnected = true;
-                    btDot.className = 'dot connected';
-                    btStatusText.textContent = '已连接';
-                    btDeviceName.textContent = savedDevice;
-                    btConnectBtn.textContent = '✅ 已连接';
-                }
-
-                // 绑定事件
-                document.querySelectorAll('.nav-tab').forEach(function(tab) {
-                    tab.addEventListener('click', function() {
-                        var name = this.getAttribute('data-tab');
-                        switchTab(name);
-                    });
-                });
-
+                // 输入验证
                 orderNo.addEventListener('input', function() {
                     if (this.value.trim().length === 0) {
                         this.classList.add('error');
@@ -1302,30 +1192,52 @@
 
                 amount.addEventListener('input', validateForm);
 
+                // 按钮事件
                 $('generateBtn').addEventListener('click', generateLabel);
                 $('resetBtn').addEventListener('click', resetForm);
-                $('backBtn').addEventListener('click', backToCreate);
-                $('downloadPdfBtn').addEventListener('click', downloadPdf);
-                $('printBtn').addEventListener('click', printLabel);
-                $('saveBtn').addEventListener('click', savePreview);
+                $('printBtn').addEventListener('click', doPrint);
+                $('downloadPdfBtn').addEventListener('click', downloadImage);
+                $('saveBtn').addEventListener('click', function() {
+                    var data = appData.previewData;
+                    if (!data.orderNo) { showToast('请先生成标签'); return; }
+                    saveToHistory(data.orderNo, data.amount);
+                    showToast('💾 已保存');
+                });
+
+                // 打印指南
+                $('guideGotIt').addEventListener('click', hideGuide);
+                $('guidePrint').addEventListener('click', directPrint);
+
+                // 清空历史
                 $('clearHistoryBtn').addEventListener('click', clearHistory);
 
-                // 蓝牙连接按钮
-                btConnectBtn.addEventListener('click', toggleBluetooth);
+                // 点击外部关闭指南
+                $('guideOverlay').addEventListener('click', function(e) {
+                    if (e.target === this) hideGuide();
+                });
 
                 // 加载历史
                 loadHistory();
                 showPage('create');
                 validateForm();
 
-                // 飞书提示
-                if (isFeishu) {
-                    console.log('📱 飞书环境已适配');
-                }
+                console.log('📱 安卓小程序模式已启动');
+                if (isFeishu) console.log('飞书环境');
+                if (isWechat) console.log('微信环境');
+                if (isAndroid) console.log('Android设备');
+                if (isIOS) console.log('iOS设备');
             });
 
-            // 暴露切换功能
-            window.switchTab = switchTab;
+            // 暴露接口
+            window.showPage = showPage;
+            window.generateLabel = generateLabel;
+            window.doPrint = doPrint;
+            window.downloadImage = downloadImage;
+            window.showGuide = showGuide;
+            window.hideGuide = hideGuide;
+            window.directPrint = directPrint;
+            window.clearHistory = clearHistory;
+            window.showToast = showToast;
         })();
     </script>
 
