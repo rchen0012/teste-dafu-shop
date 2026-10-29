@@ -168,11 +168,12 @@
         .locate-success-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #16a34a; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; }
         .locate-success-btn:active { transform: scale(0.98); }
 
-        /* 手机摄像头扫码弹窗（正方形取景 + 连续扫码） */
+        /* 手机摄像头扫码弹窗（正方形自定义取景框） */
         .camera-modal { max-width: 640px !important; padding: 16px !important; }
         .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .camera-title { font-size: 1rem; font-weight: 700; color: #0a2540; display: flex; align-items: center; gap: 6px; }
         .camera-close { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 700; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; cursor: pointer; }
+        
         .camera-stage {
             position: relative;
             width: 100%;
@@ -185,6 +186,42 @@
         }
         #reader { width: 100%; height: 100%; }
         #reader video { border-radius: 16px; object-fit: cover; }
+        
+        /* 隐藏 html5-qrcode 默认的扫描框（虚线/方框） */
+        #reader__scan_region { background: transparent !important; }
+        #reader__scan_region img { display: none !important; } /* 隐藏默认中间的图标/线 */
+        #reader__dashboard { display: none !important; }
+        #qr-shaded-region { display: none !important; }
+
+        /* 自定义正方形取景框（白角） */
+        .custom-scan-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            border-radius: 8px;
+            box-shadow: 0 0 0 4000px rgba(15, 23, 42, 0.55); /* 遮罩外部 */
+            z-index: 2;
+            pointer-events: none;
+        }
+        .custom-scan-box::before,
+        .custom-scan-box::after,
+        .custom-scan-box .corner-br,
+        .custom-scan-box .corner-bl {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 4px solid #fff;
+            border-radius: 4px;
+        }
+        .custom-scan-box::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 8px; }
+        .custom-scan-box::after { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 8px; }
+        .custom-scan-box .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 8px; }
+        .custom-scan-box .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 8px; }
+
         .camera-flash {
             position: absolute; inset: 0; pointer-events: none;
             border-radius: 16px;
@@ -529,7 +566,7 @@
     </div>
 </div>
 
-<!-- 弹窗 5：手机摄像头连续扫码（仅二维码 + 正方形框） -->
+<!-- 弹窗 5：手机摄像头连续扫码 -->
 <div class="modal-overlay" id="cameraModalOverlay">
     <div class="modal-box camera-modal">
         <div class="camera-header">
@@ -538,6 +575,11 @@
         </div>
         <div class="camera-stage">
             <div id="reader"></div>
+            <!-- 自定义正方形取景框 -->
+            <div class="custom-scan-box" id="customScanBox">
+                <div class="corner-br"></div>
+                <div class="corner-bl"></div>
+            </div>
             <div class="camera-flash" id="cameraFlash"></div>
         </div>
         <div class="camera-last empty" id="cameraLast">等待扫码…</div>
@@ -721,6 +763,7 @@
     var readerEl = document.getElementById('reader');
     var cameraFlash = document.getElementById('cameraFlash');
     var cameraLast = document.getElementById('cameraLast');
+    var customScanBox = document.getElementById('customScanBox');
 
     var statusTimer = null;
 
@@ -905,6 +948,7 @@
     }
 
     function openLocateInputModal() {
+        if (cameraRunning) closeCameraModal(true);
         locateInputValue = (locateTarget || '').slice(0, ORDER_LENGTH);
         updateLocateDisplay();
         locateInputModalOverlay.classList.add('show');
@@ -1028,6 +1072,7 @@
         playLocateHitSound();
         locateModalCode.textContent = barcode;
         locateModalOverlay.classList.add('show');
+        setScanLocked(true);
         return true;
     }
 
@@ -1044,7 +1089,7 @@
         }
     }
 
-    // ========== 手机摄像头连续扫码（仅二维码 + 正方形框） ==========
+    // ========== 手机摄像头连续扫码（正方形自定义框） ==========
     function updateCameraLast(result) {
         if (!result) {
             cameraLast.classList.add('empty');
@@ -1066,7 +1111,7 @@
     }
 
     function openCameraModal() {
-        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show') || locateModalOverlay.classList.contains('show')) {
             setStatusMessage('请先关闭当前弹窗再打开摄像头', true);
             return;
         }
@@ -1107,7 +1152,6 @@
         if (!cameraModalOverlay.classList.contains('show')) { cameraRunning = false; return; }
         try {
             html5QrCode = new Html5Qrcode("reader", {
-                // 只扫二维码，提升速度与准确率
                 formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
                 verbose: false
             });
@@ -1115,7 +1159,6 @@
                 { facingMode: "environment" },
                 {
                     fps: 12,
-                    // 正方形取景框（只扫二维码）
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
                         var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                         var size = Math.floor(minEdge * 0.7);
@@ -1125,7 +1168,7 @@
                     disableFlip: true
                 },
                 onCameraScanSuccess,
-                function(errorMessage) { /* 每帧失败忽略 */ }
+                function(errorMessage) {}
             ).catch(function(err) {
                 cameraRunning = false;
                 showCameraError('无法启动摄像头：' + (err && err.message ? err.message : err));
@@ -1156,19 +1199,16 @@
 
     function onCameraScanSuccess(decodedText, decodedResult) {
         var now = Date.now();
-        // 冷却期（避免同一条码每帧都触发）
         if (now < cameraCooldownUntil) return;
 
         var clean = (decodedText || '').trim();
         var digits = clean.replace(/\D/g, '');
         if (digits.length >= ORDER_LENGTH) digits = digits.slice(0, ORDER_LENGTH);
 
-        // 同一条码 1.5s 内不重复计数
         if (digits && digits === lastCameraCode && (now - lastCameraCodeTime) < 1500) {
             return;
         }
 
-        // 命中反馈
         flashCameraFrame();
         if (isValidOrderNo(digits)) {
             playScanHitSound();
@@ -1178,13 +1218,15 @@
 
         lastCameraCode = digits;
         lastCameraCodeTime = now;
-        cameraCooldownUntil = now + 1200; // 冷却 1.2s，可连续扫不同码
+        cameraCooldownUntil = now + 1200;
 
         if (isValidOrderNo(digits)) {
             lastCameraResult = { ok: true, code: digits };
             updateCameraLast(lastCameraResult);
-            // 直接进入计数逻辑，不关闭摄像头，继续扫下一张
-            addBox(digits, 'camera');
+            
+            setTimeout(function() {
+                addBox(digits, 'camera');
+            }, 150);
         } else {
             lastCameraResult = { ok: false, raw: clean };
             updateCameraLast(lastCameraResult);
@@ -1265,6 +1307,7 @@
     }
 
     function openOrderModal() {
+        if (cameraRunning) closeCameraModal(true);
         orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
         updateOrderDisplay();
         orderModalOverlay.classList.add('show');
@@ -1404,6 +1447,7 @@
     }
 
     function openEstimateModal(barcode) {
+        if (cameraRunning) closeCameraModal(true);
         modalMode = 'estimate';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1425,6 +1469,7 @@
     }
 
     function openEditActualModal(barcode) {
+        if (cameraRunning) closeCameraModal(true);
         modalMode = 'actual';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1447,6 +1492,7 @@
     }
 
     function openEditEstimateModal(barcode) {
+        if (cameraRunning) closeCameraModal(true);
         modalMode = 'edit-estimate';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1575,6 +1621,8 @@
 
     // ========== 超量警告（必须二选一） ==========
     function triggerOverWarn(barcode, actual, estimate) {
+        if (cameraRunning) closeCameraModal(true);
+
         var alreadyOpen = warnModalOverlay.classList.contains('show');
 
         if (alreadyOpen && currentWarnBarcode === barcode) {
@@ -1769,7 +1817,14 @@
 
     // ========== 核心扫码逻辑 ==========
     function addBox(barcode, source) {
-        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
+        // ✅ 核心修复：只要有任意弹窗显示，就拦截扫码
+        if (modalOverlay.classList.contains('show') || 
+            orderModalOverlay.classList.contains('show') || 
+            summaryOverlay.classList.contains('show') || 
+            warnModalOverlay.classList.contains('show') || 
+            locateInputModalOverlay.classList.contains('show') ||
+            locateModalOverlay.classList.contains('show') ||
+            cameraModalOverlay.classList.contains('show')) {
             setStatusMessage('弹窗打开中，扫码已锁定', true);
             return false;
         }
@@ -2256,7 +2311,7 @@
         updateLocateStatusUI();
         updateLocateDisplay();
         renderTable();
-        console.log('初始化完成 - 连续扫码正方形版');
+        console.log('初始化完成 - 全弹窗锁定版');
     }
 
     init();
