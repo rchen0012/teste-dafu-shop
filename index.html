@@ -3,569 +3,526 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>扫码器 - 箱子计数（全虚拟键盘输入）</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>扫码器 - 箱子计数（第2箱必弹窗填预估）</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
         html, body {
-            margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Helvetica Neue', sans-serif;
-            background: #f1f5f9;
-            min-height: 100vh;
-            color: #0a2540;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
         body {
-            padding: 12px 12px calc(96px + env(safe-area-inset-bottom, 0px));
-            display: flex; justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            font-size: 14px;
         }
         .card {
-            max-width: 640px;
+            max-width: 1200px;
             width: 100%;
             background: white;
             border-radius: 24px;
-            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
-        .inner { padding: 16px; }
-
-        .top-bar {
+        .inner { padding: 16px 18px 22px; }
+        .logo-area {
             display: flex; align-items: center; justify-content: space-between;
-            gap: 10px; margin-bottom: 14px;
+            margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
         }
         .logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .logo-img {
-            width: 38px; height: 38px; flex-shrink: 0;
+            width: 40px; height: 40px; flex-shrink: 0;
             background: linear-gradient(135deg, #0f62fe 0%, #1e3a5f 100%);
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 20px;
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 20px;
         }
-        .logo-text { font-size: 0.95rem; font-weight: 700; color: #1e3a5f; line-height: 1.2; }
-        .logo-text small { font-size: 0.6rem; font-weight: 400; color: #6c86a3; display: block; margin-top: 2px; }
-        .sound-toggle {
-            background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155;
-            font-size: 0.7rem; padding: 6px 12px; border-radius: 20px;
-            cursor: pointer; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+        .logo-text { font-size: 1rem; font-weight: 700; color: #1e3a5f; line-height: 1.2; }
+        .logo-text small { font-size: 0.6rem; font-weight: 400; color: #6c86a3; display: block; }
+        .company-info { text-align: right; font-size: 0.72rem; line-height: 1.4; }
+        .company-name { color: #8ba0bc; }
+        .company-name strong { color: #1e3a5f; }
+        h1 {
+            font-size: 1.25rem; margin: 0 0 6px 0; color: #0a2540;
+            display: flex; align-items: center; gap: 8px;
+            flex-wrap: wrap; justify-content: space-between; line-height: 1.3;
         }
-        .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-
-        .scan-box {
-            background: #f8fafd; border: 1px solid #e2edf7;
-            border-radius: 18px; padding: 12px; margin-bottom: 14px;
+        .badge {
+            background: #e6f7e6; color: #2e7d32; font-size: 0.65rem;
+            padding: 3px 10px; border-radius: 40px; font-weight: 500;
+            white-space: nowrap;
         }
+        .sub {
+            color: #4a5b6e; border-left: 3px solid #0f62fe;
+            padding-left: 10px; margin: 6px 0 14px 0; font-size: 0.78rem;
+            line-height: 1.5;
+        }
+        .scan-panel {
+            background: #f8fafd; border-radius: 18px; padding: 14px;
+            margin-bottom: 14px; border: 1px solid #e2edf7;
+        }
+        .scan-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; color: #1e3a5f; }
+        .scan-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .barcode-input {
-            width: 100%; background: white; border: 2px solid #cbdde9;
-            border-radius: 12px; padding: 14px 16px; font-size: 16px;
+            flex: 1 1 220px; min-width: 0; background: white; border: 2px solid #cbdde9;
+            border-radius: 60px; padding: 11px 16px; font-size: 1rem;
             font-family: 'Courier New', monospace; outline: none;
-            transition: 0.15s; margin-bottom: 10px;
+            letter-spacing: 1px;
         }
-        .barcode-input:focus {
-            border-color: #0f62fe;
-            box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
+        .barcode-input:focus { border-color: #0f62fe; box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.1); }
+        .barcode-input.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; background: #fff5f5; }
+        .barcode-input.success { border-color: #16a34a; background: #f0fdf4; }
+        .btn-primary {
+            background: #0f62fe; border: none; color: white; font-weight: 600;
+            padding: 0 20px; height: 44px; border-radius: 60px; font-size: 0.85rem;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
         }
-        .scan-btns {
-            display: grid; grid-template-columns: 2fr 1fr; gap: 8px;
+        .btn-primary:hover { background: #0353e9; }
+        .btn-secondary {
+            background: #eef2f6; border: 1px solid #ccdae5; color: #2c3e50;
+            font-weight: 500; padding: 0 16px; height: 40px; border-radius: 60px;
+            cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0;
         }
-        .btn {
-            height: 46px; border-radius: 12px; border: none;
-            font-size: 0.9rem; font-weight: 700;
-            cursor: pointer; transition: 0.15s; font-family: inherit;
+        .btn-success {
+            background: #16a34a; border: none; color: white; font-weight: 700;
+            padding: 0 22px; height: 46px; border-radius: 60px; font-size: 0.9rem; cursor: pointer;
+            box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.4); white-space: nowrap;
         }
-        .btn:active { transform: scale(0.97); }
-        .btn-primary { background: #0f62fe; color: white; }
-        .btn-primary:active { background: #0353e9; }
-        .btn-secondary { background: #eef2f6; color: #2c3e50; border: 1px solid #ccdae5; }
-
+        .btn-success:hover { background: #15803d; }
         .status {
-            margin-top: 10px; background: #e9f3fe;
-            padding: 8px 14px; border-radius: 10px;
-            font-size: 0.75rem; color: #0050b3;
+            margin-top: 10px; background: #e9f3fe; padding: 8px 14px;
+            border-radius: 40px; font-size: 0.78rem; color: #0050b3;
             line-height: 1.4; word-break: break-all;
+            transition: all 0.2s;
         }
-
         .diff-summary {
             background: linear-gradient(135deg, #1e3a5f 0%, #0f62fe 100%);
-            border-radius: 16px; padding: 12px 10px; margin-bottom: 14px;
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 6px; color: white;
+            border-radius: 16px; padding: 12px 14px; margin-bottom: 14px;
+            display: flex; justify-content: space-around; align-items: center;
+            flex-wrap: wrap; gap: 8px; color: white;
         }
-        .diff-item { text-align: center; padding: 4px 0; }
-        .diff-item .lbl { font-size: 0.65rem; opacity: 0.85; margin-bottom: 4px; }
-        .diff-item .val { font-size: 1.3rem; font-weight: 800; line-height: 1; }
-
-        .list-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 4px 8px; gap: 8px;
+        .diff-summary-item { text-align: center; flex: 1; min-width: 70px; }
+        .diff-summary-item .label { font-size: 0.65rem; opacity: 0.85; margin-bottom: 3px; }
+        .diff-summary-item .value { font-size: 1.25rem; font-weight: 700; }
+        .stats-card {
+            background: white; border-radius: 16px;
+            border: 1px solid #e9edf2; overflow: hidden;
         }
-        .list-title { font-size: 0.9rem; font-weight: 700; color: #0a2540; }
-        .list-title small { font-size: 0.65rem; color: #6c86a3; font-weight: 400; margin-left: 6px; }
+        .stats-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; background: #e8f0fe;
+            border-bottom: 1px solid #bdd4ff; flex-wrap: wrap; gap: 8px;
+        }
+        .stats-header h3 { margin: 0; font-size: 0.9rem; }
         .clear-btn {
             background: none; border: none; color: #c2410c; font-weight: 600;
-            cursor: pointer; padding: 6px 10px; border-radius: 20px; font-size: 0.7rem;
-            font-family: inherit;
+            cursor: pointer; padding: 4px 10px; border-radius: 30px; font-size: 0.72rem;
         }
-        .clear-btn:active { background: #fff1f0; }
-
-        .list-container { display: flex; flex-direction: column; gap: 8px; }
-
-        .box-card {
-            background: white; border: 1px solid #e9edf2;
-            border-radius: 14px; padding: 12px; transition: 0.15s;
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 55vh;
+            -webkit-overflow-scrolling: touch;
         }
-        .box-card.error { background: #fff8f8; border-color: #fca5a5; }
-        .box-card.over {
-            background: #fff1f0; border-color: #ef4444;
-            box-shadow: 0 0 0 1px #ef4444 inset;
+        table {
+            width: 100%;
+            min-width: 640px;
+            border-collapse: collapse;
+            font-size: 0.75rem;
         }
-
-        .card-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .card-barcode {
-            flex: 1; font-family: 'Courier New', monospace;
-            font-size: 0.82rem; font-weight: 700; color: #0a2540;
-            word-break: break-all; line-height: 1.3; min-width: 0;
+        th {
+            text-align: left; padding: 9px 8px; background: #f9fbfd;
+            border-bottom: 1px solid #e2e8f0; position: sticky; top: 0;
+            white-space: nowrap; font-size: 0.72rem; z-index: 2;
         }
-        .box-card.error .card-barcode { color: #b91c1c; }
-        .box-card.over .card-barcode { color: #b91c1c; }
+        td {
+            padding: 9px 8px; border-bottom: 1px solid #edf2f7;
+            white-space: nowrap; vertical-align: middle;
+        }
+        .barcode-cell {
+            font-family: 'Courier New', monospace;
+            word-break: break-all; font-size: 0.72rem;
+            max-width: 180px; white-space: normal;
+        }
+        .count-badge {
+            background: #0f62fe10; color: #0f62fe; font-weight: 800;
+            padding: 2px 10px; border-radius: 40px; display: inline-block;
+        }
+        .estimate-value { font-weight: 600; color: #b45309; }
         .diff-badge {
-            flex-shrink: 0; padding: 4px 10px;
-            border-radius: 20px; font-size: 0.7rem;
-            font-weight: 700; white-space: nowrap;
+            display: inline-block; padding: 2px 8px; border-radius: 20px;
+            font-size: 0.68rem; font-weight: 600; white-space: nowrap;
         }
         .diff-match { background: #dcfce7; color: #166534; }
         .diff-mismatch { background: #fee2e2; color: #b91c1c; }
-        .diff-over { background: #dc2626; color: white; }
-
-        .card-row2 {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 8px; margin-bottom: 10px;
-        }
-        .num-box {
-            background: #f8fafc; border-radius: 10px;
-            padding: 8px 10px; text-align: center;
-            border: 1px solid #edf2f7;
-        }
-        .num-box .lbl { font-size: 0.62rem; color: #64748b; margin-bottom: 2px; }
-        .num-box .val { font-size: 1.15rem; font-weight: 800; line-height: 1; }
-        .num-est .val { color: #b45309; }
-        .num-act .val { color: #0f62fe; }
-        .box-card.error .num-act { background: #fef2f2; border-color: #fecaca; }
-        .box-card.error .num-act .val { color: #b91c1c; }
-        .box-card.over .num-act { background: #fee2e2; border-color: #fca5a5; }
-        .box-card.over .num-act .val { color: #dc2626; font-weight: 900; }
-
-        .card-row3 {
-            display: grid; grid-template-columns: 44px 44px 1fr 1fr; gap: 6px;
+        .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
+        .row-error td { border-bottom: 1px solid #fecaca; }
+        .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
+        .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
+        .error-icon { display: inline-block; margin-left: 3px; font-size: 0.8rem; animation: shake 0.5s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
         }
         .adjust-btn {
-            height: 38px; border-radius: 10px; border: none;
-            font-size: 1.1rem; font-weight: 800; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.1s; font-family: inherit;
+            width: 26px; height: 26px; border-radius: 50%; border: none;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: 0.1s; user-select: none;
         }
-        .adjust-btn:active { transform: scale(0.92); }
         .adjust-plus { background: #dcfce7; color: #166534; }
         .adjust-minus { background: #fee2e2; color: #b91c1c; }
+        .adjust-btn:active { transform: scale(0.9); }
+        .action-group { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
         .edit-btn {
-            height: 38px; border-radius: 10px; border: 1px solid;
-            font-size: 0.72rem; font-weight: 700; cursor: pointer;
-            transition: 0.1s; font-family: inherit; background: none;
+            background: none; border: 1px solid #0f62fe; color: #0f62fe;
+            font-size: 0.66rem; padding: 3px 8px; border-radius: 20px; cursor: pointer;
+            font-weight: 600; white-space: nowrap;
         }
-        .edit-btn:active { transform: scale(0.97); }
         .edit-est-btn { border-color: #b45309; color: #b45309; }
-        .edit-act-btn { border-color: #0f62fe; color: #0f62fe; }
-
-        .empty-card {
-            text-align: center; padding: 50px 16px; color: #8ba0bc;
-            font-size: 0.85rem; background: #fafbfc;
-            border-radius: 14px; border: 1px dashed #e2e8f0;
+        .total-row { background: #f1f5f9; font-weight: 700; }
+        .empty-row td { text-align: center; padding: 36px 16px; color: #8ba0bc; white-space: normal; }
+        .footer-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .shortcut-hint {
+            font-size: 0.62rem; color: #5f7d9c; margin-top: 6px;
+            padding: 4px 10px; background: #f0f4f9; border-radius: 20px; display: inline-block;
+            line-height: 1.5;
         }
-        .empty-card .big { font-size: 2rem; display: block; margin-bottom: 8px; }
-
-        .footer-bar {
-            position: fixed; left: 0; right: 0; bottom: 0;
-            background: white; border-top: 1px solid #e2e8f0;
-            padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-            display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;
-            z-index: 500; box-shadow: 0 -4px 20px -6px rgba(0, 0, 0, 0.08);
+        .sound-toggle {
+            background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155;
+            font-size: 0.68rem; padding: 4px 10px; border-radius: 20px;
+            cursor: pointer; font-weight: 600; white-space: nowrap;
         }
-        .footer-bar .btn { height: 48px; font-size: 0.95rem; }
-        .btn-success { background: #16a34a; color: white; }
-        .btn-success:active { background: #15803d; }
+        .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-            display: none; align-items: flex-end; justify-content: center;
-            z-index: 1000; padding: 0;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         }
         .modal-overlay.show { display: flex; }
-
         .modal-box {
-            background: white; border-radius: 24px 24px 0 0;
-            padding: 20px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-            width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
-            animation: slideUp 0.28s ease-out;
-            box-shadow: 0 -20px 40px -10px rgba(0, 0, 0, 0.25);
+            background: white; border-radius: 22px; padding: 20px 18px 18px;
+            max-width: 380px; width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            animation: modalPop 0.25s ease-out;
+            max-height: calc(100vh - 24px);
+            max-height: calc(100dvh - 24px);
+            overflow-y: auto;
         }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .modal-handle {
-            width: 40px; height: 4px; background: #cbd5e1;
-            border-radius: 4px; margin: 0 auto 14px;
+        @keyframes modalPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         .modal-icon {
-            width: 52px; height: 52px; background: #fef3c7;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 26px; margin: 0 auto 10px;
-        }
-        .modal-title {
-            font-size: 1.1rem; font-weight: 800; color: #1e293b;
-            text-align: center; margin-bottom: 6px;
-        }
-        .modal-barcode {
-            font-family: 'Courier New', monospace; font-size: 0.78rem;
-            color: #0f62fe; background: #eff6ff;
-            padding: 6px 12px; border-radius: 8px;
-            text-align: center; margin-bottom: 10px; word-break: break-all;
-        }
-        .modal-desc {
-            font-size: 0.78rem; color: #64748b; text-align: center;
-            margin-bottom: 14px; line-height: 1.5;
-        }
-        .modal-desc strong { color: #0f62fe; }
-
-        .modal-display {
-            background: #f8fafc; border: 2px solid #e2e8f0;
-            border-radius: 14px; padding: 8px 16px; text-align: center;
-            font-size: 2.4rem; font-weight: 800; color: #0f62fe;
-            letter-spacing: 2px; min-height: 72px;
+            width: 46px; height: 46px; background: #fef3c7; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 8px; cursor: default;
-            font-family: 'Courier New', monospace; transition: 0.15s;
-            user-select: none; -webkit-user-select: none;
-            pointer-events: none;
+            font-size: 24px; margin: 0 auto 10px;
+        }
+        .modal-title { font-size: 1.05rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
+        .modal-barcode {
+            font-family: 'Courier New', monospace; font-size: 0.82rem; color: #0f62fe;
+            background: #eff6ff; padding: 7px 14px; border-radius: 10px;
+            text-align: center; margin-bottom: 10px; word-break: break-all;
+            font-weight: 700; letter-spacing: 1px;
+        }
+        .modal-desc { font-size: 0.78rem; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.5; }
+        .modal-desc strong { color: #0f62fe; }
+        .modal-display {
+            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px;
+            padding: 10px 16px; text-align: center; font-size: 2rem;
+            font-weight: 800; color: #0f62fe; letter-spacing: 2px;
+            min-height: 62px; display: flex; align-items: center;
+            justify-content: center; margin-bottom: 12px; transition: 0.2s;
+            cursor: pointer; font-family: 'Courier New', monospace;
         }
         .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
         .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .keypad {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; margin-bottom: 12px;
-        }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 10px; }
         .key {
-            background: #f1f5f9; border: none; border-radius: 14px;
-            padding: 16px 0; font-size: 1.5rem; font-weight: 700;
-            color: #1e293b; cursor: pointer; transition: 0.1s;
-            user-select: none; font-family: inherit; min-height: 56px;
+            background: #f1f5f9; border: none; border-radius: 12px;
+            padding: 14px 0; font-size: 1.3rem; font-weight: 700; color: #1e293b;
+            cursor: pointer; transition: 0.1s; user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .key:active { background: #cbd5e1; transform: scale(0.96); }
+        .key:active { background: #cbd5e1; transform: scale(0.95); }
         .key-func { background: #e0e7ff; color: #3730a3; font-size: 0.95rem; }
-        .key-delete { background: #fee2e2; color: #b91c1c; font-size: 1.3rem; }
-
-        .modal-buttons {
-            display: grid; grid-template-columns: 1fr 2fr; gap: 8px;
-        }
+        .key-delete { background: #fee2e2; color: #b91c1c; font-size: 1.15rem; }
+        .modal-buttons { display: flex; gap: 8px; margin-top: 4px; }
         .modal-btn {
-            padding: 14px; border-radius: 14px; border: none;
-            font-size: 1rem; font-weight: 700; cursor: pointer;
-            transition: 0.15s; font-family: inherit; min-height: 50px;
+            flex: 1; padding: 13px; border-radius: 14px; border: none;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
-        .modal-btn:active { transform: scale(0.98); }
-        .modal-btn-confirm { background: #0f62fe; color: white; }
-        .modal-btn-confirm:active { background: #0353e9; }
-        .modal-btn-confirm:disabled {
-            background: #cbd5e1; color: #94a3b8; cursor: not-allowed;
-        }
+        .modal-btn-confirm { background: #0f62fe; color: white; flex: 2; }
+        .modal-btn-confirm:active { transform: scale(0.98); }
         .modal-btn-cancel { background: #f1f5f9; color: #475569; }
 
+        .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
         .summary-header-icon {
-            width: 60px; height: 60px;
+            width: 54px; height: 54px;
             background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 30px; margin: 0 auto 10px; color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 10px;
+            color: white;
             box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5);
         }
-        .summary-title {
-            font-size: 1.2rem; font-weight: 800; color: #0a2540;
-            text-align: center; margin-bottom: 4px;
-        }
-        .summary-subtitle {
-            font-size: 0.75rem; color: #64748b;
-            text-align: center; margin-bottom: 14px;
-        }
-        .summary-stats {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 6px; margin-bottom: 14px;
-        }
+        .summary-title { font-size: 1.2rem; font-weight: 800; color: #0a2540; text-align: center; margin-bottom: 4px; }
+        .summary-subtitle { font-size: 0.76rem; color: #64748b; text-align: center; margin-bottom: 14px; }
+        .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
         .summary-stat {
             background: #f8fafc; border-radius: 12px;
-            padding: 8px 4px; text-align: center; border: 1px solid #e2e8f0;
+            padding: 8px 6px; text-align: center;
+            border: 1px solid #e2e8f0;
         }
         .summary-stat .lbl { font-size: 0.62rem; color: #64748b; margin-bottom: 2px; }
-        .summary-stat .val { font-size: 1.15rem; font-weight: 800; color: #0f62fe; line-height: 1; }
+        .summary-stat .val { font-size: 1.15rem; font-weight: 800; color: #0f62fe; }
         .summary-stat.diff-ok .val { color: #16a34a; }
         .summary-stat.diff-bad .val { color: #dc2626; }
-
         .summary-list-title {
-            font-size: 0.8rem; font-weight: 700; color: #0a2540;
-            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+            font-size: 0.78rem; font-weight: 700; color: #0a2540;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
         }
-        .count-tag {
+        .summary-list-title .count-tag {
             background: #fee2e2; color: #b91c1c;
-            font-size: 0.7rem; padding: 1px 8px; border-radius: 20px;
+            font-size: 0.66rem; padding: 1px 8px; border-radius: 20px;
             font-weight: 700;
         }
         .summary-list {
             max-height: 240px; overflow-y: auto;
             border: 1px solid #e2e8f0; border-radius: 12px;
             margin-bottom: 14px; background: #fafbfc;
+            -webkit-overflow-scrolling: touch;
         }
-        .summary-list::-webkit-scrollbar { width: 4px; }
-        .summary-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         .summary-item {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 12px; border-bottom: 1px solid #edf2f7; gap: 8px;
+            padding: 9px 11px; border-bottom: 1px solid #edf2f7;
+            gap: 8px;
         }
         .summary-item:last-child { border-bottom: none; }
         .summary-item-code {
             font-family: 'Courier New', monospace; font-size: 0.72rem;
-            color: #0a2540; word-break: break-all;
-            flex: 1; font-weight: 600; min-width: 0;
+            color: #0a2540; word-break: break-all; flex: 1; font-weight: 600;
         }
-        .summary-item-nums { display: flex; gap: 4px; flex-shrink: 0; }
+        .summary-item-nums { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
         .summary-num-chip {
-            font-size: 0.65rem; padding: 3px 7px;
-            border-radius: 20px; font-weight: 700; white-space: nowrap;
+            font-size: 0.66rem; padding: 2px 7px; border-radius: 20px;
+            font-weight: 700; white-space: nowrap;
         }
         .chip-est { background: #fef3c7; color: #b45309; }
         .chip-act { background: #dbeafe; color: #0f62fe; }
         .chip-diff-bad { background: #fee2e2; color: #b91c1c; }
-        .chip-over { background: #dc2626; color: white; }
-
         .summary-all-good {
-            text-align: center; padding: 30px 16px;
-            color: #16a34a; font-size: 0.88rem; font-weight: 600;
+            text-align: center; padding: 26px 14px;
+            color: #16a34a; font-size: 0.85rem; font-weight: 600;
         }
-        .summary-all-good .big { font-size: 2.4rem; display: block; margin-bottom: 8px; }
-
-        .summary-actions {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
-        }
-        .summary-actions .modal-btn {
-            padding: 12px 4px; font-size: 0.82rem; min-height: 46px;
-        }
-        .btn-export-in-summary { background: #f0f4f9; color: #334155; border: 1px solid #cbd5e1; }
+        .summary-all-good .big { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+        .summary-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+        .summary-actions .modal-btn { padding: 11px 12px; font-size: 0.85rem; flex: 1 1 0; min-width: 70px; }
         .btn-continue { background: #0f62fe; color: white; }
         .btn-finish { background: #dc2626; color: white; }
+        .btn-export-in-summary { background: #f0f4f9; color: #334155; border: 1px solid #cbd5e1; }
 
-        .over-warn-icon {
-            width: 72px; height: 72px;
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 38px; margin: 0 auto 12px; color: white;
-            box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.6);
-            animation: pulseWarn 1.2s ease-in-out infinite;
-        }
-        @keyframes pulseWarn {
-            0%, 100% { transform: scale(1); box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.6); }
-            50% { transform: scale(1.08); box-shadow: 0 8px 32px -4px rgba(220, 38, 38, 0.9); }
-        }
-        .over-warn-title {
-            font-size: 1.35rem; font-weight: 900; color: #dc2626;
-            text-align: center; margin-bottom: 10px; letter-spacing: 1px;
-        }
-        .over-warn-desc {
-            background: #fef2f2; border: 1px solid #fecaca;
-            border-radius: 14px; padding: 14px;
-            margin-bottom: 16px; text-align: center;
-        }
-        .over-warn-barcode {
-            font-family: 'Courier New', monospace; font-size: 0.85rem;
-            color: #b91c1c; word-break: break-all; font-weight: 700; margin-bottom: 10px;
-        }
-        .over-warn-nums {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; margin-top: 10px;
-        }
-        .over-warn-num {
-            background: white; border-radius: 10px; padding: 8px 4px;
-            text-align: center; border: 1px solid #fecaca;
-        }
-        .over-warn-num .lbl { font-size: 0.62rem; color: #991b1b; margin-bottom: 2px; }
-        .over-warn-num .val { font-size: 1.2rem; font-weight: 900; color: #dc2626; line-height: 1; }
-        .over-warn-num.est .val { color: #b45309; }
-        .over-warn-num.act .val { color: #dc2626; }
-        .over-warn-num.over .val { color: #fff; background: #dc2626; padding: 2px 8px; border-radius: 8px; display: inline-block; }
+        @media (max-width: 700px) {
+            body {
+                padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+                align-items: flex-start;
+                font-size: 13px;
+            }
+            .card { border-radius: 18px; }
+            .inner { padding: 12px 12px 16px; }
+            .logo-area { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .company-info { text-align: left; }
+            h1 { font-size: 1.05rem; }
+            .badge { font-size: 0.6rem; padding: 2px 8px; }
+            .sub { font-size: 0.72rem; margin: 4px 0 10px 0; }
+            .scan-panel { padding: 10px; border-radius: 14px; margin-bottom: 10px; }
+            .scan-input-area { gap: 6px; }
+            .barcode-input { flex: 1 1 100%; font-size: 0.95rem; padding: 10px 14px; }
+            .btn-primary, .btn-secondary { height: 40px; font-size: 0.8rem; padding: 0 14px; flex: 1; min-width: 0; }
+            .btn-success { width: 100%; }
+            .diff-summary { padding: 10px; margin-bottom: 10px; }
+            .diff-summary-item .value { font-size: 1.05rem; }
+            .stats-header { padding: 8px 10px; }
+            .stats-header h3 { font-size: 0.82rem; }
+            .clear-btn { font-size: 0.68rem; }
+            .table-wrapper { max-height: 50vh; }
+            table { font-size: 0.72rem; min-width: 580px; }
+            th, td { padding: 7px 6px; }
+            .footer-buttons { flex-direction: column; gap: 6px; }
+            .footer-buttons button { width: 100%; }
+            .shortcut-hint { font-size: 0.58rem; padding: 4px 8px; }
 
-        .over-warn-actions { display: flex; gap: 8px; }
-        .over-warn-actions .modal-btn { flex: 1; min-height: 50px; }
-        .btn-ignore-over { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .btn-fix-over { background: #0f62fe; color: white; }
+            .modal-box { padding: 16px 14px 14px; border-radius: 18px; max-width: 100%; }
+            .modal-title { font-size: 0.98rem; }
+            .modal-barcode { font-size: 0.78rem; padding: 6px 10px; }
+            .modal-desc { font-size: 0.73rem; }
+            .modal-display { font-size: 1.8rem; min-height: 58px; }
+            .keypad { gap: 6px; }
+            .key { padding: 13px 0; font-size: 1.2rem; }
+            .modal-btn { padding: 12px; font-size: 0.9rem; }
 
-        .input-hint {
-            font-size: 0.68rem;
-            color: #6c86a3;
-            text-align: center;
-            margin-top: 4px;
-            margin-bottom: 12px;
-            line-height: 1.3;
-        }
-        .input-hint .limit-tag {
-            background: #f0f4f9; color: #475569;
-            padding: 1px 6px; border-radius: 10px;
-            font-weight: 700; font-family: 'Courier New', monospace;
-        }
-        .input-hint.error {
-            color: #dc2626; font-weight: 700;
-            animation: blinkErr 0.5s ease-in-out 2;
-        }
-        .input-hint.error .limit-tag { background: #fee2e2; color: #b91c1c; }
-        @keyframes blinkErr {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        .modal-display.warn-limit {
-            background: #fef2f2;
-            border-color: #ef4444;
-            color: #dc2626;
+            .summary-modal { padding: 18px 14px 14px !important; }
+            .summary-title { font-size: 1.1rem; }
+            .summary-stats { grid-template-columns: repeat(3, 1fr); }
+            .summary-stat .val { font-size: 1rem; }
+            .summary-list { max-height: 200px; }
+            .summary-item { padding: 8px 9px; }
+            .summary-item-code { font-size: 0.68rem; }
         }
 
-        @media (min-width: 701px) {
-            body { padding: 20px 16px; }
-            .inner { padding: 20px 24px 28px; }
-            .top-bar { margin-bottom: 12px; }
-            .logo-text { font-size: 1.1rem; }
-            .logo-img { width: 44px; height: 44px; font-size: 22px; }
-            .scan-box { padding: 18px; }
-            .barcode-input { padding: 12px 18px; font-size: 0.95rem; margin-bottom: 0; }
-            .scan-btns { display: flex; gap: 10px; }
-            .scan-btns .btn { height: 48px; }
-            .scan-btns .btn-primary { padding: 0 24px; flex: 3; }
-            .scan-btns .btn-secondary { padding: 0 18px; flex: 0 0 auto; }
-            .diff-summary { padding: 14px 20px; }
-            .diff-item .val { font-size: 1.4rem; }
-            .list-container { display: block; }
-            .box-card {
-                display: grid;
-                grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
-                align-items: center; gap: 12px; padding: 10px 12px;
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 6px 12px;
+                align-items: flex-start;
             }
-            .box-card .card-row1 { margin-bottom: 0; }
-            .box-card .card-row2 {
-                grid-template-columns: 1fr 1fr; margin-bottom: 0; gap: 8px;
-            }
-            .box-card .card-row3 {
-                display: flex; justify-content: flex-end;
-                grid-template-columns: none; gap: 4px;
-            }
-            .box-card .num-box { background: none; border: none; padding: 0; text-align: left; }
-            .box-card .num-box .lbl { display: inline; font-size: 0.7rem; }
-            .box-card .num-box .val { font-size: 0.95rem; }
-            .card-barcode { font-size: 0.78rem; }
-            .diff-badge { font-size: 0.7rem; }
-            .adjust-btn { width: 28px; height: 28px; border-radius: 50%; font-size: 1rem; }
-            .edit-btn { height: 28px; padding: 0 10px; border-radius: 20px; }
-            .footer-bar {
-                position: static; background: none; border: none;
-                padding: 0; box-shadow: none;
-                display: flex; justify-content: flex-end; gap: 10px;
-                margin-top: 20px; grid-template-columns: none;
-            }
-            .footer-bar .btn { height: 48px; width: auto; padding: 0 24px; }
-            .modal-overlay { align-items: center; padding: 16px; }
-            .modal-box {
-                border-radius: 28px; padding: 22px 20px 20px;
-                max-width: 400px; animation: modalPop 0.25s ease-out;
-            }
-            @keyframes modalPop {
-                from { transform: scale(0.9); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-            }
-            .modal-handle { display: none; }
-            .keypad { gap: 8px; }
-            .key { padding: 16px 0; font-size: 1.4rem; min-height: 0; }
-            .modal-buttons { display: flex; gap: 10px; }
-            .modal-btn { padding: 14px; flex: 1; }
-            .modal-btn-confirm { flex: 2; }
-            .summary-modal { max-width: 520px !important; padding: 24px 20px 20px !important; }
-            .summary-actions { display: flex; gap: 10px; }
-            .summary-actions .modal-btn { padding: 13px 16px; font-size: 0.9rem; flex: 1; }
-            .over-warn-modal { max-width: 460px !important; }
+            .inner { padding: 10px 14px 14px; }
+            h1 { font-size: 1rem; }
+            .scan-panel { padding: 8px 10px; margin-bottom: 8px; }
+            .diff-summary { padding: 8px 12px; margin-bottom: 8px; }
+            .table-wrapper { max-height: 38vh; }
+            .modal-box { max-width: 480px; padding: 14px 16px; }
+            .modal-display { min-height: 50px; font-size: 1.6rem; }
+            .key { padding: 10px 0; font-size: 1.05rem; }
+            .keypad { gap: 5px; margin-bottom: 6px; }
+            .modal-buttons { margin-top: 2px; }
+            .modal-btn { padding: 10px; font-size: 0.85rem; }
+        }
+
+        @media (max-width: 360px) {
+            h1 { font-size: 0.95rem; }
+            .logo-text { font-size: 0.88rem; }
+            .scan-panel { padding: 8px; }
+            .diff-summary-item .value { font-size: 0.95rem; }
+            table { min-width: 540px; font-size: 0.68rem; }
+            .key { padding: 11px 0; font-size: 1.1rem; }
+            .summary-actions .modal-btn { font-size: 0.78rem; padding: 10px 8px; }
+        }
+
+        @media (min-width: 1200px) {
+            .inner { padding: 24px 28px 32px; }
+            h1 { font-size: 1.6rem; }
+            .card { border-radius: 32px; }
+            .barcode-input { font-size: 1.05rem; padding: 13px 20px; }
+            .btn-primary { height: 50px; font-size: 0.95rem; }
+            table { font-size: 0.82rem; }
         }
     </style>
 </head>
 <body>
 <div class="card">
     <div class="inner">
-        <div class="top-bar">
+        <div class="logo-area">
             <div class="logo">
                 <div class="logo-img">📦</div>
                 <div class="logo-text">
-                    订单箱数验证
+                    订单箱数验证程序
                     <small>Box Counter System</small>
                 </div>
             </div>
-            <button id="soundToggle" class="sound-toggle" title="开/关提示音">🔊 开</button>
+            <div class="company-info">
+                <div class="company-name">
+                    <strong>预估 vs 实际</strong><br>
+                    8位订单 · 第2箱填预估
+                </div>
+            </div>
         </div>
 
-        <div class="scan-box">
-            <input type="text" id="barcodeInput" class="barcode-input" placeholder="点击输入订单号，扫码后按回车" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            <div class="scan-btns">
-                <button id="addBtn" class="btn btn-primary">➕ 手动累加</button>
-                <button id="clearInputBtn" class="btn btn-secondary">🗑️ 清空</button>
+        <h1>
+            📦 扫码器 · 箱子计数
+            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · 🔊 提示音</span>
+        </h1>
+        <div class="sub">
+            🧾 订单号固定8位数字 | 第1次扫默认实际1+预估1 | 第2次必弹窗填预估（带提示音）| 新码置顶
+        </div>
+
+        <div class="scan-panel">
+            <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（仅限 8 位数字）</span></span>
+                <button id="soundToggle" class="sound-toggle" title="开/关第2次扫描提示音">🔊 提示音：开</button>
+            </div>
+            <div class="scan-input-area">
+                <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码或手输 8 位订单号..." inputmode="numeric" maxlength="8" pattern="\d{8}" autocomplete="off" autofocus>
+                <button id="addBtn" class="btn-primary">➕ 手动累加</button>
+                <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
             </div>
             <div id="statusMsg" class="status">
-                ✅ 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入
+                ✅ 就绪 | 订单号必须为 8 位数字
+            </div>
+            <div class="shortcut-hint">
+                💡 订单号 <b>固定 8 位数字</b> | 第1次扫 → 实际=1，预估=1 | 第2次扫 → 弹窗填预估（🔊） | 第3次起 → 实际+1
             </div>
         </div>
 
         <div class="diff-summary">
-            <div class="diff-item">
-                <div class="lbl">📊 预估</div>
-                <div class="val" id="estimateTotal">0</div>
+            <div class="diff-summary-item">
+                <div class="label">📊 预估总计</div>
+                <div class="value" id="estimateTotal">0</div>
             </div>
-            <div class="diff-item">
-                <div class="lbl">📦 实际</div>
-                <div class="val" id="actualTotal">0</div>
+            <div class="diff-summary-item">
+                <div class="label">📦 实际总计</div>
+                <div class="value" id="actualTotal">0</div>
             </div>
-            <div class="diff-item">
-                <div class="lbl">⚠️ 差异</div>
-                <div class="val" id="diffTotal">0</div>
+            <div class="diff-summary-item">
+                <div class="label">⚠️ 差异</div>
+                <div class="value" id="diffTotal">0</div>
             </div>
         </div>
 
-        <div class="list-header">
-            <div class="list-title">
-                📋 订单清单
-                <small>新扫置顶</small>
+        <div class="stats-card">
+            <div class="stats-header">
+                <h3>📦 箱子清单 <span style="font-size:0.68rem;">(新码置顶 · 8位订单)</span></h3>
+                <button id="clearAllBtn" class="clear-btn">🧹 清空全部</button>
             </div>
-            <button id="clearAllBtn" class="clear-btn">🧹 清空全部</button>
+            <div class="table-wrapper">
+                <table id="boxTable">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>预估</th>
+                            <th>实际</th>
+                            <th>对比</th>
+                            <th>调整</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="empty-row"><td colspan="5">暂无订单记录，请扫码添加</td></tr>
+                    </tbody>
+                    <tfoot id="tableFoot" style="display: none;">
+                        <tr class="total-row"><td><strong>总计</strong></td><th id="estimateFooter">0</th><th id="actualFooter">0</th><th id="diffFooter">0</th><th></th></tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
-        <div class="list-container" id="listContainer">
-            <div class="empty-card">
-                <span class="big">📦</span>
-                暂无订单记录<br>请扫码或手动输入添加
-            </div>
+        <div class="footer-buttons">
+            <button id="exportBtn" class="btn-secondary">📎 导出 CSV</button>
+            <button id="finishBtn" class="btn-success">✅ 完成 (汇总差异)</button>
         </div>
     </div>
 </div>
 
-<div class="footer-bar">
-    <button id="exportBtn" class="btn btn-secondary">📎 导出</button>
-    <button id="finishBtn" class="btn btn-success">✅ 完成 (汇总)</button>
-</div>
-
-<!-- 数字键盘弹窗 -->
+<!-- 弹窗：数字键盘 -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box">
-        <div class="modal-handle"></div>
         <div class="modal-icon" id="modalIcon">🔁</div>
         <div class="modal-title" id="modalTitle">输入预估总数</div>
         <div class="modal-barcode" id="modalBarcode">-</div>
@@ -574,13 +531,9 @@
             请输入该订单的<strong>预估总数</strong>
         </div>
 
-        <div class="modal-display" id="modalDisplay">0</div>
+        <div class="modal-display" id="modalDisplay" tabindex="0">0</div>
 
-        <div class="input-hint" id="inputHint">
-            最多可输入 <span class="limit-tag">999</span> 箱
-        </div>
-
-        <div class="keypad" id="numKeypad">
+        <div class="keypad">
             <button class="key" data-key="1">1</button>
             <button class="key" data-key="2">2</button>
             <button class="key" data-key="3">3</button>
@@ -602,75 +555,9 @@
     </div>
 </div>
 
-<!-- 手动输入订单号虚拟键盘弹窗 -->
-<div class="modal-overlay" id="manualModalOverlay">
-    <div class="modal-box">
-        <div class="modal-handle"></div>
-        <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
-        <div class="modal-title">手动输入订单号</div>
-        <div class="modal-desc" style="margin-top:8px;">
-            请点击下方键盘输入<strong>订单号</strong>
-        </div>
-
-        <div class="modal-display" id="manualDisplay" style="font-size:1.4rem; letter-spacing:1px; word-break:break-all;">请输入订单号</div>
-
-        <!-- ✅ 纯数字键盘 -->
-        <div class="keypad" id="manualKeypad">
-            <button class="key" data-key="1">1</button>
-            <button class="key" data-key="2">2</button>
-            <button class="key" data-key="3">3</button>
-            <button class="key" data-key="4">4</button>
-            <button class="key" data-key="5">5</button>
-            <button class="key" data-key="6">6</button>
-            <button class="key" data-key="7">7</button>
-            <button class="key" data-key="8">8</button>
-            <button class="key" data-key="9">9</button>
-            <button class="key key-func" data-action="clear">清空</button>
-            <button class="key" data-key="0">0</button>
-            <button class="key key-delete" data-action="delete">⌫</button>
-        </div>
-
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" id="manualCancelBtn">取消</button>
-            <button class="modal-btn modal-btn-confirm" id="manualConfirmBtn">确认添加</button>
-        </div>
-    </div>
-</div>
-
-<!-- 超量警告弹窗 -->
-<div class="modal-overlay" id="overWarnOverlay">
-    <div class="modal-box over-warn-modal">
-        <div class="modal-handle"></div>
-        <div class="over-warn-icon">⚠️</div>
-        <div class="over-warn-title">实际数量已超出预估！</div>
-        <div class="over-warn-desc">
-            <div class="over-warn-barcode" id="overWarnBarcode">-</div>
-            <div class="over-warn-nums">
-                <div class="over-warn-num est">
-                    <div class="lbl">预估</div>
-                    <div class="val" id="overWarnEst">0</div>
-                </div>
-                <div class="over-warn-num act">
-                    <div class="lbl">实际</div>
-                    <div class="val" id="overWarnAct">0</div>
-                </div>
-                <div class="over-warn-num over">
-                    <div class="lbl">超出</div>
-                    <div class="val" id="overWarnOver">+0</div>
-                </div>
-            </div>
-        </div>
-        <div class="over-warn-actions">
-            <button class="modal-btn btn-ignore-over" id="overIgnoreBtn">忽略继续</button>
-            <button class="modal-btn btn-fix-over" id="overFixBtn">修改预估</button>
-        </div>
-    </div>
-</div>
-
 <!-- 完成汇总弹窗 -->
 <div class="modal-overlay" id="summaryOverlay">
     <div class="modal-box summary-modal">
-        <div class="modal-handle"></div>
         <div class="summary-header-icon">✅</div>
         <div class="summary-title">任务完成汇总</div>
         <div class="summary-subtitle" id="summarySubtitle">以下为有差异的订单清单</div>
@@ -710,23 +597,18 @@
 </div>
 
 <script>
-    // ========== 配置 ==========
-    var MAX_ESTIMATE = 999;
-    var MAX_INPUT_DIGITS = 5;
-
-    // ========== 数据 ==========
+    // ========== 数据存储 ==========
     var boxData = new Map();
     var currentBarcode = null;
     var modalInputValue = '';
     var modalMode = 'estimate';
     var lastAddTime = 0;
     var scanSeq = 0;
+    var ORDER_LENGTH = 8;   // ✅ 订单号固定 8 位
 
+    // ========== 提示音控制 ==========
     var soundEnabled = true;
     var audioCtx = null;
-
-    // ✅ 手动输入状态
-    var manualInputValue = '';
 
     // ========== DOM ==========
     var barcodeInput = document.getElementById('barcodeInput');
@@ -737,11 +619,15 @@
     var finishBtn = document.getElementById('finishBtn');
     var soundToggle = document.getElementById('soundToggle');
     var statusMsgDiv = document.getElementById('statusMsg');
-    var listContainer = document.getElementById('listContainer');
+    var tableBody = document.getElementById('tableBody');
+    var tableFoot = document.getElementById('tableFoot');
 
     var estimateTotalSpan = document.getElementById('estimateTotal');
     var actualTotalSpan = document.getElementById('actualTotal');
     var diffTotalSpan = document.getElementById('diffTotal');
+    var estimateFooter = document.getElementById('estimateFooter');
+    var actualFooter = document.getElementById('actualFooter');
+    var diffFooter = document.getElementById('diffFooter');
 
     var modalOverlay = document.getElementById('modalOverlay');
     var modalIcon = document.getElementById('modalIcon');
@@ -751,15 +637,6 @@
     var modalDisplay = document.getElementById('modalDisplay');
     var modalConfirmBtn = document.getElementById('modalConfirmBtn');
     var modalCancelBtn = document.getElementById('modalCancelBtn');
-    var inputHint = document.getElementById('inputHint');
-    var numKeypad = document.getElementById('numKeypad');
-
-    // ✅ 手动输入弹窗 DOM
-    var manualModalOverlay = document.getElementById('manualModalOverlay');
-    var manualDisplay = document.getElementById('manualDisplay');
-    var manualKeypad = document.getElementById('manualKeypad');
-    var manualCancelBtn = document.getElementById('manualCancelBtn');
-    var manualConfirmBtn = document.getElementById('manualConfirmBtn');
 
     var summaryOverlay = document.getElementById('summaryOverlay');
     var summarySubtitle = document.getElementById('summarySubtitle');
@@ -773,16 +650,40 @@
     var continueBtn = document.getElementById('continueBtn');
     var finishTaskBtn = document.getElementById('finishTaskBtn');
 
-    var overWarnOverlay = document.getElementById('overWarnOverlay');
-    var overWarnBarcode = document.getElementById('overWarnBarcode');
-    var overWarnEst = document.getElementById('overWarnEst');
-    var overWarnAct = document.getElementById('overWarnAct');
-    var overWarnOver = document.getElementById('overWarnOver');
-    var overIgnoreBtn = document.getElementById('overIgnoreBtn');
-    var overFixBtn = document.getElementById('overFixBtn');
-    var overWarnBarcodeValue = null;
-
     var statusTimer = null;
+
+    // ========== 🔒 订单号校验 ==========
+    function isValidOrderNo(code) {
+        return /^\d{8}$/.test(code);
+    }
+
+    // 过滤输入：仅保留数字，最多8位
+    function sanitizeOrderNo(raw) {
+        if (!raw) return '';
+        var digits = String(raw).replace(/\D/g, '');
+        return digits.slice(0, ORDER_LENGTH);
+    }
+
+    // 实时校验输入框
+    function validateBarcodeInput(showError) {
+        var raw = barcodeInput.value;
+        var clean = sanitizeOrderNo(raw);
+        if (clean !== raw) {
+            barcodeInput.value = clean;
+        }
+        var len = clean.length;
+        if (len === ORDER_LENGTH) {
+            barcodeInput.classList.add('success');
+            barcodeInput.classList.remove('error');
+        } else {
+            barcodeInput.classList.remove('success');
+            if (showError && len > 0) {
+                barcodeInput.classList.add('error');
+                setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
+            }
+        }
+        return len;
+    }
 
     // ========== 🔊 提示音 ==========
     function getAudioContext() {
@@ -790,65 +691,66 @@
             try {
                 var Ctx = window.AudioContext || window.webkitAudioContext;
                 if (Ctx) audioCtx = new Ctx();
-            } catch (e) { console.warn(e); }
+            } catch (e) {}
         }
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume().catch(function(){});
         }
         return audioCtx;
     }
-    function playTone(freq, startTime, duration, volume, type) {
-        var ctx = getAudioContext(); if (!ctx) return;
+
+    function playTone(freq, startTime, duration, volume) {
+        var ctx = getAudioContext();
+        if (!ctx) return;
         var osc = ctx.createOscillator();
         var gain = ctx.createGain();
-        osc.type = type || 'sine';
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, startTime);
         gain.gain.setValueAtTime(0, startTime);
         gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(startTime); osc.stop(startTime + duration + 0.05);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
     }
+
     function playEstimatePromptSound() {
         if (!soundEnabled) return;
-        var ctx = getAudioContext(); if (!ctx) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
         var now = ctx.currentTime;
         playTone(1046.5, now, 0.18, 0.35);
         playTone(880, now + 0.2, 0.28, 0.35);
         if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
     }
+
     function playConfirmSound() {
         if (!soundEnabled) return;
-        var ctx = getAudioContext(); if (!ctx) return;
-        playTone(1318.5, ctx.currentTime, 0.08, 0.2);
-    }
-    function playOverWarnSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext(); if (!ctx) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
         var now = ctx.currentTime;
-        playTone(440, now, 0.12, 0.5, 'square');
-        playTone(440, now + 0.16, 0.12, 0.5, 'square');
-        playTone(330, now + 0.32, 0.2, 0.5, 'square');
-        if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 250]);
+        playTone(1318.5, now, 0.08, 0.2);
     }
-    function playInputLimitSound() {
+
+    function playErrorSound() {
         if (!soundEnabled) return;
-        var ctx = getAudioContext(); if (!ctx) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
         var now = ctx.currentTime;
-        playTone(300, now, 0.1, 0.3, 'square');
-        playTone(220, now + 0.12, 0.15, 0.3, 'square');
-        if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+        playTone(280, now, 0.15, 0.3);
+        playTone(220, now + 0.16, 0.2, 0.3);
     }
 
     function toggleSound() {
         soundEnabled = !soundEnabled;
         if (soundEnabled) {
-            soundToggle.textContent = '🔊 开';
+            soundToggle.textContent = '🔊 提示音：开';
             soundToggle.classList.remove('muted');
             playConfirmSound();
             setStatusMessage('提示音已开启', false);
         } else {
-            soundToggle.textContent = '🔇 关';
+            soundToggle.textContent = '🔇 提示音：关';
             soundToggle.classList.add('muted');
             setStatusMessage('提示音已关闭', true);
         }
@@ -861,11 +763,12 @@
         statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
         statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
         statusTimer = setTimeout(function() {
-            statusMsgDiv.innerHTML = '📌 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入';
+            statusMsgDiv.innerHTML = '📌 就绪 | 订单号必须为 8 位数字';
             statusMsgDiv.style.background = '#e9f3fe';
             statusMsgDiv.style.color = '#0050b3';
         }, 3000);
     }
+
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -876,7 +779,7 @@
         });
     }
 
-    // ========== 预估数字键盘 ==========
+    // ========== 虚拟键盘 ==========
     function updateModalDisplay() {
         if (modalInputValue === '') {
             modalDisplay.textContent = '0';
@@ -887,63 +790,29 @@
         }
     }
 
-    function resetInputHint() {
-        inputHint.innerHTML = '最多可输入 <span class="limit-tag">999</span> 箱';
-        inputHint.classList.remove('error');
-        modalDisplay.classList.remove('warn-limit');
-        modalConfirmBtn.disabled = false;
-    }
-
-    function showLimitError() {
-        modalDisplay.classList.add('error', 'warn-limit');
-        inputHint.innerHTML = '⚠️ 预估数量不能超过 <span class="limit-tag">999</span>！';
-        inputHint.classList.add('error');
-        modalConfirmBtn.disabled = true;
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        playInputLimitSound();
-        setTimeout(function() {
-            modalDisplay.classList.remove('error');
-        }, 500);
-    }
-
     function handleKeypadInput(key) {
-        var newValue;
-        if (modalInputValue === '0') newValue = key;
-        else if (modalInputValue === '' && key === '0') newValue = '0';
-        else newValue = modalInputValue + key;
-
-        if (newValue.length > MAX_INPUT_DIGITS) {
-            if (navigator.vibrate) navigator.vibrate(30);
-            return;
-        }
-
-        modalInputValue = newValue;
+        if (modalInputValue === '0') modalInputValue = key;
+        else if (modalInputValue === '' && key === '0') modalInputValue = '0';
+        else if (modalInputValue.length >= 6) return;
+        else modalInputValue += key;
         updateModalDisplay();
-
-        var numVal = parseInt(modalInputValue, 10);
-        if (!isNaN(numVal) && numVal > MAX_ESTIMATE) {
-            showLimitError();
-        } else {
-            resetInputHint();
-        }
-
-        if (navigator.vibrate) navigator.vibrate(15);
+        if (navigator.vibrate) navigator.vibrate(20);
     }
 
     function handleKeypadDelete() {
         if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
         updateModalDisplay();
-        resetInputHint();
         if (navigator.vibrate) navigator.vibrate(20);
     }
+
     function handleKeypadClear() {
         modalInputValue = '';
         updateModalDisplay();
-        resetInputHint();
         if (navigator.vibrate) navigator.vibrate(20);
     }
+
     function bindKeypadEvents() {
-        var keys = numKeypad.querySelectorAll('.key');
+        var keys = document.querySelectorAll('.key');
         for (var i = 0; i < keys.length; i++) {
             keys[i].addEventListener('click', function(e) {
                 e.preventDefault();
@@ -956,102 +825,15 @@
         }
     }
 
-    // ========== ✅ 订单号输入键盘（纯数字） ==========
-    function bindManualKeypadEvents() {
-        var btns = manualKeypad.querySelectorAll('.key');
-        for (var m = 0; m < btns.length; m++) {
-            btns[m].addEventListener('click', function(e) {
-                e.preventDefault();
-                var key = this.getAttribute('data-key');
-                var action = this.getAttribute('data-action');
-                if (action === 'delete') manualDelete();
-                else if (action === 'clear') manualClear();
-                else if (key !== null) manualInput(key);
-            });
-        }
-    }
-
-    function manualInput(key) {
-        if (manualInputValue.length >= 30) {
-            if (navigator.vibrate) navigator.vibrate(30);
-            return;
-        }
-        manualInputValue += key;
-        updateManualDisplay();
-        if (navigator.vibrate) navigator.vibrate(15);
-    }
-    function manualDelete() {
-        if (manualInputValue.length > 0) manualInputValue = manualInputValue.slice(0, -1);
-        updateManualDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-    function manualClear() {
-        manualInputValue = '';
-        updateManualDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function updateManualDisplay() {
-        if (manualInputValue === '') {
-            manualDisplay.textContent = '请输入订单号';
-            manualDisplay.classList.add('empty');
-        } else {
-            manualDisplay.textContent = manualInputValue;
-            manualDisplay.classList.remove('empty');
-        }
-    }
-
-    function openManualModal() {
-        manualInputValue = '';
-        updateManualDisplay();
-        manualModalOverlay.classList.add('show');
-        setTimeout(function() {
-            if (!manualModalOverlay.classList.contains('show')) return;
-            document.addEventListener('keydown', onManualModalKeyDown);
-        }, 0);
-    }
-
-    function closeManualModal() {
-        manualModalOverlay.classList.remove('show');
-        document.removeEventListener('keydown', onManualModalKeyDown);
-        if (!modalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !overWarnOverlay.classList.contains('show')) {
-            barcodeInput.focus();
-        }
-    }
-
-    function onManualConfirm() {
-        var code = manualInputValue.trim();
-        if (code === '') {
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            setStatusMessage('请输入订单号', true);
-            return;
-        }
-        addBox(code, 'manual');
-        closeManualModal();
-    }
-
-    // 手动输入弹窗的键盘拦截
-    function onManualModalKeyDown(e) {
-        if (!manualModalOverlay.classList.contains('show')) return;
-        if (e.key === 'Tab' || e.key === 'Shift') return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.key >= '0' && e.key <= '9') {
-            if (navigator.vibrate) navigator.vibrate(20);
-            setStatusMessage('手动输入请点击下方虚拟键盘', true);
-        }
-    }
-
-    // ========== 预估数字键盘弹窗 ==========
+    // ========== 数字键盘弹窗 ==========
     function registerModalKeys() {
         setTimeout(function () {
             if (!modalOverlay.classList.contains('show')) return;
             document.addEventListener('keydown', onModalKeyDown);
+            modalDisplay.focus();
         }, 0);
     }
-    
+
     function openEstimateModal(barcode) {
         modalMode = 'estimate';
         currentBarcode = barcode;
@@ -1063,16 +845,15 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '<strong>第 2 次扫描</strong>该订单<br>' +
             '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>预估总数</strong>（不能超过 999）';
+            '请输入该订单的<strong>预估总数</strong>（用于对比）';
 
         modalInputValue = '';
         updateModalDisplay();
-        resetInputHint();
         modalOverlay.classList.add('show');
         registerModalKeys();
         playEstimatePromptSound();
     }
-    
+
     function openEditActualModal(barcode) {
         modalMode = 'actual';
         currentBarcode = barcode;
@@ -1085,16 +866,15 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
             '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>实际总件数</strong>（不能超过 999）';
+            '请输入该订单的<strong>实际总件数</strong>';
 
         modalInputValue = currentActual > 0 ? String(currentActual) : '';
         updateModalDisplay();
-        resetInputHint();
         modalOverlay.classList.add('show');
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
     }
-    
+
     function openEditEstimateModal(barcode) {
         modalMode = 'edit-estimate';
         currentBarcode = barcode;
@@ -1107,48 +887,48 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
             '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
-            '请输入新的<strong>预估总数</strong>（不能超过 999）';
+            '请输入新的<strong>预估总数</strong>';
 
         modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
         updateModalDisplay();
-        resetInputHint();
         modalOverlay.classList.add('show');
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
     }
-    
+
     function closeModal() {
         modalOverlay.classList.remove('show');
         currentBarcode = null;
         modalInputValue = '';
         document.removeEventListener('keydown', onModalKeyDown);
-        if (!summaryOverlay.classList.contains('show') && !overWarnOverlay.classList.contains('show') && !manualModalOverlay.classList.contains('show')) {
+        modalDisplay.blur();
+        if (!summaryOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
 
     function confirmModalInput() {
         if (!currentBarcode) return;
+
         if (modalInputValue === '') {
             modalDisplay.classList.add('error');
             setTimeout(function() { modalDisplay.classList.remove('error'); }, 500);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            playErrorSound();
             setStatusMessage('请先输入有效的预估数量', true);
             return;
         }
+
         var inputVal = parseInt(modalInputValue);
         if (isNaN(inputVal) || inputVal < 0) {
             modalDisplay.classList.add('error');
             setTimeout(function() { modalDisplay.classList.remove('error'); }, 500);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            playErrorSound();
             setStatusMessage('请输入有效数量（≥0）', true);
             return;
         }
-        if (inputVal > MAX_ESTIMATE) {
-            showLimitError();
-            setStatusMessage('预估数量不能超过 ' + MAX_ESTIMATE, true);
-            return;
-        }
+
         var barcode = currentBarcode;
         var existing = boxData.get(barcode);
 
@@ -1163,9 +943,9 @@
             });
             var diff = newActual - inputVal;
             if (diff !== 0) {
-                setStatusMessage('订单 ' + barcode + ' 预估设为 ' + inputVal + ' 箱 | ⚠️ 与实际差异 ' + (diff > 0 ? '+' + diff : diff), true);
+                setStatusMessage('订单 ' + barcode + ' 预估设为 ' + inputVal + ' 箱 | ⚠️ 与当前实际差异 ' + (diff > 0 ? '+' + diff : diff), true);
             } else {
-                setStatusMessage('订单 ' + barcode + ' 预估设为 ' + inputVal + ' 箱', false);
+                setStatusMessage('订单 ' + barcode + ' 预估设为 ' + inputVal + ' 箱（后续扫码自动+1实际）', false);
             }
             playConfirmSound();
         } else if (modalMode === 'actual') {
@@ -1191,91 +971,55 @@
             if (d !== 0) {
                 setStatusMessage('订单 ' + barcode + ' 预估改为 ' + inputVal + ' 箱 | ⚠️ 与实际差异 ' + (d > 0 ? '+' + d : d), true);
             } else {
-                setStatusMessage('订单 ' + barcode + ' 预估改为 ' + inputVal + ' 箱（一致）', false);
+                setStatusMessage('订单 ' + barcode + ' 预估改为 ' + inputVal + ' 箱（与实际一致）', false);
             }
         }
+
         closeModal();
-        renderList();
+        renderTable();
     }
 
-    // 预估弹窗拦截键盘
     function onModalKeyDown(e) {
         if (!modalOverlay.classList.contains('show')) return;
-        if (e.key === 'Tab' || e.key === 'Shift') return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.key >= '0' && e.key <= '9') {
-            if (navigator.vibrate) navigator.vibrate(30);
-            setStatusMessage('弹窗内请点击下方虚拟键盘输入', true);
-        }
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleKeypadInput(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); handleKeypadDelete(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
+        else if (e.key === 'Delete') { e.preventDefault(); handleKeypadClear(); }
     }
 
-    // ========== 超量警告弹窗 ==========
-    function openOverWarnModal(barcode) {
-        var data = boxData.get(barcode);
-        if (!data) return;
-        overWarnBarcodeValue = barcode;
-        var estimate = data.estimate || 0;
-        var actual = data.actual || 0;
-        var over = actual - estimate;
-
-        overWarnBarcode.textContent = '📦 ' + barcode;
-        overWarnEst.textContent = estimate;
-        overWarnAct.textContent = actual;
-        overWarnOver.textContent = '+' + over;
-
-        overWarnOverlay.classList.add('show');
-        playOverWarnSound();
-    }
-    function closeOverWarn() {
-        overWarnOverlay.classList.remove('show');
-        overWarnBarcodeValue = null;
-        if (!modalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !manualModalOverlay.classList.contains('show')) {
-            barcodeInput.focus();
-        }
-    }
-    function onOverIgnore() {
-        closeOverWarn();
-        setStatusMessage('已忽略超量警告，继续扫码', false);
-    }
-    function onOverFix() {
-        var barcode = overWarnBarcodeValue;
-        closeOverWarn();
-        if (barcode && boxData.has(barcode)) {
-            openEditEstimateModal(barcode);
-        }
-    }
-
-    // ========== 统计 ==========
+    // ========== 表格渲染 ==========
     function updateTotals() {
         var totalEstimate = 0, totalActual = 0;
-        boxData.forEach(function(data) {
+        for (var entry of boxData.entries()) {
+            var data = entry[1];
             totalEstimate += data.estimate || 0;
             totalActual += data.actual || 0;
-        });
+        }
         var totalDiff = totalActual - totalEstimate;
         estimateTotalSpan.innerText = totalEstimate;
         actualTotalSpan.innerText = totalActual;
         diffTotalSpan.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
         diffTotalSpan.style.color = totalDiff === 0 ? '#a5f3c3' : '#fecaca';
+        estimateFooter.innerText = totalEstimate;
+        actualFooter.innerText = totalActual;
+        diffFooter.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        diffFooter.style.color = totalDiff === 0 ? '#166534' : '#b91c1c';
     }
 
-    // ========== 渲染列表 ==========
-    function renderList() {
-        listContainer.innerHTML = '';
+    function renderTable() {
+        tableBody.innerHTML = '';
         if (boxData.size === 0) {
-            listContainer.innerHTML = '<div class="empty-card">' +
-                '<span class="big">📦</span>' +
-                '暂无订单记录<br>请扫码或手动输入添加' +
-                '</div>';
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无订单记录，请扫码添加</td></tr>';
+            tableFoot.style.display = 'none';
             updateTotals();
             return;
         }
 
         var sorted = Array.from(boxData.entries()).sort(function(a, b) {
-            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
+            var ta = a[1].lastScanTime || 0;
+            var tb = b[1].lastScanTime || 0;
+            return tb - ta;
         });
 
         for (var i = 0; i < sorted.length; i++) {
@@ -1285,94 +1029,69 @@
             var actual = data.actual || 0;
             var diff = actual - estimate;
             var isMismatch = diff !== 0;
-            var isOver = data.hasFilledEstimate && diff > 0;
+            var diffClass = diff === 0 ? 'diff-match' : 'diff-mismatch';
+            var diffText;
+            if (diff === 0) diffText = '✓ 一致';
+            else if (diff > 0) diffText = '⚠️ +' + diff;
+            else diffText = '⚠️ ' + diff;
 
-            var diffClass, diffText;
-            if (diff === 0) {
-                diffClass = 'diff-match';
-                diffText = '✓ 一致';
-            } else if (isOver) {
-                diffClass = 'diff-over';
-                diffText = '🚨 超量 +' + diff;
-            } else {
-                diffClass = 'diff-mismatch';
-                diffText = '⚠️ ' + diff;
-            }
-
-            var cardClass = 'box-card';
-            if (isOver) cardClass += ' over';
-            else if (isMismatch) cardClass += ' error';
+            var rowClass = isMismatch ? 'row-error' : '';
+            var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
 
             var safeBarcode = barcode.replace(/"/g, '&quot;');
-            var card = document.createElement('div');
-            card.className = cardClass;
-
-            card.innerHTML =
-                '<div class="card-row1">' +
-                    '<div class="card-barcode">📦 ' + escapeHtml(barcode) + '</div>' +
-                    '<div class="diff-badge ' + diffClass + '">' + diffText + '</div>' +
-                '</div>' +
-                '<div class="card-row2">' +
-                    '<div class="num-box num-est">' +
-                        '<div class="lbl">预估</div>' +
-                        '<div class="val">' + estimate + '</div>' +
+            var row = document.createElement('tr');
+            if (rowClass) row.className = rowClass;
+            row.innerHTML =
+                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + '</td>' +
+                '<td><span class="estimate-value">' + estimate + '</span></td>' +
+                '<td><span class="count-badge">' + actual + '</span></td>' +
+                '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
+                '<td>' +
+                    '<div class="action-group">' +
+                        '<button class="adjust-btn adjust-minus" data-barcode="' + safeBarcode + '" data-action="minus" title="实际-1">−</button>' +
+                        '<button class="adjust-btn adjust-plus" data-barcode="' + safeBarcode + '" data-action="plus" title="实际+1">+</button>' +
+                        '<button class="edit-btn edit-est-btn" data-barcode="' + safeBarcode + '" data-action="edit-estimate">✏️预估</button>' +
+                        '<button class="edit-btn" data-barcode="' + safeBarcode + '" data-action="edit-actual">✏️实际</button>' +
                     '</div>' +
-                    '<div class="num-box num-act">' +
-                        '<div class="lbl">实际</div>' +
-                        '<div class="val">' + actual + '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="card-row3">' +
-                    '<button class="adjust-btn adjust-minus" data-barcode="' + safeBarcode + '" data-action="minus">−</button>' +
-                    '<button class="adjust-btn adjust-plus" data-barcode="' + safeBarcode + '" data-action="plus">+</button>' +
-                    '<button class="edit-btn edit-est-btn" data-barcode="' + safeBarcode + '" data-action="edit-estimate">✏️ 预估</button>' +
-                    '<button class="edit-btn edit-act-btn" data-barcode="' + safeBarcode + '" data-action="edit-actual">✏️ 实际</button>' +
-                '</div>';
-
-            listContainer.appendChild(card);
+                '</td>';
+            tableBody.appendChild(row);
         }
+        tableFoot.style.display = 'table-footer-group';
         updateTotals();
 
-        listContainer.querySelectorAll('[data-action="plus"]').forEach(function(btn) {
-            btn.onclick = function() { handleAdjust(btn.getAttribute('data-barcode'), 'plus'); };
-        });
-        listContainer.querySelectorAll('[data-action="minus"]').forEach(function(btn) {
-            btn.onclick = function() { handleAdjust(btn.getAttribute('data-barcode'), 'minus'); };
-        });
-        listContainer.querySelectorAll('[data-action="edit-estimate"]').forEach(function(btn) {
-            btn.onclick = function() { openEditEstimateModal(btn.getAttribute('data-barcode')); };
-        });
-        listContainer.querySelectorAll('[data-action="edit-actual"]').forEach(function(btn) {
-            btn.onclick = function() { openEditActualModal(btn.getAttribute('data-barcode')); };
-        });
-    }
-
-    function checkOverAndWarn(barcode) {
-        var data = boxData.get(barcode);
-        if (!data) return false;
-        if (!data.hasFilledEstimate) return false;
-        var estimate = data.estimate || 0;
-        var actual = data.actual || 0;
-        if (actual > estimate) {
-            openOverWarnModal(barcode);
-            setStatusMessage('订单 ' + barcode + ' 实际 ' + actual + ' 已超出预估 ' + estimate, true);
-            return true;
+        var adjustBtns = document.querySelectorAll('.adjust-btn');
+        for (var j = 0; j < adjustBtns.length; j++) {
+            adjustBtns[j].onclick = handleAdjustActual;
         }
-        return false;
+
+        var editEstBtns = document.querySelectorAll('[data-action="edit-estimate"]');
+        for (var k = 0; k < editEstBtns.length; k++) {
+            editEstBtns[k].onclick = function(e) {
+                var barcode = e.currentTarget.getAttribute('data-barcode');
+                openEditEstimateModal(barcode);
+            };
+        }
+
+        var editActBtns = document.querySelectorAll('[data-action="edit-actual"]');
+        for (var m = 0; m < editActBtns.length; m++) {
+            editActBtns[m].onclick = function(e) {
+                var barcode = e.currentTarget.getAttribute('data-barcode');
+                openEditActualModal(barcode);
+            };
+        }
     }
 
-    // ========== 调整 ==========
-    function handleAdjust(barcode, action) {
+    // ========== 调整实际数量 ==========
+    function handleAdjustActual(e) {
+        var barcode = e.currentTarget.getAttribute('data-barcode');
+        var action = e.currentTarget.getAttribute('data-action');
         if (!barcode || !boxData.has(barcode)) return;
+
         var data = boxData.get(barcode);
         if (action === 'plus') {
             data.actual = (data.actual || 0) + 1;
             boxData.set(barcode, data);
             setStatusMessage(barcode + ' 实际+1 → ' + data.actual + ' 箱', false);
-            if (checkOverAndWarn(barcode)) {
-                renderList();
-                return;
-            }
         } else if (action === 'minus') {
             if (data.actual > 0) {
                 data.actual = (data.actual || 0) - 1;
@@ -1382,50 +1101,77 @@
                 setStatusMessage('实际数量已为0，无法再减', true);
             }
         }
-        renderList();
+        renderTable();
         if (navigator.vibrate) navigator.vibrate(30);
     }
 
-    // ========== 核心扫码 ==========
+    // ========== 核心扫码逻辑 ==========
     function addBox(barcode, source) {
         if (!barcode || barcode.trim() === '') {
-            setStatusMessage('订单号为空', true);
+            setStatusMessage('订单号内容为空，请重新输入', true);
+            playErrorSound();
             return false;
         }
         var cleanCode = barcode.trim();
-        if (cleanCode.length > 120) {
-            setStatusMessage('订单号过长', true);
+        var len = cleanCode.length;
+
+        // 🚫 不足 8 位
+        if (len < ORDER_LENGTH) {
+            setStatusMessage('订单号不足 8 位（当前 ' + len + ' 位），请补全后再确认', true);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            barcodeInput.classList.add('error');
+            setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
             return false;
         }
+        // 🚫 超出 8 位（理论上输入框已拦截，双保险）
+        if (len > ORDER_LENGTH) {
+            setStatusMessage('订单号超出 8 位（当前 ' + len + ' 位），已忽略多余内容', true);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            return false;
+        }
+        // 🚫 包含非数字
+        if (!isValidOrderNo(cleanCode)) {
+            setStatusMessage('订单号必须为纯数字（当前：' + cleanCode + '）', true);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            barcodeInput.classList.add('error');
+            setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
+            return false;
+        }
+
         var existing = boxData.get(cleanCode);
 
         if (!existing) {
             boxData.set(cleanCode, {
-                actual: 1, estimate: 1, scanCount: 1,
-                hasFilledEstimate: false, lastScanTime: ++scanSeq
+                actual: 1,
+                estimate: 1,
+                scanCount: 1,
+                hasFilledEstimate: false,
+                lastScanTime: ++scanSeq
             });
-            renderList();
-            setStatusMessage((source === 'scan' ? '第1次扫码' : '手动添加') + ' | ' + cleanCode + ' → 实际=1，预估=1', false);
+            renderTable();
+            setStatusMessage((source === 'scan' ? '第1次扫码' : '手动添加') + ' | ' + cleanCode + ' → 实际=1，预估=1（下次扫码将弹窗填预估）', false);
             if (navigator.vibrate) navigator.vibrate(80);
             return true;
         }
+
         if (!existing.hasFilledEstimate) {
             existing.lastScanTime = ++scanSeq;
             boxData.set(cleanCode, existing);
-            renderList();
+            renderTable();
             openEstimateModal(cleanCode);
-            setStatusMessage('第2次扫码 ' + cleanCode + ' | 请用虚拟键盘输入预估', false);
+            setStatusMessage('第2次扫码 ' + cleanCode + ' | 请输入预估总数（🔊）', false);
             return true;
         }
+
         existing.actual = (existing.actual || 0) + 1;
         existing.scanCount = (existing.scanCount || 2) + 1;
         existing.lastScanTime = ++scanSeq;
         boxData.set(cleanCode, existing);
-        renderList();
+        renderTable();
         setStatusMessage('第' + existing.scanCount + '次扫码 | ' + cleanCode + ' → 实际 ' + existing.actual + ' 箱', false);
-        if (checkOverAndWarn(cleanCode)) {
-            return true;
-        }
         if (navigator.vibrate) navigator.vibrate(80);
         return true;
     }
@@ -1433,21 +1179,25 @@
     // ========== 完成汇总 ==========
     function getDiffEntries() {
         var list = [];
-        boxData.forEach(function(data, barcode) {
+        for (var entry of boxData.entries()) {
+            var barcode = entry[0];
+            var data = entry[1];
             var estimate = data.estimate || 0;
             var actual = data.actual || 0;
             if (actual - estimate !== 0) {
                 list.push({
-                    barcode: barcode, estimate: estimate, actual: actual,
-                    diff: actual - estimate, scanCount: data.scanCount || 0,
-                    lastScanTime: data.lastScanTime || 0,
-                    isOver: data.hasFilledEstimate && (actual - estimate > 0)
+                    barcode: barcode,
+                    estimate: estimate,
+                    actual: actual,
+                    diff: actual - estimate,
+                    scanCount: data.scanCount || 0,
+                    lastScanTime: data.lastScanTime || 0
                 });
             }
-        });
+        }
         list.sort(function(a, b) {
-            if (a.isOver !== b.isOver) return a.isOver ? -1 : 1;
-            var absA = Math.abs(a.diff), absB = Math.abs(b.diff);
+            var absA = Math.abs(a.diff);
+            var absB = Math.abs(b.diff);
             if (absA !== absB) return absB - absA;
             return b.lastScanTime - a.lastScanTime;
         });
@@ -1459,11 +1209,12 @@
             setStatusMessage('暂无数据，无需完成', true);
             return;
         }
+
         var totalEst = 0, totalAct = 0;
-        boxData.forEach(function(d) {
-            totalEst += d.estimate || 0;
-            totalAct += d.actual || 0;
-        });
+        for (var entry of boxData.entries()) {
+            totalEst += entry[1].estimate || 0;
+            totalAct += entry[1].actual || 0;
+        }
         var totalDiff = totalAct - totalEst;
         var diffList = getDiffEntries();
 
@@ -1485,64 +1236,58 @@
             for (var i = 0; i < diffList.length; i++) {
                 var item = diffList[i];
                 var diffSign = item.diff > 0 ? '+' + item.diff : '' + item.diff;
-                var chipCls = item.isOver ? 'chip-over' : 'chip-diff-bad';
-                var chipText = item.isOver ? '🚨 超 ' + diffSign : '差 ' + diffSign;
                 html += '<div class="summary-item">' +
                     '<div class="summary-item-code">📦 ' + escapeHtml(item.barcode) + '</div>' +
                     '<div class="summary-item-nums">' +
                         '<span class="summary-num-chip chip-est">预 ' + item.estimate + '</span>' +
                         '<span class="summary-num-chip chip-act">实 ' + item.actual + '</span>' +
-                        '<span class="summary-num-chip ' + chipCls + '">' + chipText + '</span>' +
+                        '<span class="summary-num-chip chip-diff-bad">差 ' + diffSign + '</span>' +
                     '</div>' +
                     '</div>';
             }
             summaryList.innerHTML = html;
         }
+
         summaryOverlay.classList.add('show');
         if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]);
     }
 
     function closeSummary() {
         summaryOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show') &&
-            !overWarnOverlay.classList.contains('show') &&
-            !manualModalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
+
     function onContinueTask() {
         closeSummary();
         setStatusMessage('已继续任务，可继续扫码', false);
     }
 
-    // ========== 结束任务 ==========
+    // ========== 结束任务：彻底还原 ==========
     function resetToInitialState() {
         boxData.clear();
         scanSeq = 0;
         currentBarcode = null;
         modalInputValue = '';
         modalMode = 'estimate';
-        overWarnBarcodeValue = null;
-        manualInputValue = '';
 
         modalOverlay.classList.remove('show');
         summaryOverlay.classList.remove('show');
-        overWarnOverlay.classList.remove('show');
-        manualModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onModalKeyDown);
-        document.removeEventListener('keydown', onManualModalKeyDown);
+
         barcodeInput.value = '';
+        barcodeInput.classList.remove('error', 'success');
 
         modalDisplay.textContent = '0';
         modalDisplay.classList.add('empty');
-        modalDisplay.classList.remove('error', 'warn-limit');
-        resetInputHint();
-        updateManualDisplay();
+        modalDisplay.classList.remove('error');
+        modalDisplay.blur();
 
-        renderList();
+        renderTable();
 
         if (statusTimer) clearTimeout(statusTimer);
-        statusMsgDiv.innerHTML = '✅ 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入';
+        statusMsgDiv.innerHTML = '✅ 就绪 | 订单号必须为 8 位数字';
         statusMsgDiv.style.background = '#e9f3fe';
         statusMsgDiv.style.color = '#0050b3';
 
@@ -1559,31 +1304,108 @@
 
         lastAddTime = 0;
         barcodeInput.focus();
+
+        var tableWrapper = document.querySelector('.table-wrapper');
+        if (tableWrapper) tableWrapper.scrollTop = 0;
         window.scrollTo(0, 0);
+
         if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
     }
 
     function onFinishTask() {
         if (!confirm('⚠️ 确认结束任务吗？\n\n将执行以下操作：\n• 清空所有扫码数据\n• 关闭所有弹窗\n• 还原到初始状态\n\n此操作不可恢复！')) return;
         resetToInitialState();
-        setStatusMessage('任务已结束，可开始新任务', false);
+        setStatusMessage('任务已结束，已还原初始状态，可开始新任务', false);
     }
 
-    // ========== 导出 ==========
+    // ========== 汇总弹窗导出 ==========
     function onSummaryExport() {
         var diffList = getDiffEntries();
-        if (diffList.length === 0) { alert('没有差异订单可导出'); return; }
-        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '是否超量', '扫码次数']];
+        if (diffList.length === 0) {
+            alert('没有差异订单可导出');
+            return;
+        }
+        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '扫码次数']];
         var totalEst = 0, totalAct = 0;
         for (var i = 0; i < diffList.length; i++) {
             var it = diffList[i];
-            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.isOver ? '是' : '否', it.scanCount]);
-            totalEst += it.estimate; totalAct += it.actual;
+            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.scanCount]);
+            totalEst += it.estimate;
+            totalAct += it.actual;
         }
-        csvRows.push(['', '', '', '', '', '']);
-        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '', '']);
-        downloadCSV(csvRows, '差异订单_' + new Date().toISOString().slice(0,10) + '.csv');
+        csvRows.push(['', '', '', '', '']);
+        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '']);
+        var csvLines = [];
+        for (var x = 0; x < csvRows.length; x++) {
+            var row = csvRows[x];
+            var esc = [];
+            for (var y = 0; y < row.length; y++) {
+                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
+            }
+            csvLines.push(esc.join(','));
+        }
+        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '差异订单_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
         setStatusMessage('差异订单已导出', false);
+    }
+
+    // ========== 事件 ==========
+    function onKeyDown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+
+            var now = Date.now();
+            if (now - lastAddTime < 150) {
+                barcodeInput.value = '';
+                return;
+            }
+            lastAddTime = now;
+
+            var val = barcodeInput.value.trim();
+            if (val !== '') {
+                barcodeInput.value = '';
+                barcodeInput.classList.remove('success', 'error');
+                addBox(val, 'scan');
+            } else {
+                setStatusMessage('请先扫描或输入订单号', true);
+                playErrorSound();
+            }
+
+            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+                barcodeInput.focus();
+            }
+        }
+    }
+
+    function onAddManual() {
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+        var val = barcodeInput.value.trim();
+        if (val === '') { 
+            setStatusMessage('请输入订单号', true); 
+            playErrorSound();
+            return; 
+        }
+        var ok = addBox(val, 'manual');
+        if (ok) {
+            barcodeInput.value = '';
+            barcodeInput.classList.remove('success', 'error');
+        }
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function onClearAll() {
+        if (boxData.size === 0) { setStatusMessage('无数据', true); return; }
+        if (confirm('⚠️ 确定清空所有订单记录吗？')) {
+            resetToInitialState();
+            setStatusMessage('已清空所有数据', false);
+        }
     }
 
     function onExport() {
@@ -1599,21 +1421,13 @@
             var est = data.estimate || 0;
             var act = data.actual || 0;
             var diff = act - est;
-            var status;
-            if (diff === 0) status = '一致';
-            else if (data.hasFilledEstimate && diff > 0) status = '🚨 超量';
-            else if (diff > 0) status = '实际多于预估';
-            else status = '实际少于预估';
+            var status = diff === 0 ? '一致' : (diff > 0 ? '实际多于预估' : '实际少于预估');
             csvRows.push([barcode, est, act, diff, status, data.scanCount || 0]);
-            totalEst += est; totalAct += act;
+            totalEst += est;
+            totalAct += act;
         }
         csvRows.push(['', '', '', '', '', '']);
         csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '']);
-        downloadCSV(csvRows, '订单统计_' + new Date().toISOString().slice(0,10) + '.csv');
-        setStatusMessage('导出成功', false);
-    }
-
-    function downloadCSV(csvRows, filename) {
         var csvLines = [];
         for (var x = 0; x < csvRows.length; x++) {
             var row = csvRows[x];
@@ -1626,60 +1440,20 @@
         var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = filename;
+        link.download = '订单统计_' + new Date().toISOString().slice(0,10) + '.csv';
         link.click();
         URL.revokeObjectURL(link.href);
+        setStatusMessage('导出成功', false);
     }
 
-    // ========== 事件 ==========
-    function onKeyDown(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (modalOverlay.classList.contains('show') ||
-                summaryOverlay.classList.contains('show') ||
-                overWarnOverlay.classList.contains('show') ||
-                manualModalOverlay.classList.contains('show')) return;
-            var now = Date.now();
-            if (now - lastAddTime < 150) { barcodeInput.value = ''; return; }
-            lastAddTime = now;
-            var val = barcodeInput.value.trim();
-            if (val !== '') {
-                barcodeInput.value = '';
-                addBox(val, 'scan');
-            } else {
-                setStatusMessage('请先扫描或输入订单号', true);
-            }
-            if (!modalOverlay.classList.contains('show') &&
-                !summaryOverlay.classList.contains('show') &&
-                !overWarnOverlay.classList.contains('show') &&
-                !manualModalOverlay.classList.contains('show')) {
-                barcodeInput.focus();
-            }
-        }
-    }
-    function onAddManual() {
-        if (modalOverlay.classList.contains('show') ||
-            summaryOverlay.classList.contains('show') ||
-            overWarnOverlay.classList.contains('show') ||
-            manualModalOverlay.classList.contains('show')) return;
-        openManualModal();
-    }
-    function onClearAll() {
-        if (boxData.size === 0) { setStatusMessage('无数据', true); return; }
-        if (confirm('⚠️ 确定清空所有订单记录吗？')) {
-            resetToInitialState();
-            setStatusMessage('已清空所有数据', false);
-        }
-    }
     function onBodyClick(e) {
         if (modalOverlay.classList.contains('show')) return;
         if (summaryOverlay.classList.contains('show')) return;
-        if (overWarnOverlay.classList.contains('show')) return;
-        if (manualModalOverlay.classList.contains('show')) return;
-        if (e.target !== barcodeInput && !e.target.closest('button') && !e.target.closest('input') && !e.target.closest('.box-card')) {
+        if (e.target !== barcodeInput && !e.target.closest('button') && !e.target.closest('input')) {
             barcodeInput.focus();
         }
     }
+
     function preventFormSubmit(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'number' && !e.target.closest('.modal-box')) {
             e.preventDefault();
@@ -1689,9 +1463,27 @@
     // ========== 初始化 ==========
     function init() {
         barcodeInput.addEventListener('keydown', onKeyDown);
+
+        // ✅ 实时过滤：只保留数字，最多 8 位
+        barcodeInput.addEventListener('input', function() {
+            validateBarcodeInput(false);
+        });
+        // ✅ 失焦时校验并提示
+        barcodeInput.addEventListener('blur', function() {
+            var len = validateBarcodeInput(false);
+            if (len > 0 && len < ORDER_LENGTH) {
+                setStatusMessage('订单号需 8 位数字（当前 ' + len + ' 位）', true);
+            }
+        });
+        // ✅ 粘贴时也过滤
+        barcodeInput.addEventListener('paste', function(e) {
+            setTimeout(function() { validateBarcodeInput(false); }, 0);
+        });
+
         addBtn.addEventListener('click', onAddManual);
         clearInputBtn.addEventListener('click', function() {
             barcodeInput.value = '';
+            barcodeInput.classList.remove('success', 'error');
             barcodeInput.focus();
         });
         clearAllBtn.addEventListener('click', onClearAll);
@@ -1706,20 +1498,6 @@
             if (e.target === modalOverlay) closeModal();
         });
 
-        // 手动输入弹窗事件
-        manualCancelBtn.addEventListener('click', closeManualModal);
-        manualConfirmBtn.addEventListener('click', onManualConfirm);
-        manualModalOverlay.addEventListener('click', function(e) {
-            if (e.target === manualModalOverlay) closeManualModal();
-        });
-        bindManualKeypadEvents();
-
-        overIgnoreBtn.addEventListener('click', onOverIgnore);
-        overFixBtn.addEventListener('click', onOverFix);
-        overWarnOverlay.addEventListener('click', function(e) {
-            if (e.target === overWarnOverlay) onOverIgnore();
-        });
-
         continueBtn.addEventListener('click', onContinueTask);
         finishTaskBtn.addEventListener('click', onFinishTask);
         summaryExportBtn.addEventListener('click', onSummaryExport);
@@ -1727,14 +1505,8 @@
             if (e.target === summaryOverlay) closeSummary();
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (overWarnOverlay.classList.contains('show')) {
-                    onOverIgnore();
-                } else if (summaryOverlay.classList.contains('show')) {
-                    closeSummary();
-                } else if (manualModalOverlay.classList.contains('show')) {
-                    closeManualModal();
-                }
+            if (e.key === 'Escape' && summaryOverlay.classList.contains('show')) {
+                closeSummary();
             }
         });
 
@@ -1749,9 +1521,9 @@
         document.addEventListener('touchstart', initAudioOnce);
 
         bindKeypadEvents();
-        renderList();
+        renderTable();
         barcodeInput.focus();
-        console.log('初始化完成 - 手动纯数字键盘版');
+        console.log('初始化完成 - 8位订单锁定加强版');
     }
 
     init();
