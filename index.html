@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>扫码器 - 箱子计数（超量警告 + 预估限999）</title>
+    <title>扫码器 - 箱子计数（超量警告 + 预估安全阈值）</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
@@ -52,11 +52,10 @@
             border-radius: 18px; padding: 12px; margin-bottom: 14px;
         }
         .barcode-input {
-            width: 100%;
-            background: white; border: 2px solid #cbdde9;
-            border-radius: 12px; padding: 14px 16px;
-            font-size: 16px; font-family: 'Courier New', monospace;
-            outline: none; transition: 0.15s; margin-bottom: 10px;
+            width: 100%; background: white; border: 2px solid #cbdde9;
+            border-radius: 12px; padding: 14px 16px; font-size: 16px;
+            font-family: 'Courier New', monospace; outline: none;
+            transition: 0.15s; margin-bottom: 10px;
         }
         .barcode-input:focus {
             border-color: #0f62fe;
@@ -117,14 +116,11 @@
             box-shadow: 0 0 0 1px #ef4444 inset;
         }
 
-        .card-row1 {
-            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-        }
+        .card-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .card-barcode {
             flex: 1; font-family: 'Courier New', monospace;
-            font-size: 0.82rem; font-weight: 700;
-            color: #0a2540; word-break: break-all;
-            line-height: 1.3; min-width: 0;
+            font-size: 0.82rem; font-weight: 700; color: #0a2540;
+            word-break: break-all; line-height: 1.3; min-width: 0;
         }
         .box-card.error .card-barcode { color: #b91c1c; }
         .box-card.over .card-barcode { color: #b91c1c; }
@@ -245,7 +241,7 @@
             font-size: 2.4rem; font-weight: 800; color: #0f62fe;
             letter-spacing: 2px; min-height: 72px;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 12px; cursor: pointer;
+            margin-bottom: 8px; cursor: pointer;
             font-family: 'Courier New', monospace; transition: 0.15s;
         }
         .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
@@ -281,6 +277,9 @@
         .modal-btn:active { transform: scale(0.98); }
         .modal-btn-confirm { background: #0f62fe; color: white; }
         .modal-btn-confirm:active { background: #0353e9; }
+        .modal-btn-confirm:disabled {
+            background: #cbd5e1; color: #94a3b8; cursor: not-allowed;
+        }
         .modal-btn-cancel { background: #f1f5f9; color: #475569; }
 
         .summary-header-icon {
@@ -407,26 +406,22 @@
         .btn-ignore-over { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         .btn-fix-over { background: #0f62fe; color: white; }
 
-        /* ===== ✅ 新增：输入超限错误提示样式 ===== */
+        /* ✅ 新增：输入超限提示 */
         .input-hint {
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             color: #6c86a3;
             text-align: center;
-            margin-top: 6px;
-            margin-bottom: 10px;
+            margin-top: 4px;
+            margin-bottom: 12px;
             line-height: 1.3;
         }
         .input-hint .limit-tag {
-            background: #f0f4f9;
-            color: #475569;
-            padding: 1px 6px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
+            background: #f0f4f9; color: #475569;
+            padding: 1px 6px; border-radius: 10px;
+            font-weight: 700; font-family: 'Courier New', monospace;
         }
         .input-hint.error {
-            color: #dc2626;
-            font-weight: 700;
+            color: #dc2626; font-weight: 700;
             animation: blinkErr 0.5s ease-in-out 2;
         }
         .input-hint.error .limit-tag { background: #fee2e2; color: #b91c1c; }
@@ -525,7 +520,7 @@
                 <button id="clearInputBtn" class="btn btn-secondary">🗑️ 清空</button>
             </div>
             <div id="statusMsg" class="status">
-                ✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（≤999），超出警告
+                ✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告
             </div>
         </div>
 
@@ -580,7 +575,7 @@
 
         <div class="modal-display" id="modalDisplay" tabindex="0">0</div>
 
-        <!-- ✅ 新增：输入提示 / 限制提示 -->
+        <!-- ✅ 输入提示（实时反馈能否确认） -->
         <div class="input-hint" id="inputHint">
             最多可输入 <span class="limit-tag">999</span> 箱
         </div>
@@ -681,8 +676,8 @@
 
 <script>
     // ========== 配置 ==========
-    var MAX_ESTIMATE = 999;          // ✅ 预估数量上限
-    var MAX_INPUT_DIGITS = 3;        // ✅ 最大输入位数（999 是 3 位）
+    var MAX_ESTIMATE = 999;          // ✅ 预估数量安全阈值（超过无法确认）
+    var MAX_INPUT_DIGITS = 5;        // ✅ 最大输入位数（允许临时输入 1000-99999）
 
     // ========== 数据 ==========
     var boxData = new Map();
@@ -718,7 +713,7 @@
     var modalDisplay = document.getElementById('modalDisplay');
     var modalConfirmBtn = document.getElementById('modalConfirmBtn');
     var modalCancelBtn = document.getElementById('modalCancelBtn');
-    var inputHint = document.getElementById('inputHint'); // ✅ 输入提示
+    var inputHint = document.getElementById('inputHint');
 
     var summaryOverlay = document.getElementById('summaryOverlay');
     var summarySubtitle = document.getElementById('summarySubtitle');
@@ -790,7 +785,7 @@
         playTone(330, now + 0.32, 0.2, 0.5, 'square');
         if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 250]);
     }
-    // ✅ 新增：输入超限错误音（短促警示，区别于超量警告）
+    // ✅ 输入超限（错误）音
     function playInputLimitSound() {
         if (!soundEnabled) return;
         var ctx = getAudioContext(); if (!ctx) return;
@@ -821,7 +816,7 @@
         statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
         statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
         statusTimer = setTimeout(function() {
-            statusMsgDiv.innerHTML = '📌 就绪 | 第1次实际1+预估1，第2次弹窗填预估（≤999），超出警告';
+            statusMsgDiv.innerHTML = '📌 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告';
             statusMsgDiv.style.background = '#e9f3fe';
             statusMsgDiv.style.color = '#0050b3';
         }, 3000);
@@ -836,7 +831,7 @@
         });
     }
 
-    // ========== ✅ 虚拟键盘（含 999 上限校验） ==========
+    // ========== 虚拟键盘 ==========
     function updateModalDisplay() {
         if (modalInputValue === '') {
             modalDisplay.textContent = '0';
@@ -847,11 +842,11 @@
         }
     }
 
-    // ✅ 重置输入提示为默认
     function resetInputHint() {
         inputHint.innerHTML = '最多可输入 <span class="limit-tag">999</span> 箱';
         inputHint.classList.remove('error');
         modalDisplay.classList.remove('warn-limit');
+        modalConfirmBtn.disabled = false;
     }
 
     // ✅ 显示超限错误
@@ -859,44 +854,45 @@
         modalDisplay.classList.add('error', 'warn-limit');
         inputHint.innerHTML = '⚠️ 预估数量不能超过 <span class="limit-tag">999</span>！';
         inputHint.classList.add('error');
+        modalConfirmBtn.disabled = true; // 禁用确认按钮
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         playInputLimitSound();
         setTimeout(function() {
             modalDisplay.classList.remove('error');
-            // 恢复提示文案，但保留红色（等下次输入时恢复）
         }, 500);
     }
 
+    // ✅ 数字输入逻辑
     function handleKeypadInput(key) {
-        // 若已是 0，直接替换
         var newValue;
         if (modalInputValue === '0') newValue = key;
         else if (modalInputValue === '' && key === '0') newValue = '0';
         else newValue = modalInputValue + key;
 
-        // ✅ 长度超限（超过 3 位）直接拦截
+        // ✅ 长度拦截（防止无限输入）
         if (newValue.length > MAX_INPUT_DIGITS) {
-            showLimitError();
-            return;
-        }
-
-        // ✅ 数值超限（> 999）拦截
-        var numVal = parseInt(newValue, 10);
-        if (!isNaN(numVal) && numVal > MAX_ESTIMATE) {
-            showLimitError();
+            if (navigator.vibrate) navigator.vibrate(30);
             return;
         }
 
         modalInputValue = newValue;
         updateModalDisplay();
-        resetInputHint();
+
+        // ✅ 数值超限（>999）：显示红色警告 + 禁用确认
+        var numVal = parseInt(modalInputValue, 10);
+        if (!isNaN(numVal) && numVal > MAX_ESTIMATE) {
+            showLimitError();
+        } else {
+            resetInputHint();
+        }
+
         if (navigator.vibrate) navigator.vibrate(15);
     }
 
     function handleKeypadDelete() {
         if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
         updateModalDisplay();
-        resetInputHint();
+        resetInputHint(); // 删除后清除错误状态
         if (navigator.vibrate) navigator.vibrate(20);
     }
     function handleKeypadClear() {
@@ -938,7 +934,7 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '<strong>第 2 次扫描</strong>该订单<br>' +
             '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>预估总数</strong>（≤ 999）';
+            '请输入该订单的<strong>预估总数</strong>（不能超过 999）';
 
         modalInputValue = '';
         updateModalDisplay();
@@ -959,7 +955,7 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
             '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>实际总件数</strong>（≤ 999）';
+            '请输入该订单的<strong>实际总件数</strong>（不能超过 999）';
 
         modalInputValue = currentActual > 0 ? String(currentActual) : '';
         updateModalDisplay();
@@ -980,7 +976,7 @@
         modalBarcode.textContent = barcode;
         modalDesc.innerHTML = '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
             '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
-            '请输入新的<strong>预估总数</strong>（≤ 999）';
+            '请输入新的<strong>预估总数</strong>（不能超过 999）';
 
         modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
         updateModalDisplay();
@@ -1017,7 +1013,7 @@
             setStatusMessage('请输入有效数量（≥0）', true);
             return;
         }
-        // ✅ 再次校验上限
+        // ✅ 校验阈值：超过 999 拒绝确认
         if (inputVal > MAX_ESTIMATE) {
             showLimitError();
             setStatusMessage('预估数量不能超过 ' + MAX_ESTIMATE, true);
@@ -1406,7 +1402,7 @@
         renderList();
 
         if (statusTimer) clearTimeout(statusTimer);
-        statusMsgDiv.innerHTML = '✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（≤999），超出警告';
+        statusMsgDiv.innerHTML = '✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告';
         statusMsgDiv.style.background = '#e9f3fe';
         statusMsgDiv.style.color = '#0050b3';
 
@@ -1609,7 +1605,7 @@
         bindKeypadEvents();
         renderList();
         barcodeInput.focus();
-        console.log('初始化完成 - 超量警告 + 预估限999版');
+        console.log('初始化完成 - 阈值拦截版');
     }
 
     init();
