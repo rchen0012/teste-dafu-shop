@@ -199,6 +199,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            /* 宽高由 JS 在启动时根据画布尺寸计算并设置，确保绝对正方形 */
             width: 240px;
             height: 240px;
             border-radius: 8px;
@@ -948,7 +949,6 @@
     }
 
     function openLocateInputModal() {
-        if (cameraRunning) closeCameraModal(true);
         locateInputValue = (locateTarget || '').slice(0, ORDER_LENGTH);
         updateLocateDisplay();
         locateInputModalOverlay.classList.add('show');
@@ -1072,7 +1072,6 @@
         playLocateHitSound();
         locateModalCode.textContent = barcode;
         locateModalOverlay.classList.add('show');
-        setScanLocked(true);
         return true;
     }
 
@@ -1159,6 +1158,7 @@
                 { facingMode: "environment" },
                 {
                     fps: 12,
+                    // 这里设置正方型区域，配合 CSS 自定义框，确保识别区域是正方形
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
                         var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                         var size = Math.floor(minEdge * 0.7);
@@ -1168,7 +1168,7 @@
                     disableFlip: true
                 },
                 onCameraScanSuccess,
-                function(errorMessage) {}
+                function(errorMessage) { /* 每帧失败忽略 */ }
             ).catch(function(err) {
                 cameraRunning = false;
                 showCameraError('无法启动摄像头：' + (err && err.message ? err.message : err));
@@ -1224,6 +1224,7 @@
             lastCameraResult = { ok: true, code: digits };
             updateCameraLast(lastCameraResult);
             
+            // ✅ 核心修复：如果是新码，先让 UI 闪一下，然后关闭摄像头，再弹预估
             setTimeout(function() {
                 addBox(digits, 'camera');
             }, 150);
@@ -1307,7 +1308,9 @@
     }
 
     function openOrderModal() {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
         if (cameraRunning) closeCameraModal(true);
+        
         orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
         updateOrderDisplay();
         orderModalOverlay.classList.add('show');
@@ -1447,7 +1450,9 @@
     }
 
     function openEstimateModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
         if (cameraRunning) closeCameraModal(true);
+
         modalMode = 'estimate';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1469,7 +1474,9 @@
     }
 
     function openEditActualModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
         if (cameraRunning) closeCameraModal(true);
+
         modalMode = 'actual';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1492,7 +1499,9 @@
     }
 
     function openEditEstimateModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
         if (cameraRunning) closeCameraModal(true);
+
         modalMode = 'edit-estimate';
         currentBarcode = barcode;
         var existing = boxData.get(barcode);
@@ -1621,6 +1630,7 @@
 
     // ========== 超量警告（必须二选一） ==========
     function triggerOverWarn(barcode, actual, estimate) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
         if (cameraRunning) closeCameraModal(true);
 
         var alreadyOpen = warnModalOverlay.classList.contains('show');
@@ -1817,14 +1827,7 @@
 
     // ========== 核心扫码逻辑 ==========
     function addBox(barcode, source) {
-        // ✅ 核心修复：只要有任意弹窗显示，就拦截扫码
-        if (modalOverlay.classList.contains('show') || 
-            orderModalOverlay.classList.contains('show') || 
-            summaryOverlay.classList.contains('show') || 
-            warnModalOverlay.classList.contains('show') || 
-            locateInputModalOverlay.classList.contains('show') ||
-            locateModalOverlay.classList.contains('show') ||
-            cameraModalOverlay.classList.contains('show')) {
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
             setStatusMessage('弹窗打开中，扫码已锁定', true);
             return false;
         }
@@ -2311,7 +2314,7 @@
         updateLocateStatusUI();
         updateLocateDisplay();
         renderTable();
-        console.log('初始化完成 - 全弹窗锁定版');
+        console.log('初始化完成 - 弹窗优先连续扫码正方形版');
     }
 
     init();
