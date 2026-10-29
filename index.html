@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>扫码器 - 强制虚拟键盘填预估</title>
+    <title>扫码器 - 箱子计数（全虚拟键盘输入）</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
@@ -235,7 +235,6 @@
         }
         .modal-desc strong { color: #0f62fe; }
 
-        /* ✅ 修改：禁用焦点和选中 */
         .modal-display {
             background: #f8fafc; border: 2px solid #e2e8f0;
             border-radius: 14px; padding: 8px 16px; text-align: center;
@@ -245,7 +244,7 @@
             margin-bottom: 8px; cursor: default;
             font-family: 'Courier New', monospace; transition: 0.15s;
             user-select: none; -webkit-user-select: none;
-            pointer-events: none; /* 完全阻断点击 */
+            pointer-events: none;
         }
         .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
         .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
@@ -522,7 +521,7 @@
                 <button id="clearInputBtn" class="btn btn-secondary">🗑️ 清空</button>
             </div>
             <div id="statusMsg" class="status">
-                ✅ 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效
+                ✅ 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入
             </div>
         </div>
 
@@ -575,15 +574,13 @@
             请输入该订单的<strong>预估总数</strong>
         </div>
 
-        <!-- 禁用焦点、触摸、点击的纯展示框 -->
         <div class="modal-display" id="modalDisplay">0</div>
 
-        <!-- 输入提示 -->
         <div class="input-hint" id="inputHint">
             最多可输入 <span class="limit-tag">999</span> 箱
         </div>
 
-        <div class="keypad">
+        <div class="keypad" id="numKeypad">
             <button class="key" data-key="1">1</button>
             <button class="key" data-key="2">2</button>
             <button class="key" data-key="3">3</button>
@@ -601,6 +598,41 @@
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">取消</button>
             <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 手动输入订单号虚拟键盘弹窗 -->
+<div class="modal-overlay" id="manualModalOverlay">
+    <div class="modal-box">
+        <div class="modal-handle"></div>
+        <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
+        <div class="modal-title">手动输入订单号</div>
+        <div class="modal-desc" style="margin-top:8px;">
+            请点击下方键盘输入<strong>订单号</strong>
+        </div>
+
+        <div class="modal-display" id="manualDisplay" style="font-size:1.4rem; letter-spacing:1px; word-break:break-all;">请输入订单号</div>
+
+        <!-- ✅ 纯数字键盘 -->
+        <div class="keypad" id="manualKeypad">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key key-func" data-action="clear">清空</button>
+            <button class="key" data-key="0">0</button>
+            <button class="key key-delete" data-action="delete">⌫</button>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="manualCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="manualConfirmBtn">确认添加</button>
         </div>
     </div>
 </div>
@@ -693,6 +725,9 @@
     var soundEnabled = true;
     var audioCtx = null;
 
+    // ✅ 手动输入状态
+    var manualInputValue = '';
+
     // ========== DOM ==========
     var barcodeInput = document.getElementById('barcodeInput');
     var addBtn = document.getElementById('addBtn');
@@ -717,6 +752,14 @@
     var modalConfirmBtn = document.getElementById('modalConfirmBtn');
     var modalCancelBtn = document.getElementById('modalCancelBtn');
     var inputHint = document.getElementById('inputHint');
+    var numKeypad = document.getElementById('numKeypad');
+
+    // ✅ 手动输入弹窗 DOM
+    var manualModalOverlay = document.getElementById('manualModalOverlay');
+    var manualDisplay = document.getElementById('manualDisplay');
+    var manualKeypad = document.getElementById('manualKeypad');
+    var manualCancelBtn = document.getElementById('manualCancelBtn');
+    var manualConfirmBtn = document.getElementById('manualConfirmBtn');
 
     var summaryOverlay = document.getElementById('summaryOverlay');
     var summarySubtitle = document.getElementById('summarySubtitle');
@@ -818,7 +861,7 @@
         statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
         statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
         statusTimer = setTimeout(function() {
-            statusMsgDiv.innerHTML = '📌 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效';
+            statusMsgDiv.innerHTML = '📌 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入';
             statusMsgDiv.style.background = '#e9f3fe';
             statusMsgDiv.style.color = '#0050b3';
         }, 3000);
@@ -833,7 +876,7 @@
         });
     }
 
-    // ========== 虚拟键盘 ==========
+    // ========== 预估数字键盘 ==========
     function updateModalDisplay() {
         if (modalInputValue === '') {
             modalDisplay.textContent = '0';
@@ -900,7 +943,7 @@
         if (navigator.vibrate) navigator.vibrate(20);
     }
     function bindKeypadEvents() {
-        var keys = document.querySelectorAll('.key');
+        var keys = numKeypad.querySelectorAll('.key');
         for (var i = 0; i < keys.length; i++) {
             keys[i].addEventListener('click', function(e) {
                 e.preventDefault();
@@ -913,7 +956,95 @@
         }
     }
 
-    // ========== 弹窗控制 ==========
+    // ========== ✅ 订单号输入键盘（纯数字） ==========
+    function bindManualKeypadEvents() {
+        var btns = manualKeypad.querySelectorAll('.key');
+        for (var m = 0; m < btns.length; m++) {
+            btns[m].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-key');
+                var action = this.getAttribute('data-action');
+                if (action === 'delete') manualDelete();
+                else if (action === 'clear') manualClear();
+                else if (key !== null) manualInput(key);
+            });
+        }
+    }
+
+    function manualInput(key) {
+        if (manualInputValue.length >= 30) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            return;
+        }
+        manualInputValue += key;
+        updateManualDisplay();
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+    function manualDelete() {
+        if (manualInputValue.length > 0) manualInputValue = manualInputValue.slice(0, -1);
+        updateManualDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+    function manualClear() {
+        manualInputValue = '';
+        updateManualDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function updateManualDisplay() {
+        if (manualInputValue === '') {
+            manualDisplay.textContent = '请输入订单号';
+            manualDisplay.classList.add('empty');
+        } else {
+            manualDisplay.textContent = manualInputValue;
+            manualDisplay.classList.remove('empty');
+        }
+    }
+
+    function openManualModal() {
+        manualInputValue = '';
+        updateManualDisplay();
+        manualModalOverlay.classList.add('show');
+        setTimeout(function() {
+            if (!manualModalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onManualModalKeyDown);
+        }, 0);
+    }
+
+    function closeManualModal() {
+        manualModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onManualModalKeyDown);
+        if (!modalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !overWarnOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function onManualConfirm() {
+        var code = manualInputValue.trim();
+        if (code === '') {
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('请输入订单号', true);
+            return;
+        }
+        addBox(code, 'manual');
+        closeManualModal();
+    }
+
+    // 手动输入弹窗的键盘拦截
+    function onManualModalKeyDown(e) {
+        if (!manualModalOverlay.classList.contains('show')) return;
+        if (e.key === 'Tab' || e.key === 'Shift') return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.key >= '0' && e.key <= '9') {
+            if (navigator.vibrate) navigator.vibrate(20);
+            setStatusMessage('手动输入请点击下方虚拟键盘', true);
+        }
+    }
+
+    // ========== 预估数字键盘弹窗 ==========
     function registerModalKeys() {
         setTimeout(function () {
             if (!modalOverlay.classList.contains('show')) return;
@@ -991,7 +1122,7 @@
         currentBarcode = null;
         modalInputValue = '';
         document.removeEventListener('keydown', onModalKeyDown);
-        if (!summaryOverlay.classList.contains('show') && !overWarnOverlay.classList.contains('show')) {
+        if (!summaryOverlay.classList.contains('show') && !overWarnOverlay.classList.contains('show') && !manualModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1067,18 +1198,12 @@
         renderList();
     }
 
-    // ✅ 核心：弹窗打开时拦截键盘，扫码枪的输入全部无效
+    // 预估弹窗拦截键盘
     function onModalKeyDown(e) {
         if (!modalOverlay.classList.contains('show')) return;
-        // 允许 Tab 和 Shift
         if (e.key === 'Tab' || e.key === 'Shift') return;
-        
-        // 拦截所有其他按键（数字、字母、回车、退格、Delete、Esc）
-        // 扫码枪：数字键和 Enter 都不会生效
         e.preventDefault();
         e.stopPropagation();
-        
-        // 可选：给个轻微反馈，表示拦截了扫码枪
         if (e.key >= '0' && e.key <= '9') {
             if (navigator.vibrate) navigator.vibrate(30);
             setStatusMessage('弹窗内请点击下方虚拟键盘输入', true);
@@ -1105,7 +1230,9 @@
     function closeOverWarn() {
         overWarnOverlay.classList.remove('show');
         overWarnBarcodeValue = null;
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !manualModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1377,7 +1504,9 @@
 
     function closeSummary() {
         summaryOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show') && !overWarnOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') &&
+            !overWarnOverlay.classList.contains('show') &&
+            !manualModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1394,22 +1523,26 @@
         modalInputValue = '';
         modalMode = 'estimate';
         overWarnBarcodeValue = null;
+        manualInputValue = '';
 
         modalOverlay.classList.remove('show');
         summaryOverlay.classList.remove('show');
         overWarnOverlay.classList.remove('show');
+        manualModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onModalKeyDown);
+        document.removeEventListener('keydown', onManualModalKeyDown);
         barcodeInput.value = '';
 
         modalDisplay.textContent = '0';
         modalDisplay.classList.add('empty');
         modalDisplay.classList.remove('error', 'warn-limit');
         resetInputHint();
+        updateManualDisplay();
 
         renderList();
 
         if (statusTimer) clearTimeout(statusTimer);
-        statusMsgDiv.innerHTML = '✅ 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效';
+        statusMsgDiv.innerHTML = '✅ 就绪 | 扫码枪扫单号 | 手点「手动累加」用虚拟键盘输入';
         statusMsgDiv.style.background = '#e9f3fe';
         statusMsgDiv.style.color = '#0050b3';
 
@@ -1504,7 +1637,8 @@
             e.preventDefault();
             if (modalOverlay.classList.contains('show') ||
                 summaryOverlay.classList.contains('show') ||
-                overWarnOverlay.classList.contains('show')) return;
+                overWarnOverlay.classList.contains('show') ||
+                manualModalOverlay.classList.contains('show')) return;
             var now = Date.now();
             if (now - lastAddTime < 150) { barcodeInput.value = ''; return; }
             lastAddTime = now;
@@ -1517,7 +1651,8 @@
             }
             if (!modalOverlay.classList.contains('show') &&
                 !summaryOverlay.classList.contains('show') &&
-                !overWarnOverlay.classList.contains('show')) {
+                !overWarnOverlay.classList.contains('show') &&
+                !manualModalOverlay.classList.contains('show')) {
                 barcodeInput.focus();
             }
         }
@@ -1525,16 +1660,9 @@
     function onAddManual() {
         if (modalOverlay.classList.contains('show') ||
             summaryOverlay.classList.contains('show') ||
-            overWarnOverlay.classList.contains('show')) return;
-        var val = barcodeInput.value.trim();
-        if (val === '') { setStatusMessage('请输入订单号', true); return; }
-        addBox(val, 'manual');
-        barcodeInput.value = '';
-        if (!modalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !overWarnOverlay.classList.contains('show')) {
-            barcodeInput.focus();
-        }
+            overWarnOverlay.classList.contains('show') ||
+            manualModalOverlay.classList.contains('show')) return;
+        openManualModal();
     }
     function onClearAll() {
         if (boxData.size === 0) { setStatusMessage('无数据', true); return; }
@@ -1547,6 +1675,7 @@
         if (modalOverlay.classList.contains('show')) return;
         if (summaryOverlay.classList.contains('show')) return;
         if (overWarnOverlay.classList.contains('show')) return;
+        if (manualModalOverlay.classList.contains('show')) return;
         if (e.target !== barcodeInput && !e.target.closest('button') && !e.target.closest('input') && !e.target.closest('.box-card')) {
             barcodeInput.focus();
         }
@@ -1577,6 +1706,14 @@
             if (e.target === modalOverlay) closeModal();
         });
 
+        // 手动输入弹窗事件
+        manualCancelBtn.addEventListener('click', closeManualModal);
+        manualConfirmBtn.addEventListener('click', onManualConfirm);
+        manualModalOverlay.addEventListener('click', function(e) {
+            if (e.target === manualModalOverlay) closeManualModal();
+        });
+        bindManualKeypadEvents();
+
         overIgnoreBtn.addEventListener('click', onOverIgnore);
         overFixBtn.addEventListener('click', onOverFix);
         overWarnOverlay.addEventListener('click', function(e) {
@@ -1595,6 +1732,8 @@
                     onOverIgnore();
                 } else if (summaryOverlay.classList.contains('show')) {
                     closeSummary();
+                } else if (manualModalOverlay.classList.contains('show')) {
+                    closeManualModal();
                 }
             }
         });
@@ -1612,7 +1751,7 @@
         bindKeypadEvents();
         renderList();
         barcodeInput.focus();
-        console.log('初始化完成 - 强制虚拟键盘版');
+        console.log('初始化完成 - 手动纯数字键盘版');
     }
 
     init();
