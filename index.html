@@ -2,1244 +2,1359 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>大福面单 · 安卓小程序</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>扫码器 - 箱子计数（第2箱必弹窗填预估）</title>
     <style>
-        /* ============================================================
-           安卓小程序风格样式
-           ============================================================ */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: #f5f5f5;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
             min-height: 100vh;
-            padding: 0;
+            padding: 20px 16px;
             display: flex;
-            align-items: flex-start;
             justify-content: center;
-            background: #f0f2f5;
-        }
-
-        /* ----- 小程序容器 ----- */
-        .app-container {
-            max-width: 420px;
-            width: 100%;
-            background: #f0f2f5;
-            min-height: 100vh;
-            padding: 0 0 80px 0;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* ----- 状态栏占位 (安卓风格) ----- */
-        .status-bar {
-            height: 32px;
-            background: #0ABAB5;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
         }
-
-        .status-bar .time {
-            font-weight: 600;
-        }
-        .status-bar .icons {
-            display: flex;
-            gap: 4px;
-            font-size: 12px;
-        }
-
-        /* ----- 顶部导航 (小程序风格) ----- */
-        .nav-bar {
-            background: #fff;
-            padding: 12px 16px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #e8ecf0;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .nav-bar .back-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #333;
-            cursor: pointer;
-            padding: 0 4px;
-            display: none;
-            min-width: 36px;
-        }
-        .nav-bar .back-btn.show {
-            display: block;
-        }
-
-        .nav-bar .title {
-            font-size: 17px;
-            font-weight: 600;
-            color: #1e1e2a;
-            flex: 1;
-            text-align: center;
-        }
-
-        .nav-bar .right-btn {
-            font-size: 14px;
-            color: #0ABAB5;
-            background: none;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 4px 8px;
-            min-width: 36px;
-            text-align: right;
-        }
-        .nav-bar .right-btn:active {
-            opacity: 0.6;
-        }
-
-        /* ----- 页面切换 ----- */
-        .page {
-            display: none;
-            padding: 12px 16px 20px;
-            animation: slideUp 0.25s ease;
-        }
-        .page.active {
-            display: block;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ----- 卡片组件 (安卓Material风格) ----- */
         .card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1e1e2a;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .card-title .badge {
-            font-size: 10px;
-            background: #0ABAB5;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 500;
-        }
-
-        /* ----- 表单 ----- */
-        .form-group {
-            margin-bottom: 14px;
-        }
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #444;
-            margin-bottom: 4px;
-        }
-
-        label .required {
-            color: #ff4757;
-        }
-
-        input {
+            max-width: 1200px;
             width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #e0e4e8;
-            border-radius: 10px;
-            font-size: 15px;
-            background: #fafbfc;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-            font-family: inherit;
-            color: #1e1e2a;
-            min-height: 46px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #0ABAB5;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
-        }
-
-        input.error {
-            border-color: #ff4757;
-        }
-
-        .error-message {
-            color: #ff4757;
-            font-size: 11px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        /* ----- 按钮 (安卓风格) ----- */
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px 10px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            min-height: 46px;
-            position: relative;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
-
-        .btn:active {
-            transform: scale(0.97);
+        .inner { padding: 20px 24px 28px; }
+        .logo-area {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; flex-wrap: wrap; gap: 12px;
         }
-
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-img {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #0f62fe 0%, #1e3a5f 100%);
+            border-radius: 12px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 22px;
+        }
+        .logo-text { font-size: 1.1rem; font-weight: 700; color: #1e3a5f; }
+        .logo-text small { font-size: 0.65rem; font-weight: 400; color: #6c86a3; display: block; }
+        .company-info { text-align: right; }
+        .company-name { font-size: 0.8rem; color: #8ba0bc; }
+        .company-name strong { color: #1e3a5f; }
+        h1 {
+            font-size: 1.6rem; margin: 0 0 4px 0; color: #0a2540;
+            display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap; justify-content: space-between;
+        }
+        .badge {
+            background: #e6f7e6; color: #2e7d32; font-size: 0.7rem;
+            padding: 4px 12px; border-radius: 40px; font-weight: 500;
+        }
+        .sub {
+            color: #4a5b6e; border-left: 4px solid #0f62fe;
+            padding-left: 12px; margin: 6px 0 20px 0; font-size: 0.85rem;
+        }
+        .scan-panel {
+            background: #f8fafd; border-radius: 24px; padding: 18px;
+            margin-bottom: 20px; border: 1px solid #e2edf7;
+        }
+        .scan-title { font-weight: 700; font-size: 1rem; margin-bottom: 12px; color: #1e3a5f; }
+        .scan-input-area { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .barcode-input {
+            flex: 3; min-width: 180px; background: white; border: 2px solid #cbdde9;
+            border-radius: 60px; padding: 12px 18px; font-size: 0.95rem;
+            font-family: 'Courier New', monospace; outline: none;
+        }
+        .barcode-input:focus { border-color: #0f62fe; box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.1); }
         .btn-primary {
-            background: #0ABAB5;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(10, 186, 181, 0.25);
+            background: #0f62fe; border: none; color: white; font-weight: 600;
+            padding: 0 24px; height: 48px; border-radius: 60px; font-size: 0.9rem; cursor: pointer;
         }
-        .btn-primary:disabled {
-            background: #c5c8cc;
-            box-shadow: none;
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
+        .btn-primary:hover { background: #0353e9; }
         .btn-secondary {
-            background: #e8ecf0;
-            color: #333;
+            background: #eef2f6; border: 1px solid #ccdae5; color: #2c3e50;
+            font-weight: 500; padding: 0 18px; height: 44px; border-radius: 60px; cursor: pointer;
         }
-        .btn-secondary:active {
-            background: #d5d9df;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
-        }
-        .btn-danger:active {
-            background: #c82333;
-        }
-
         .btn-success {
-            background: #28a745;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+            background: #16a34a; border: none; color: white; font-weight: 700;
+            padding: 0 28px; height: 48px; border-radius: 60px; font-size: 0.95rem; cursor: pointer;
+            box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.4);
         }
-        .btn-success:active {
-            background: #1e7e34;
+        .btn-success:hover { background: #15803d; }
+        .status {
+            margin-top: 12px; background: #e9f3fe; padding: 8px 16px;
+            border-radius: 40px; font-size: 0.8rem; color: #0050b3;
         }
-
-        .btn-warning {
-            background: #ff6b35;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+        .diff-summary {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f62fe 100%);
+            border-radius: 18px; padding: 14px 20px; margin-bottom: 20px;
+            display: flex; justify-content: space-around; align-items: center;
+            flex-wrap: wrap; gap: 12px; color: white;
         }
-        .btn-warning:active {
-            background: #e55a2b;
+        .diff-summary-item { text-align: center; flex: 1; min-width: 80px; }
+        .diff-summary-item .label { font-size: 0.7rem; opacity: 0.85; margin-bottom: 4px; }
+        .diff-summary-item .value { font-size: 1.4rem; font-weight: 700; }
+        .stats-card {
+            background: white; border-radius: 20px;
+            border: 1px solid #e9edf2; overflow: hidden;
         }
-
-        .btn-outline {
-            background: transparent;
-            color: #0ABAB5;
-            border: 1.5px solid #0ABAB5;
+        .stats-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: #e8f0fe;
+            border-bottom: 1px solid #bdd4ff; flex-wrap: wrap; gap: 10px;
         }
-        .btn-outline:active {
-            background: rgba(10, 186, 181, 0.08);
+        .stats-header h3 { margin: 0; font-size: 1rem; }
+        .clear-btn {
+            background: none; border: none; color: #c2410c; font-weight: 600;
+            cursor: pointer; padding: 4px 10px; border-radius: 30px; font-size: 0.75rem;
         }
-
-        /* ----- 预览面单 (50x40mm) ----- */
-        .label-preview-container {
-            display: flex;
-            justify-content: center;
-            padding: 8px 0;
+        .table-wrapper { overflow-x: auto; max-height: 450px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th {
+            text-align: left; padding: 10px 10px; background: #f9fbfd;
+            border-bottom: 1px solid #e2e8f0; position: sticky; top: 0;
         }
-
-        .label-card {
-            background: #fff;
-            border: 2px solid #222;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-family: Arial, sans-serif;
-            width: 100%;
-            max-width: 280px;
-            aspect-ratio: 50/40;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        td { padding: 10px 10px; border-bottom: 1px solid #edf2f7; }
+        .barcode-cell { font-family: 'Courier New', monospace; word-break: break-all; font-size: 0.75rem; }
+        .count-badge {
+            background: #0f62fe10; color: #0f62fe; font-weight: 800;
+            padding: 2px 10px; border-radius: 40px; display: inline-block;
         }
-
-        .label-card .label-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2px;
+        .estimate-value { font-weight: 600; color: #b45309; }
+        .diff-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 600;
         }
-
-        .label-card .label-logo {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0ABAB5;
-            letter-spacing: 1px;
+        .diff-match { background: #dcfce7; color: #166534; }
+        .diff-mismatch { background: #fee2e2; color: #b91c1c; }
+        .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
+        .row-error td { border-bottom: 1px solid #fecaca; }
+        .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
+        .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
+        .error-icon { display: inline-block; margin-left: 4px; font-size: 0.9rem; animation: shake 0.5s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
         }
-
-        .label-card .label-order {
-            font-size: 10px;
-            color: #666;
+        .adjust-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: 0.1s; user-select: none;
+        }
+        .adjust-plus { background: #dcfce7; color: #166534; }
+        .adjust-plus:hover { background: #bbf7d0; }
+        .adjust-minus { background: #fee2e2; color: #b91c1c; }
+        .adjust-minus:hover { background: #fecaca; }
+        .adjust-btn:active { transform: scale(0.9); }
+        .action-group { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .edit-btn {
+            background: none; border: 1px solid #0f62fe; color: #0f62fe;
+            font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; cursor: pointer;
             font-weight: 600;
         }
+        .edit-btn:hover { background: #dbeafe; }
+        .edit-est-btn { border-color: #b45309; color: #b45309; }
+        .edit-est-btn:hover { background: #fef3c7; }
+        .total-row { background: #f1f5f9; font-weight: 700; }
+        .empty-row td { text-align: center; padding: 40px 16px; color: #8ba0bc; }
+        .footer-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .shortcut-hint {
+            font-size: 0.65rem; color: #5f7d9c; margin-top: 8px;
+            padding: 5px 10px; background: #f0f4f9; border-radius: 20px; display: inline-block;
+        }
+        .sound-toggle {
+            background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155;
+            font-size: 0.7rem; padding: 4px 12px; border-radius: 20px;
+            cursor: pointer; font-weight: 600;
+        }
+        .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: 16px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: 28px; padding: 22px 20px 20px;
+            max-width: 380px; width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            animation: modalPop 0.25s ease-out; max-height: 95vh; overflow-y: auto;
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-icon {
+            width: 50px; height: 50px; background: #fef3c7; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin: 0 auto 12px;
+        }
+        .modal-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 8px; }
+        .modal-barcode {
+            font-family: 'Courier New', monospace; font-size: 0.85rem; color: #0f62fe;
+            background: #eff6ff; padding: 8px 16px; border-radius: 12px;
+            text-align: center; margin-bottom: 12px; word-break: break-all;
+        }
+        .modal-desc { font-size: 0.8rem; color: #64748b; text-align: center; margin-bottom: 14px; line-height: 1.5; }
+        .modal-desc strong { color: #0f62fe; }
+        .modal-display {
+            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px;
+            padding: 12px 18px; text-align: center; font-size: 2.2rem;
+            font-weight: 800; color: #0f62fe; letter-spacing: 2px;
+            min-height: 70px; display: flex; align-items: center;
+            justify-content: center; margin-bottom: 14px; transition: 0.2s;
+            cursor: pointer; font-family: 'Courier New', monospace;
+        }
+        .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
+        .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .key {
+            background: #f1f5f9; border: none; border-radius: 14px;
+            padding: 16px 0; font-size: 1.4rem; font-weight: 700; color: #1e293b;
+            cursor: pointer; transition: 0.1s; user-select: none;
+            -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', sans-serif;
+        }
+        .key:hover { background: #e2e8f0; }
+        .key:active { background: #cbd5e1; transform: scale(0.95); }
+        .key-func { background: #e0e7ff; color: #3730a3; font-size: 1rem; }
+        .key-func:hover { background: #c7d2fe; }
+        .key-delete { background: #fee2e2; color: #b91c1c; font-size: 1.2rem; }
+        .key-delete:hover { background: #fecaca; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 6px; }
+        .modal-btn {
+            flex: 1; padding: 14px; border-radius: 16px; border: none;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .modal-btn-confirm { background: #0f62fe; color: white; flex: 2; }
+        .modal-btn-confirm:hover { background: #0353e9; }
+        .modal-btn-confirm:active { transform: scale(0.98); }
+        .modal-btn-cancel { background: #f1f5f9; color: #475569; }
+        .modal-btn-cancel:hover { background: #e2e8f0; }
 
-        .label-card .label-divider {
-            border-top: 1px dashed #ccc;
-            margin: 2px 0;
+        .summary-modal {
+            max-width: 520px !important;
+            padding: 24px 20px 20px !important;
         }
-
-        .label-card .label-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex: 1;
-            padding: 2px 0;
-        }
-
-        .label-card .label-field {
-            font-size: 12px;
-            color: #333;
-        }
-
-        .label-card .label-field .value {
-            font-weight: 700;
-            font-size: 14px;
-            color: #1e1e2a;
-        }
-
-        .label-card .label-field .value.price {
-            font-size: 18px;
-            color: #dc3545;
-        }
-
-        .label-card .label-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2px;
-            font-size: 8px;
-            color: #999;
-        }
-
-        /* ----- 预览操作按钮 ----- */
-        .preview-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 14px;
-            flex-wrap: wrap;
-        }
-
-        .preview-actions .btn {
-            flex: 1;
-            min-width: 70px;
-            font-size: 13px;
-            padding: 10px 8px;
-            min-height: 40px;
-        }
-
-        /* ----- 历史记录 ----- */
-        .history-item {
-            background: #fff;
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin-bottom: 8px;
-            border-left: 3px solid #0ABAB5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-item .info .order {
-            font-weight: 600;
-            color: #1e1e2a;
-            font-size: 14px;
-        }
-
-        .history-item .info .price {
-            font-size: 13px;
-            color: #dc3545;
-            font-weight: 600;
-        }
-
-        .history-item .info .date {
-            font-size: 11px;
-            color: #999;
-        }
-
-        .history-item .actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .history-item .actions .btn-sm {
-            padding: 4px 12px;
-            font-size: 11px;
-            border-radius: 6px;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            min-height: 28px;
-        }
-
-        .history-item .actions .btn-sm-reprint {
-            background: #0ABAB5;
-            color: #fff;
-        }
-        .history-item .actions .btn-sm-reprint:active {
-            background: #008E9B;
-        }
-        .history-item .actions .btn-sm-delete {
-            background: #fee;
-            color: #dc3545;
-        }
-        .history-item .actions .btn-sm-delete:active {
-            background: #fdd;
-        }
-
-        .history-empty {
-            text-align: center;
-            padding: 30px 0;
-            color: #999;
-            font-size: 13px;
-        }
-
-        /* ----- 底部安全区 ----- */
-        .bottom-safe {
-            height: 20px;
-        }
-
-        /* ----- Toast ----- */
-        .toast {
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(30, 30, 42, 0.92);
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-            z-index: 99999;
-            animation: slideDown 0.35s ease;
-            max-width: 85%;
-            text-align: center;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            backdrop-filter: blur(8px);
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateX(-50%) translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* ----- 打印指南弹窗 (安卓风格) ----- */
-        .guide-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            animation: fadeIn 0.25s ease;
-        }
-
-        .guide-overlay.show {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .guide-modal {
-            background: #fff;
-            border-radius: 16px;
-            max-width: 360px;
-            width: 100%;
-            padding: 24px 20px 20px;
-            animation: modalSlideUp 0.3s ease;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes modalSlideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .guide-modal .icon {
-            text-align: center;
-            font-size: 44px;
-            margin-bottom: 6px;
-        }
-
-        .guide-modal h3 {
-            text-align: center;
-            font-size: 18px;
-            color: #1e1e2a;
-            margin-bottom: 2px;
-        }
-
-        .guide-modal .sub {
-            text-align: center;
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 14px;
-        }
-
-        .guide-modal .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-            color: #444;
-            line-height: 1.5;
-        }
-
-        .guide-modal .step:last-child {
-            border-bottom: none;
-        }
-
-        .guide-modal .step .num {
-            width: 24px;
-            height: 24px;
-            background: #0ABAB5;
-            color: #fff;
+        .summary-header-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; margin: 0 auto 12px;
+            color: white;
+            box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5);
+        }
+        .summary-title {
+            font-size: 1.3rem; font-weight: 800; color: #0a2540;
+            text-align: center; margin-bottom: 6px;
+        }
+        .summary-subtitle {
+            font-size: 0.8rem; color: #64748b;
+            text-align: center; margin-bottom: 16px;
+        }
+        .summary-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin-bottom: 16px;
+        }
+        .summary-stat {
+            background: #f8fafc; border-radius: 14px;
+            padding: 10px 6px; text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .summary-stat .lbl { font-size: 0.65rem; color: #64748b; margin-bottom: 2px; }
+        .summary-stat .val { font-size: 1.3rem; font-weight: 800; color: #0f62fe; }
+        .summary-stat.diff-ok .val { color: #16a34a; }
+        .summary-stat.diff-bad .val { color: #dc2626; }
+        .summary-list-title {
+            font-size: 0.8rem; font-weight: 700; color: #0a2540;
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+        }
+        .summary-list-title .count-tag {
+            background: #fee2e2; color: #b91c1c;
+            font-size: 0.7rem; padding: 1px 8px; border-radius: 20px;
             font-weight: 700;
-            flex-shrink: 0;
-            margin-top: 1px;
         }
-
-        .guide-modal .step .text strong {
-            color: #0ABAB5;
+        .summary-list {
+            max-height: 260px; overflow-y: auto;
+            border: 1px solid #e2e8f0; border-radius: 14px;
+            margin-bottom: 16px; background: #fafbfc;
         }
-
-        .guide-modal .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
+        .summary-list::-webkit-scrollbar { width: 6px; }
+        .summary-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .summary-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; border-bottom: 1px solid #edf2f7;
+            gap: 8px;
         }
-
-        .guide-modal .modal-actions .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            min-height: 44px;
+        .summary-item:last-child { border-bottom: none; }
+        .summary-item-code {
+            font-family: 'Courier New', monospace; font-size: 0.75rem;
+            color: #0a2540; word-break: break-all; flex: 1; font-weight: 600;
         }
-
-        /* ----- 打印专用 ----- */
-        @media print {
-            body { background: #fff; padding: 0; }
-            .app-container { background: #fff; padding: 0; }
-            .nav-bar, .status-bar, .page > .card:first-child,
-            .preview-actions, .btn-group, .bottom-safe,
-            .guide-overlay, .toast { display: none !important; }
-            .page { display: block !important; padding: 0 !important; }
-            #pagePreview { display: block !important; }
-            #pageCreate, #pageHistory { display: none !important; }
-            .label-card {
-                width: 50mm;
-                height: 40mm;
-                border: 1px solid #000;
-                border-radius: 0;
-                padding: 2mm 3mm;
-                max-width: none;
-                margin: 0 auto;
-                page-break-after: avoid;
-                box-shadow: none;
-            }
-            .preview-page { background: #fff; padding: 0; }
-            .label-preview-container { padding: 0; }
+        .summary-item-nums {
+            display: flex; gap: 6px; flex-shrink: 0;
         }
+        .summary-num-chip {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+            font-weight: 700; white-space: nowrap;
+        }
+        .chip-est { background: #fef3c7; color: #b45309; }
+        .chip-act { background: #dbeafe; color: #0f62fe; }
+        .chip-diff-bad { background: #fee2e2; color: #b91c1c; }
+        .summary-all-good {
+            text-align: center; padding: 30px 16px;
+            color: #16a34a; font-size: 0.9rem; font-weight: 600;
+        }
+        .summary-all-good .big { font-size: 2rem; display: block; margin-bottom: 6px; }
+        .summary-actions {
+            display: flex; gap: 10px;
+        }
+        .summary-actions .modal-btn {
+            padding: 13px 16px; font-size: 0.9rem;
+        }
+        .btn-continue {
+            background: #0f62fe; color: white; flex: 1;
+        }
+        .btn-continue:hover { background: #0353e9; }
+        .btn-finish {
+            background: #dc2626; color: white; flex: 1;
+        }
+        .btn-finish:hover { background: #b91c1c; }
+        .btn-export-in-summary {
+            background: #f0f4f9; color: #334155; flex: 1;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-export-in-summary:hover { background: #e2e8f0; }
 
-        /* ----- 工具 ----- */
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .text-muted { color: #999; font-size: 12px; }
-        .mt-8 { margin-top: 8px; }
-        .flex-1 { flex: 1; }
+        @media (max-width: 700px) {
+            .inner { padding: 16px; }
+            .barcode-input { font-size: 0.85rem; padding: 10px 14px; }
+            .diff-summary-item .value { font-size: 1.1rem; }
+            .logo-area { flex-direction: column; align-items: flex-start; }
+            .company-info { text-align: left; }
+            .modal-box { padding: 18px 16px 16px; }
+            .key { padding: 14px 0; font-size: 1.3rem; }
+            .summary-modal { max-width: 95vw !important; }
+            .summary-stats { grid-template-columns: repeat(3, 1fr); }
+            .summary-stat .val { font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
-
-    <div class="app-container" id="app">
-
-        <!-- ===== 状态栏 (安卓风格) ===== -->
-        <div class="status-bar" id="statusBar">
-            <span class="time" id="statusTime">12:00</span>
-            <span class="icons">📶 📶 🔋</span>
-        </div>
-
-        <!-- ===== 导航栏 ===== -->
-        <div class="nav-bar">
-            <button class="back-btn" id="navBackBtn">‹</button>
-            <span class="title" id="navTitle">面单打印</span>
-            <button class="right-btn" id="navRightBtn">历史</button>
-        </div>
-
-        <!-- ===== 页面：创建标签 ===== -->
-        <div id="pageCreate" class="page active">
-            <div class="card">
-                <div class="card-title">
-                    📋 订单信息
-                    <span class="badge">50×40mm</span>
-                </div>
-
-                <div class="form-group">
-                    <label>货号 <span class="required">*</span></label>
-                    <input type="text" id="orderNo" placeholder="输入货号" maxlength="20">
-                    <div class="error-message" id="orderNoError">请输入货号</div>
-                </div>
-
-                <div class="form-group">
-                    <label>价格 <span class="required">*</span></label>
-                    <input type="number" id="amount" placeholder="输入价格" step="0.01" min="0">
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn btn-primary" id="generateBtn">生成标签</button>
-                    <button class="btn btn-secondary" id="resetBtn">重置</button>
+<div class="card">
+    <div class="inner">
+        <div class="logo-area">
+            <div class="logo">
+                <div class="logo-img">📦</div>
+                <div class="logo-text">
+                    订单箱数验证程序
+                    <small>Box Counter System</small>
                 </div>
             </div>
-
-            <div class="card" style="margin-top:8px;">
-                <div class="card-title" style="font-size:13px;color:#666;margin-bottom:4px;">
-                    💡 快速上手
-                </div>
-                <div style="font-size:12px;color:#999;line-height:1.8;">
-                    1. 输入货号和价格 → 2. 点击「生成标签」<br>
-                    3. 预览确认 → 4. 点击「打印」或「保存」
+            <div class="company-info">
+                <div class="company-name">
+                    <strong>预估 vs 实际</strong><br>
+                    第2箱弹窗填预估
                 </div>
             </div>
         </div>
 
-        <!-- ===== 页面：预览 ===== -->
-        <div id="pagePreview" class="page">
-            <div class="card">
-                <div class="card-title">
-                    🏷️ 标签预览
-                    <span class="badge" id="previewBadge">1张</span>
-                </div>
+        <h1>
+            📦 扫码器 · 箱子计数
+            <span class="badge">🔁 新码置顶 · ✅ 完成汇总 · 🔊 提示音</span>
+        </h1>
+        <div class="sub">
+            🧾 第1次扫默认实际1+预估1 | 第2次必弹窗填预估（带提示音）| 新码置顶 | 完成后只看差异条码
+        </div>
 
-                <div class="label-preview-container">
-                    <div class="label-card" id="labelCard">
-                        <div class="label-top">
-                            <span class="label-logo">DAFU</span>
-                            <span class="label-order" id="previewOrderTag">#________</span>
-                        </div>
-                        <div class="label-divider"></div>
-                        <div class="label-main">
-                            <span class="label-field">货号</span>
-                            <span class="label-field"><span class="value" id="previewOrderValue">________</span></span>
-                        </div>
-                        <div class="label-main">
-                            <span class="label-field">价格</span>
-                            <span class="label-field"><span class="value price" id="previewPriceValue">¥0.00</span></span>
-                        </div>
-                        <div class="label-divider"></div>
-                        <div class="label-bottom">
-                            <span id="previewDate">-- --- ----</span>
-                            <span>大福面单</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="preview-actions">
-                    <button class="btn btn-warning" id="printBtn">🖨️ 打印</button>
-                    <button class="btn btn-danger" id="downloadPdfBtn">📄 下载</button>
-                    <button class="btn btn-secondary" id="saveBtn">💾 保存</button>
-                </div>
-                <div style="margin-top:8px;font-size:11px;color:#999;text-align:center;">
-                    💡 点击「打印」使用系统打印，或「下载」保存为图片
-                </div>
+        <div class="scan-panel">
+            <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span>🎯 扫码区</span>
+                <button id="soundToggle" class="sound-toggle" title="开/关第2次扫描提示音">🔊 提示音：开</button>
+            </div>
+            <div class="scan-input-area">
+                <input type="text" id="barcodeInput" class="barcode-input" placeholder="光标点这里，扫码后按回车键..." autofocus>
+                <button id="addBtn" class="btn-primary">➕ 手动累加</button>
+                <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
+            </div>
+            <div id="statusMsg" class="status">
+                ✅ 就绪 | 第1次实际1+预估1，第2次必弹窗填预估，新码置顶
+            </div>
+            <div class="shortcut-hint">
+                💡 第1次扫 → 实际=1，预估=1 | 第2次扫 → 弹窗填预估（🔊提示音）| 第3次起 → 实际+1 | 点「完成」提取差异条码
             </div>
         </div>
 
-        <!-- ===== 页面：历史记录 ===== -->
-        <div id="pageHistory" class="page">
-            <div class="card">
-                <div class="card-title">
-                    📦 历史记录
-                    <span class="badge" id="historyCount">0</span>
-                </div>
-                <div id="historyList">
-                    <div class="history-empty">暂无记录</div>
-                </div>
-                <div style="margin-top:12px;text-align:center;">
-                    <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 20px;font-size:12px;min-height:32px;flex:none;width:auto;">清空全部</button>
-                </div>
+        <div class="diff-summary">
+            <div class="diff-summary-item">
+                <div class="label">📊 预估总计</div>
+                <div class="value" id="estimateTotal">0</div>
+            </div>
+            <div class="diff-summary-item">
+                <div class="label">📦 实际总计</div>
+                <div class="value" id="actualTotal">0</div>
+            </div>
+            <div class="diff-summary-item">
+                <div class="label">⚠️ 差异</div>
+                <div class="value" id="diffTotal">0</div>
             </div>
         </div>
 
-        <!-- ===== 底部安全区 ===== -->
-        <div class="bottom-safe"></div>
-    </div>
+        <div class="stats-card">
+            <div class="stats-header">
+                <h3>📦 箱子清单 <span style="font-size:0.7rem;">(新码置顶 · 预估 vs 实际)</span></h3>
+                <button id="clearAllBtn" class="clear-btn">🧹 清空全部</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="boxTable">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>预估数量</th>
+                            <th>实际数量</th>
+                            <th>对比</th>
+                            <th>调整</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="empty-row"><td colspan="5">暂无箱子记录，请扫码添加</td></tr>
+                    </tbody>
+                    <tfoot id="tableFoot" style="display: none;">
+                        <tr class="total-row"><td><strong>总计</strong></td><th id="estimateFooter">0</th><th id="actualFooter">0</th><th id="diffFooter">0</th><th></th></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
 
-    <!-- ===== 打印指南弹窗 ===== -->
-    <div class="guide-overlay" id="guideOverlay">
-        <div class="guide-modal">
-            <div class="icon">📱</div>
-            <h3>快速打印指南</h3>
-            <div class="sub">3步完成手机打印</div>
-
-            <div class="step">
-                <span class="num">1</span>
-                <div class="text"><strong>点击「打印」</strong><br>使用系统打印功能</div>
-            </div>
-            <div class="step">
-                <span class="num">2</span>
-                <div class="text"><strong>选择「另存为PDF」</strong><br>或选择已连接的打印机</div>
-            </div>
-            <div class="step">
-                <span class="num">3</span>
-                <div class="text"><strong>完成打印</strong><br>调整设置后点击打印</div>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="guideGotIt">我知道了</button>
-                <button class="btn btn-warning" id="guidePrint">🖨️ 去打印</button>
-            </div>
+        <div class="footer-buttons">
+            <button id="exportBtn" class="btn-secondary">📎 导出 CSV</button>
+            <button id="finishBtn" class="btn-success">✅ 完成 (汇总差异)</button>
         </div>
     </div>
+</div>
 
-    <!-- ===== Toast ===== -->
-    <div id="toast" class="toast"></div>
+<!-- 弹窗：数字键盘 -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" id="modalIcon">🔁</div>
+        <div class="modal-title" id="modalTitle">输入预估总数</div>
+        <div class="modal-barcode" id="modalBarcode">-</div>
+        <div class="modal-desc" id="modalDesc">
+            <strong>第 2 次扫描</strong>该箱码<br>
+            请输入该箱码的<strong>预估总数</strong>
+        </div>
 
-    <script>
-        // ============================================================
-        // 安卓小程序应用逻辑
-        // ============================================================
+        <div class="modal-display" id="modalDisplay" tabindex="0">0</div>
 
-        (function() {
-            'use strict';
+        <div class="keypad">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key key-func" data-action="clear">清空</button>
+            <button class="key" data-key="0">0</button>
+            <button class="key key-delete" data-action="delete">⌫</button>
+        </div>
 
-            // ----- 检测环境 -----
-            var isFeishu = /Lark|Feishu|LarkMobile/i.test(navigator.userAgent);
-            var isWechat = /MicroMessenger/i.test(navigator.userAgent);
-            var isAndroid = /Android/i.test(navigator.userAgent);
-            var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">确认</button>
+        </div>
+    </div>
+</div>
 
-            // ----- 数据 -----
-            var appData = {
-                labelHistory: [],
-                previewData: { orderNo: '', amount: '', dateStr: '' },
-                currentPage: 'create'
-            };
+<!-- 完成汇总弹窗 -->
+<div class="modal-overlay" id="summaryOverlay">
+    <div class="modal-box summary-modal">
+        <div class="summary-header-icon">✅</div>
+        <div class="summary-title">任务完成汇总</div>
+        <div class="summary-subtitle" id="summarySubtitle">以下为有差异的条码清单</div>
 
-            // ----- 存储 -----
-            function safeGetStorage(key, def) {
-                try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; }
+        <div class="summary-stats">
+            <div class="summary-stat">
+                <div class="lbl">总预估</div>
+                <div class="val" id="summaryEstTotal">0</div>
+            </div>
+            <div class="summary-stat">
+                <div class="lbl">总实际</div>
+                <div class="val" id="summaryActTotal">0</div>
+            </div>
+            <div class="summary-stat" id="summaryDiffStat">
+                <div class="lbl">总差异</div>
+                <div class="val" id="summaryDiffTotal">0</div>
+            </div>
+        </div>
+
+        <div class="summary-list-title">
+            📋 差异条码清单
+            <span class="count-tag" id="summaryDiffCount">0 条</span>
+        </div>
+        <div class="summary-list" id="summaryList">
+            <div class="summary-all-good">
+                <span class="big">🎉</span>
+                所有条码都一致，没有差异！
+            </div>
+        </div>
+
+        <div class="summary-actions">
+            <button class="modal-btn btn-export-in-summary" id="summaryExportBtn">📎 导出</button>
+            <button class="modal-btn btn-continue" id="continueBtn">🔄 继续任务</button>
+            <button class="modal-btn btn-finish" id="finishTaskBtn">🏁 结束任务</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== 数据存储 ==========
+    var boxData = new Map();
+    var currentBarcode = null;
+    var modalInputValue = '';
+    var modalMode = 'estimate';
+    var lastAddTime = 0;
+    var scanSeq = 0;
+
+    // ========== 提示音控制 ==========
+    var soundEnabled = true;
+    var audioCtx = null;
+
+    // ========== DOM ==========
+    var barcodeInput = document.getElementById('barcodeInput');
+    var addBtn = document.getElementById('addBtn');
+    var clearInputBtn = document.getElementById('clearInputBtn');
+    var clearAllBtn = document.getElementById('clearAllBtn');
+    var exportBtn = document.getElementById('exportBtn');
+    var finishBtn = document.getElementById('finishBtn');
+    var soundToggle = document.getElementById('soundToggle');
+    var statusMsgDiv = document.getElementById('statusMsg');
+    var tableBody = document.getElementById('tableBody');
+    var tableFoot = document.getElementById('tableFoot');
+
+    var estimateTotalSpan = document.getElementById('estimateTotal');
+    var actualTotalSpan = document.getElementById('actualTotal');
+    var diffTotalSpan = document.getElementById('diffTotal');
+    var estimateFooter = document.getElementById('estimateFooter');
+    var actualFooter = document.getElementById('actualFooter');
+    var diffFooter = document.getElementById('diffFooter');
+
+    var modalOverlay = document.getElementById('modalOverlay');
+    var modalIcon = document.getElementById('modalIcon');
+    var modalBarcode = document.getElementById('modalBarcode');
+    var modalDesc = document.getElementById('modalDesc');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalDisplay = document.getElementById('modalDisplay');
+    var modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    var modalCancelBtn = document.getElementById('modalCancelBtn');
+
+    var summaryOverlay = document.getElementById('summaryOverlay');
+    var summarySubtitle = document.getElementById('summarySubtitle');
+    var summaryEstTotal = document.getElementById('summaryEstTotal');
+    var summaryActTotal = document.getElementById('summaryActTotal');
+    var summaryDiffTotal = document.getElementById('summaryDiffTotal');
+    var summaryDiffStat = document.getElementById('summaryDiffStat');
+    var summaryDiffCount = document.getElementById('summaryDiffCount');
+    var summaryList = document.getElementById('summaryList');
+    var summaryExportBtn = document.getElementById('summaryExportBtn');
+    var continueBtn = document.getElementById('continueBtn');
+    var finishTaskBtn = document.getElementById('finishTaskBtn');
+
+    var statusTimer = null;
+
+    // ========== 🔊 提示音 ==========
+    function getAudioContext() {
+        if (!audioCtx) {
+            try {
+                var Ctx = window.AudioContext || window.webkitAudioContext;
+                if (Ctx) audioCtx = new Ctx();
+            } catch (e) {
+                console.warn('无法创建 AudioContext:', e);
             }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function(){});
+        }
+        return audioCtx;
+    }
 
-            function safeSetStorage(key, val) {
-                try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
-            }
+    function playTone(freq, startTime, duration, volume) {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+    }
 
-            // ----- DOM 引用 -----
-            var $ = function(id) { return document.getElementById(id); };
-            var orderNo = $('orderNo');
-            var amount = $('amount');
-            var generateBtn = $('generateBtn');
-            var toast = $('toast');
+    function playEstimatePromptSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(1046.5, now, 0.18, 0.35);
+        playTone(880, now + 0.2, 0.28, 0.35);
+        if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+    }
 
-            // ============================================================
-            // 状态栏时间
-            // ============================================================
-            function updateStatusTime() {
-                var now = new Date();
-                var h = String(now.getHours()).padStart(2, '0');
-                var m = String(now.getMinutes()).padStart(2, '0');
-                var timeEl = $('statusTime');
-                if (timeEl) timeEl.textContent = h + ':' + m;
-            }
-            updateStatusTime();
-            setInterval(updateStatusTime, 30000);
+    function playConfirmSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(1318.5, now, 0.08, 0.2);
+    }
 
-            // ============================================================
-            // 页面切换 (小程序风格)
-            // ============================================================
-            function showPage(page) {
-                appData.currentPage = page;
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+            soundToggle.textContent = '🔊 提示音：开';
+            soundToggle.classList.remove('muted');
+            playConfirmSound();
+            setStatusMessage('提示音已开启', false);
+        } else {
+            soundToggle.textContent = '🔇 提示音：关';
+            soundToggle.classList.add('muted');
+            setStatusMessage('提示音已关闭', true);
+        }
+    }
 
-                // 隐藏所有页面
-                document.querySelectorAll('.page').forEach(function(p) {
-                    p.classList.remove('active');
-                });
+    // ========== 工具 ==========
+    function setStatusMessage(msg, isError) {
+        if (statusTimer) clearTimeout(statusTimer);
+        statusMsgDiv.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
+        statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
+        statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
+        statusTimer = setTimeout(function() {
+            statusMsgDiv.innerHTML = '📌 就绪 | 第1次实际1+预估1，第2次必弹窗填预估，新码置顶';
+            statusMsgDiv.style.background = '#e9f3fe';
+            statusMsgDiv.style.color = '#0050b3';
+        }, 3000);
+    }
 
-                var target = $('page' + page.charAt(0).toUpperCase() + page.slice(1));
-                if (target) target.classList.add('active');
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
 
-                // 更新导航
-                var navTitle = $('navTitle');
-                var navBackBtn = $('navBackBtn');
-                var navRightBtn = $('navRightBtn');
+    // ========== 虚拟键盘 ==========
+    function updateModalDisplay() {
+        if (modalInputValue === '') {
+            modalDisplay.textContent = '0';
+            modalDisplay.classList.add('empty');
+        } else {
+            modalDisplay.textContent = modalInputValue;
+            modalDisplay.classList.remove('empty');
+        }
+    }
 
-                if (page === 'create') {
-                    navTitle.textContent = '面单打印';
-                    navBackBtn.classList.remove('show');
-                    navRightBtn.textContent = '历史';
-                    navRightBtn.onclick = function() { showPage('history'); };
-                } else if (page === 'preview') {
-                    navTitle.textContent = '标签预览';
-                    navBackBtn.classList.add('show');
-                    navBackBtn.onclick = function() { showPage('create'); };
-                    navRightBtn.textContent = '打印';
-                    navRightBtn.onclick = function() { doPrint(); };
-                } else if (page === 'history') {
-                    navTitle.textContent = '历史记录';
-                    navBackBtn.classList.add('show');
-                    navBackBtn.onclick = function() { showPage('create'); };
-                    navRightBtn.textContent = '清空';
-                    navRightBtn.onclick = function() { clearHistory(); };
-                }
-            }
+    function handleKeypadInput(key) {
+        if (modalInputValue === '0') modalInputValue = key;
+        else if (modalInputValue === '' && key === '0') modalInputValue = '0';
+        else if (modalInputValue.length >= 6) return;
+        else modalInputValue += key;
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
 
-            // ============================================================
-            // 表单与标签
-            // ============================================================
-            function validateForm() {
-                var valid = orderNo.value.trim().length > 0 &&
-                    amount.value.trim().length > 0 &&
-                    !isNaN(parseFloat(amount.value)) &&
-                    parseFloat(amount.value) >= 0;
-                if (generateBtn) generateBtn.disabled = !valid;
-                return valid;
-            }
+    function handleKeypadDelete() {
+        if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
 
-            function getDateStr() {
-                var now = new Date();
-                var months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                var day = String(now.getDate()).padStart(2, '0');
-                var month = months[now.getMonth()];
-                var year = now.getFullYear();
-                return day + ' ' + month + ' ' + year;
-            }
+    function handleKeypadClear() {
+        modalInputValue = '';
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
 
-            function escapeHtml(s) {
-                return String(s)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-
-            function generateLabel() {
-                if (!validateForm()) {
-                    showToast('请完整填写必填信息');
-                    return;
-                }
-
-                var no = orderNo.value.trim();
-                var amt = amount.value.trim();
-
-                appData.previewData = { orderNo: no, amount: amt, dateStr: getDateStr() };
-                renderPreview();
-                showPage('preview');
-                showToast('✅ 标签已生成');
-            }
-
-            // ===== 面单渲染 =====
-            function renderPreview() {
-                var data = appData.previewData;
-                var priceDisplay = parseFloat(data.amount).toFixed(2);
-
-                $('previewBadge').textContent = '1张';
-                $('previewOrderTag').textContent = '#' + escapeHtml(data.orderNo);
-                $('previewOrderValue').textContent = escapeHtml(data.orderNo);
-                $('previewPriceValue').textContent = '¥' + escapeHtml(priceDisplay);
-                $('previewDate').textContent = escapeHtml(data.dateStr);
-            }
-
-            function resetForm() {
-                orderNo.value = '';
-                amount.value = '';
-                validateForm();
-                showToast('🔄 已重置');
-            }
-
-            // ============================================================
-            // 打印功能
-            // ============================================================
-            function doPrint() {
-                var data = appData.previewData;
-                if (!data.orderNo) {
-                    showToast('请先生成标签');
-                    return;
-                }
-
-                // 显示打印指南（移动端友好）
-                showGuide();
-            }
-
-            function showGuide() {
-                $('guideOverlay').classList.add('show');
-            }
-
-            function hideGuide() {
-                $('guideOverlay').classList.remove('show');
-            }
-
-            function directPrint() {
-                hideGuide();
-                window.print();
-                showToast('🖨️ 正在打开打印...');
-            }
-
-            // ============================================================
-            // 下载图片 (安卓兼容)
-            // ============================================================
-            function downloadImage() {
-                var data = appData.previewData;
-                if (!data.orderNo) {
-                    showToast('请先生成标签');
-                    return;
-                }
-
-                try {
-                    var mmToPx = 3.78;
-                    var w = 50 * mmToPx;
-                    var h = 40 * mmToPx;
-
-                    var canvas = document.createElement('canvas');
-                    canvas.width = w;
-                    canvas.height = h;
-
-                    var ctx = canvas.getContext('2d');
-
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
-
-                    var pad = 2 * mmToPx;
-                    var x = pad;
-                    var y = pad;
-
-                    ctx.fillStyle = '#0ABAB5';
-                    ctx.font = 'bold ' + (5 * mmToPx) + 'px Arial';
-                    ctx.fillText('DAFU', x, y + 5 * mmToPx);
-
-                    ctx.fillStyle = '#666';
-                    ctx.font = (4 * mmToPx) + 'px Arial';
-                    ctx.textAlign = 'right';
-                    ctx.fillText('#' + escapeHtml(data.orderNo), canvas.width - pad, y + 5 * mmToPx);
-                    ctx.textAlign = 'left';
-
-                    y += 5 * mmToPx + 1 * mmToPx;
-                    ctx.strokeStyle = '#cccccc';
-                    ctx.setLineDash([1 * mmToPx, 1.5 * mmToPx]);
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(canvas.width - pad, y);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-
-                    y += 2 * mmToPx;
-                    ctx.fillStyle = '#333';
-                    ctx.font = (4.5 * mmToPx) + 'px Arial';
-                    ctx.fillText('货号', x, y + 4.5 * mmToPx);
-
-                    ctx.fillStyle = '#1e1e2a';
-                    ctx.font = 'bold ' + (6 * mmToPx) + 'px Arial';
-                    ctx.textAlign = 'right';
-                    ctx.fillText(escapeHtml(data.orderNo), canvas.width - pad, y + 4.5 * mmToPx);
-                    ctx.textAlign = 'left';
-
-                    y += 5 * mmToPx + 1 * mmToPx;
-                    ctx.fillStyle = '#333';
-                    ctx.font = (4.5 * mmToPx) + 'px Arial';
-                    ctx.fillText('价格', x, y + 4.5 * mmToPx);
-
-                    var priceDisplay = parseFloat(data.amount).toFixed(2);
-                    ctx.fillStyle = '#dc3545';
-                    ctx.font = 'bold ' + (7 * mmToPx) + 'px Arial';
-                    ctx.textAlign = 'right';
-                    ctx.fillText('¥' + escapeHtml(priceDisplay), canvas.width - pad, y + 4.5 * mmToPx);
-                    ctx.textAlign = 'left';
-
-                    y += 5 * mmToPx + 1 * mmToPx;
-                    ctx.strokeStyle = '#cccccc';
-                    ctx.setLineDash([1 * mmToPx, 1.5 * mmToPx]);
-                    ctx.lineWidth = 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(canvas.width - pad, y);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-
-                    y += 2 * mmToPx;
-                    ctx.fillStyle = '#999';
-                    ctx.font = (3.5 * mmToPx) + 'px Arial';
-                    ctx.fillText(escapeHtml(data.dateStr), x, y + 3.5 * mmToPx);
-
-                    ctx.textAlign = 'right';
-                    ctx.fillText('大福面单', canvas.width - pad, y + 3.5 * mmToPx);
-                    ctx.textAlign = 'left';
-
-                    // 下载
-                    var link = document.createElement('a');
-                    link.href = canvas.toDataURL('image/png');
-                    link.download = '面单_' + data.orderNo + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    showToast('✅ 图片已下载');
-                    saveToHistory(data.orderNo, data.amount);
-
-                } catch (e) {
-                    showToast('⚠️ 下载失败: ' + e.message);
-                    console.error('下载错误:', e);
-                }
-            }
-
-            // ============================================================
-            // 保存与历史
-            // ============================================================
-            function saveToHistory(no, amt) {
-                var data = {
-                    id: Date.now(),
-                    orderNo: no,
-                    amount: amt,
-                    createTime: new Date().toLocaleString('zh-CN')
-                };
-                appData.labelHistory.unshift(data);
-                safeSetStorage('labelHistory', appData.labelHistory);
-                loadHistory();
-            }
-
-            function loadHistory() {
-                var list = $('historyList');
-                var count = $('historyCount');
-                var history = appData.labelHistory;
-
-                if (count) count.textContent = history.length;
-
-                if (history.length === 0) {
-                    list.innerHTML = '<div class="history-empty">暂无记录</div>';
-                    return;
-                }
-
-                var html = '';
-                for (var i = 0; i < history.length; i++) {
-                    var item = history[i];
-                    html +=
-                        '<div class="history-item">' +
-                        '  <div class="info">' +
-                        '    <div class="order">📦 货号: ' + escapeHtml(item.orderNo) + '</div>' +
-                        '    <div class="price">💰 ' + escapeHtml(item.amount) + '</div>' +
-                        '    <div class="date">' + escapeHtml(item.createTime) + '</div>' +
-                        '  </div>' +
-                        '  <div class="actions">' +
-                        '    <button class="btn-sm btn-sm-reprint" data-id="' + i + '">重印</button>' +
-                        '    <button class="btn-sm btn-sm-delete" data-id="' + i + '">删除</button>' +
-                        '  </div>' +
-                        '</div>';
-                }
-                list.innerHTML = html;
-
-                // 重印事件
-                list.querySelectorAll('.btn-sm-reprint').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        var idx = parseInt(this.getAttribute('data-id'));
-                        var item = appData.labelHistory[idx];
-                        if (item) {
-                            orderNo.value = item.orderNo;
-                            amount.value = item.amount;
-                            validateForm();
-                            generateLabel();
-                            showToast('🔄 已加载订单');
-                        }
-                    });
-                });
-
-                // 删除事件
-                list.querySelectorAll('.btn-sm-delete').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        var idx = parseInt(this.getAttribute('data-id'));
-                        if (confirm('确定删除该记录？')) {
-                            appData.labelHistory.splice(idx, 1);
-                            safeSetStorage('labelHistory', appData.labelHistory);
-                            loadHistory();
-                            showToast('已删除');
-                        }
-                    });
-                });
-            }
-
-            function clearHistory() {
-                if (confirm('确定清空所有历史记录？')) {
-                    appData.labelHistory = [];
-                    safeSetStorage('labelHistory', []);
-                    loadHistory();
-                    showToast('已清空');
-                }
-            }
-
-            // ============================================================
-            // Toast
-            // ============================================================
-            var toastTimer = null;
-
-            function showToast(msg) {
-                if (!toast) return;
-                toast.textContent = msg;
-                toast.classList.add('show');
-                clearTimeout(toastTimer);
-                toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2200);
-            }
-
-            // ============================================================
-            // 事件绑定与初始化
-            // ============================================================
-            document.addEventListener('DOMContentLoaded', function() {
-                appData.labelHistory = safeGetStorage('labelHistory', []);
-
-                // 输入验证
-                orderNo.addEventListener('input', function() {
-                    if (this.value.trim().length === 0) {
-                        this.classList.add('error');
-                        $('orderNoError').style.display = 'block';
-                    } else {
-                        this.classList.remove('error');
-                        $('orderNoError').style.display = 'none';
-                    }
-                    validateForm();
-                });
-
-                amount.addEventListener('input', validateForm);
-
-                // 按钮事件
-                $('generateBtn').addEventListener('click', generateLabel);
-                $('resetBtn').addEventListener('click', resetForm);
-                $('printBtn').addEventListener('click', doPrint);
-                $('downloadPdfBtn').addEventListener('click', downloadImage);
-                $('saveBtn').addEventListener('click', function() {
-                    var data = appData.previewData;
-                    if (!data.orderNo) { showToast('请先生成标签'); return; }
-                    saveToHistory(data.orderNo, data.amount);
-                    showToast('💾 已保存');
-                });
-
-                // 打印指南
-                $('guideGotIt').addEventListener('click', hideGuide);
-                $('guidePrint').addEventListener('click', directPrint);
-
-                // 清空历史
-                $('clearHistoryBtn').addEventListener('click', clearHistory);
-
-                // 点击外部关闭指南
-                $('guideOverlay').addEventListener('click', function(e) {
-                    if (e.target === this) hideGuide();
-                });
-
-                // 加载历史
-                loadHistory();
-                showPage('create');
-                validateForm();
-
-                console.log('📱 安卓小程序模式已启动');
-                if (isFeishu) console.log('飞书环境');
-                if (isWechat) console.log('微信环境');
-                if (isAndroid) console.log('Android设备');
-                if (isIOS) console.log('iOS设备');
+    function bindKeypadEvents() {
+        var keys = document.querySelectorAll('.key');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-key');
+                var action = this.getAttribute('data-action');
+                if (action === 'delete') handleKeypadDelete();
+                else if (action === 'clear') handleKeypadClear();
+                else if (key !== null) handleKeypadInput(key);
             });
+        }
+    }
 
-            // 暴露接口
-            window.showPage = showPage;
-            window.generateLabel = generateLabel;
-            window.doPrint = doPrint;
-            window.downloadImage = downloadImage;
-            window.showGuide = showGuide;
-            window.hideGuide = hideGuide;
-            window.directPrint = directPrint;
-            window.clearHistory = clearHistory;
-            window.showToast = showToast;
-        })();
-    </script>
+    // ========== 数字键盘弹窗 ==========
+    function registerModalKeys() {
+        setTimeout(function () {
+            if (!modalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onModalKeyDown);
+            modalDisplay.focus();
+        }, 0);
+    }
 
+    function openEstimateModal(barcode) {
+        modalMode = 'estimate';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        var currentActual = existing ? existing.actual : 0;
+
+        modalIcon.textContent = '🔁';
+        modalTitle.textContent = '输入预估总数';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '<strong>第 2 次扫描</strong>该箱码<br>' +
+            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '请输入该箱码的<strong>预估总数</strong>（用于对比）';
+
+        // ✅ 修复：预估输入框强制为空
+        modalInputValue = '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        registerModalKeys();
+
+        // ✅ 关键：第2次扫描弹窗时播放提示音
+        playEstimatePromptSound();
+    }
+
+    function openEditActualModal(barcode) {
+        modalMode = 'actual';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        var currentActual = existing ? existing.actual : 0;
+        var currentEstimate = existing ? existing.estimate : 0;
+
+        modalIcon.textContent = '📦';
+        modalTitle.textContent = '修改实际数量';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
+            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '请输入该箱码的<strong>实际总件数</strong>';
+
+        modalInputValue = currentActual > 0 ? String(currentActual) : '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        registerModalKeys();
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function openEditEstimateModal(barcode) {
+        modalMode = 'edit-estimate';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        var currentEstimate = existing ? existing.estimate : 0;
+        var currentActual = existing ? existing.actual : 0;
+
+        modalIcon.textContent = '📊';
+        modalTitle.textContent = '修改预估数量';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
+            '请输入新的<strong>预估总数</strong>';
+
+        modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        registerModalKeys();
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('show');
+        currentBarcode = null;
+        modalInputValue = '';
+        document.removeEventListener('keydown', onModalKeyDown);
+        modalDisplay.blur();
+        if (!summaryOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function confirmModalInput() {
+        if (!currentBarcode) return;
+
+        // ✅ 修复：如果为空，强制拦截并提示
+        if (modalInputValue === '') {
+            modalDisplay.classList.add('error');
+            setTimeout(function() { modalDisplay.classList.remove('error'); }, 500);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('请先输入有效的预估数量', true);
+            return;
+        }
+
+        var inputVal = parseInt(modalInputValue);
+        if (isNaN(inputVal) || inputVal < 0) {
+            modalDisplay.classList.add('error');
+            setTimeout(function() { modalDisplay.classList.remove('error'); }, 500);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('请输入有效数量（≥0）', true);
+            return;
+        }
+
+        var barcode = currentBarcode;
+        var existing = boxData.get(barcode);
+
+        if (modalMode === 'estimate') {
+            var newActual = existing ? (existing.actual || 0) + 1 : 1;
+            boxData.set(barcode, {
+                actual: newActual,
+                estimate: inputVal,
+                scanCount: (existing && existing.scanCount) ? existing.scanCount + 1 : 2,
+                hasFilledEstimate: true,
+                lastScanTime: ++scanSeq
+            });
+            var diff = newActual - inputVal;
+            if (diff !== 0) {
+                setStatusMessage('箱码 ' + barcode + ' 预估设为 ' + inputVal + ' 箱 | ⚠️ 与当前实际差异 ' + (diff > 0 ? '+' + diff : diff), true);
+            } else {
+                setStatusMessage('箱码 ' + barcode + ' 预估设为 ' + inputVal + ' 箱（后续扫码自动+1实际）', false);
+            }
+            playConfirmSound();
+        } else if (modalMode === 'actual') {
+            var est = existing ? existing.estimate : 0;
+            boxData.set(barcode, {
+                actual: inputVal,
+                estimate: est,
+                scanCount: existing ? (existing.scanCount || 2) : 1,
+                hasFilledEstimate: existing ? (existing.hasFilledEstimate || false) : false,
+                lastScanTime: existing ? (existing.lastScanTime || ++scanSeq) : ++scanSeq
+            });
+            setStatusMessage('箱码 ' + barcode + ' 实际数量已改为 ' + inputVal + ' 箱', false);
+        } else if (modalMode === 'edit-estimate') {
+            var act = existing ? existing.actual : 0;
+            boxData.set(barcode, {
+                actual: act,
+                estimate: inputVal,
+                scanCount: existing ? (existing.scanCount || 1) : 1,
+                hasFilledEstimate: true,
+                lastScanTime: existing ? (existing.lastScanTime || ++scanSeq) : ++scanSeq
+            });
+            var d = act - inputVal;
+            if (d !== 0) {
+                setStatusMessage('箱码 ' + barcode + ' 预估改为 ' + inputVal + ' 箱 | ⚠️ 与实际差异 ' + (d > 0 ? '+' + d : d), true);
+            } else {
+                setStatusMessage('箱码 ' + barcode + ' 预估改为 ' + inputVal + ' 箱（与实际一致）', false);
+            }
+        }
+
+        closeModal();
+        renderTable();
+    }
+
+    function onModalKeyDown(e) {
+        if (!modalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleKeypadInput(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); handleKeypadDelete(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
+        else if (e.key === 'Delete') { e.preventDefault(); handleKeypadClear(); }
+    }
+
+    // ========== 表格渲染 ==========
+    function updateTotals() {
+        var totalEstimate = 0, totalActual = 0;
+        for (var entry of boxData.entries()) {
+            var data = entry[1];
+            totalEstimate += data.estimate || 0;
+            totalActual += data.actual || 0;
+        }
+        var totalDiff = totalActual - totalEstimate;
+        estimateTotalSpan.innerText = totalEstimate;
+        actualTotalSpan.innerText = totalActual;
+        diffTotalSpan.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        diffTotalSpan.style.color = totalDiff === 0 ? '#a5f3c3' : '#fecaca';
+        estimateFooter.innerText = totalEstimate;
+        actualFooter.innerText = totalActual;
+        diffFooter.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        diffFooter.style.color = totalDiff === 0 ? '#166534' : '#b91c1c';
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        if (boxData.size === 0) {
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无箱子记录，请扫码添加</td></tr>';
+            tableFoot.style.display = 'none';
+            updateTotals();
+            return;
+        }
+
+        var sorted = Array.from(boxData.entries()).sort(function(a, b) {
+            var ta = a[1].lastScanTime || 0;
+            var tb = b[1].lastScanTime || 0;
+            return tb - ta;
+        });
+
+        for (var i = 0; i < sorted.length; i++) {
+            var barcode = sorted[i][0];
+            var data = sorted[i][1];
+            var estimate = data.estimate || 0;
+            var actual = data.actual || 0;
+            var diff = actual - estimate;
+            var isMismatch = diff !== 0;
+            var diffClass = diff === 0 ? 'diff-match' : 'diff-mismatch';
+            var diffText;
+            if (diff === 0) diffText = '✓ 一致';
+            else if (diff > 0) diffText = '⚠️ +' + diff;
+            else diffText = '⚠️ ' + diff;
+
+            var rowClass = isMismatch ? 'row-error' : '';
+            var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
+
+            var safeBarcode = barcode.replace(/"/g, '&quot;');
+            var row = document.createElement('tr');
+            if (rowClass) row.className = rowClass;
+            row.innerHTML =
+                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + '</td>' +
+                '<td><span class="estimate-value">' + estimate + '</span> 箱</td>' +
+                '<td><span class="count-badge">' + actual + '</span> 箱</td>' +
+                '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
+                '<td>' +
+                    '<div class="action-group">' +
+                        '<button class="adjust-btn adjust-minus" data-barcode="' + safeBarcode + '" data-action="minus" title="实际-1">−</button>' +
+                        '<button class="adjust-btn adjust-plus" data-barcode="' + safeBarcode + '" data-action="plus" title="实际+1">+</button>' +
+                        '<button class="edit-btn edit-est-btn" data-barcode="' + safeBarcode + '" data-action="edit-estimate">✏️ 改预估</button>' +
+                        '<button class="edit-btn" data-barcode="' + safeBarcode + '" data-action="edit-actual">✏️ 改实际</button>' +
+                    '</div>' +
+                '</td>';
+            tableBody.appendChild(row);
+        }
+        tableFoot.style.display = 'table-footer-group';
+        updateTotals();
+
+        var adjustBtns = document.querySelectorAll('.adjust-btn');
+        for (var j = 0; j < adjustBtns.length; j++) {
+            adjustBtns[j].onclick = handleAdjustActual;
+        }
+
+        var editEstBtns = document.querySelectorAll('[data-action="edit-estimate"]');
+        for (var k = 0; k < editEstBtns.length; k++) {
+            editEstBtns[k].onclick = function(e) {
+                var barcode = e.currentTarget.getAttribute('data-barcode');
+                openEditEstimateModal(barcode);
+            };
+        }
+
+        var editActBtns = document.querySelectorAll('[data-action="edit-actual"]');
+        for (var m = 0; m < editActBtns.length; m++) {
+            editActBtns[m].onclick = function(e) {
+                var barcode = e.currentTarget.getAttribute('data-barcode');
+                openEditActualModal(barcode);
+            };
+        }
+    }
+
+    // ========== 调整实际数量 ==========
+    function handleAdjustActual(e) {
+        var barcode = e.currentTarget.getAttribute('data-barcode');
+        var action = e.currentTarget.getAttribute('data-action');
+        if (!barcode || !boxData.has(barcode)) return;
+
+        var data = boxData.get(barcode);
+        if (action === 'plus') {
+            data.actual = (data.actual || 0) + 1;
+            boxData.set(barcode, data);
+            setStatusMessage(barcode + ' 实际+1 → ' + data.actual + ' 箱', false);
+        } else if (action === 'minus') {
+            if (data.actual > 0) {
+                data.actual = (data.actual || 0) - 1;
+                boxData.set(barcode, data);
+                setStatusMessage(barcode + ' 实际-1 → ' + data.actual + ' 箱', false);
+            } else {
+                setStatusMessage('实际数量已为0，无法再减', true);
+            }
+        }
+        renderTable();
+        if (navigator.vibrate) navigator.vibrate(30);
+    }
+
+    // ========== 核心扫码逻辑 ==========
+    function addBox(barcode, source) {
+        if (!barcode || barcode.trim() === '') {
+            setStatusMessage('条码内容为空', true);
+            return false;
+        }
+        var cleanCode = barcode.trim();
+        if (cleanCode.length > 120) {
+            setStatusMessage('条码过长', true);
+            return false;
+        }
+
+        var existing = boxData.get(cleanCode);
+
+        if (!existing) {
+            boxData.set(cleanCode, {
+                actual: 1,
+                estimate: 1,
+                scanCount: 1,
+                hasFilledEstimate: false,
+                lastScanTime: ++scanSeq
+            });
+            renderTable();
+            setStatusMessage((source === 'scan' ? '第1次扫码' : '手动添加') + ' | ' + cleanCode + ' → 实际=1，预估=1（下次扫码将弹窗填预估）', false);
+            if (navigator.vibrate) navigator.vibrate(80);
+            return true;
+        }
+
+        if (!existing.hasFilledEstimate) {
+            existing.lastScanTime = ++scanSeq;
+            boxData.set(cleanCode, existing);
+            renderTable();
+            // ✅ 这里 openEstimateModal 内部会播放提示音并清空输入
+            openEstimateModal(cleanCode);
+            setStatusMessage('第2次扫码 ' + cleanCode + ' | 请输入预估总数（🔊）', false);
+            return true;
+        }
+
+        existing.actual = (existing.actual || 0) + 1;
+        existing.scanCount = (existing.scanCount || 2) + 1;
+        existing.lastScanTime = ++scanSeq;
+        boxData.set(cleanCode, existing);
+        renderTable();
+        setStatusMessage('第' + existing.scanCount + '次扫码 | ' + cleanCode + ' → 实际 ' + existing.actual + ' 箱', false);
+        if (navigator.vibrate) navigator.vibrate(80);
+        return true;
+    }
+
+    // ========== 完成汇总 ==========
+    function getDiffEntries() {
+        var list = [];
+        for (var entry of boxData.entries()) {
+            var barcode = entry[0];
+            var data = entry[1];
+            var estimate = data.estimate || 0;
+            var actual = data.actual || 0;
+            if (actual - estimate !== 0) {
+                list.push({
+                    barcode: barcode,
+                    estimate: estimate,
+                    actual: actual,
+                    diff: actual - estimate,
+                    scanCount: data.scanCount || 0,
+                    lastScanTime: data.lastScanTime || 0
+                });
+            }
+        }
+        list.sort(function(a, b) {
+            var absA = Math.abs(a.diff);
+            var absB = Math.abs(b.diff);
+            if (absA !== absB) return absB - absA;
+            return b.lastScanTime - a.lastScanTime;
+        });
+        return list;
+    }
+
+    function onFinish() {
+        if (boxData.size === 0) {
+            setStatusMessage('暂无数据，无需完成', true);
+            return;
+        }
+
+        var totalEst = 0, totalAct = 0;
+        for (var entry of boxData.entries()) {
+            totalEst += entry[1].estimate || 0;
+            totalAct += entry[1].actual || 0;
+        }
+        var totalDiff = totalAct - totalEst;
+        var diffList = getDiffEntries();
+
+        summaryEstTotal.innerText = totalEst;
+        summaryActTotal.innerText = totalAct;
+        summaryDiffTotal.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        summaryDiffStat.className = 'summary-stat ' + (totalDiff === 0 ? 'diff-ok' : 'diff-bad');
+        summaryDiffCount.innerText = diffList.length + ' 条';
+
+        if (diffList.length === 0) {
+            summarySubtitle.textContent = '所有条码预估与实际完全一致 🎉';
+            summaryList.innerHTML = '<div class="summary-all-good">' +
+                '<span class="big">🎉</span>' +
+                '所有 ' + boxData.size + ' 个条码都一致，没有差异！' +
+                '</div>';
+        } else {
+            summarySubtitle.textContent = '共 ' + boxData.size + ' 个条码，其中 ' + diffList.length + ' 个有差异';
+            var html = '';
+            for (var i = 0; i < diffList.length; i++) {
+                var item = diffList[i];
+                var diffSign = item.diff > 0 ? '+' + item.diff : '' + item.diff;
+                html += '<div class="summary-item">' +
+                    '<div class="summary-item-code">📦 ' + escapeHtml(item.barcode) + '</div>' +
+                    '<div class="summary-item-nums">' +
+                        '<span class="summary-num-chip chip-est">预 ' + item.estimate + '</span>' +
+                        '<span class="summary-num-chip chip-act">实 ' + item.actual + '</span>' +
+                        '<span class="summary-num-chip chip-diff-bad">差 ' + diffSign + '</span>' +
+                    '</div>' +
+                    '</div>';
+            }
+            summaryList.innerHTML = html;
+        }
+
+        summaryOverlay.classList.add('show');
+        if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]);
+    }
+
+    function closeSummary() {
+        summaryOverlay.classList.remove('show');
+        if (!modalOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function onContinueTask() {
+        closeSummary();
+        setStatusMessage('已继续任务，可继续扫码', false);
+    }
+
+    // ========== 结束任务：彻底还原 ==========
+    function resetToInitialState() {
+        boxData.clear();
+        scanSeq = 0;
+        currentBarcode = null;
+        modalInputValue = '';
+        modalMode = 'estimate';
+
+        modalOverlay.classList.remove('show');
+        summaryOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onModalKeyDown);
+
+        barcodeInput.value = '';
+
+        modalDisplay.textContent = '0';
+        modalDisplay.classList.add('empty');
+        modalDisplay.classList.remove('error');
+        modalDisplay.blur();
+
+        renderTable();
+
+        if (statusTimer) clearTimeout(statusTimer);
+        statusMsgDiv.innerHTML = '✅ 就绪 | 第1次实际1+预估1，第2次必弹窗填预估，新码置顶';
+        statusMsgDiv.style.background = '#e9f3fe';
+        statusMsgDiv.style.color = '#0050b3';
+
+        summaryEstTotal.innerText = '0';
+        summaryActTotal.innerText = '0';
+        summaryDiffTotal.innerText = '0';
+        summaryDiffStat.className = 'summary-stat';
+        summaryDiffCount.innerText = '0 条';
+        summarySubtitle.textContent = '以下为有差异的条码清单';
+        summaryList.innerHTML = '<div class="summary-all-good">' +
+            '<span class="big">🎉</span>' +
+            '所有条码都一致，没有差异！' +
+            '</div>';
+
+        lastAddTime = 0;
+        barcodeInput.focus();
+
+        var tableWrapper = document.querySelector('.table-wrapper');
+        if (tableWrapper) tableWrapper.scrollTop = 0;
+        window.scrollTo(0, 0);
+
+        if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+    }
+
+    function onFinishTask() {
+        if (!confirm('⚠️ 确认结束任务吗？\n\n将执行以下操作：\n• 清空所有扫码数据\n• 关闭所有弹窗\n• 还原到初始状态\n\n此操作不可恢复！')) return;
+        resetToInitialState();
+        setStatusMessage('任务已结束，已还原初始状态，可开始新任务', false);
+    }
+
+    // ========== 汇总弹窗导出 ==========
+    function onSummaryExport() {
+        var diffList = getDiffEntries();
+        if (diffList.length === 0) {
+            alert('没有差异条码可导出');
+            return;
+        }
+        var csvRows = [['条形码', '预估数量', '实际数量', '差异', '扫码次数']];
+        var totalEst = 0, totalAct = 0;
+        for (var i = 0; i < diffList.length; i++) {
+            var it = diffList[i];
+            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.scanCount]);
+            totalEst += it.estimate;
+            totalAct += it.actual;
+        }
+        csvRows.push(['', '', '', '', '']);
+        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '']);
+        var csvLines = [];
+        for (var x = 0; x < csvRows.length; x++) {
+            var row = csvRows[x];
+            var esc = [];
+            for (var y = 0; y < row.length; y++) {
+                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
+            }
+            csvLines.push(esc.join(','));
+        }
+        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '差异条码_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatusMessage('差异条码已导出', false);
+    }
+
+    // ========== 事件 ==========
+    function onKeyDown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+
+            var now = Date.now();
+            if (now - lastAddTime < 150) {
+                barcodeInput.value = '';
+                return;
+            }
+            lastAddTime = now;
+
+            var val = barcodeInput.value.trim();
+            if (val !== '') {
+                barcodeInput.value = '';
+                addBox(val, 'scan');
+            } else {
+                setStatusMessage('请先扫描条码', true);
+            }
+
+            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+                barcodeInput.focus();
+            }
+        }
+    }
+
+    function onAddManual() {
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+        var val = barcodeInput.value.trim();
+        if (val === '') { setStatusMessage('请输入条码', true); return; }
+        addBox(val, 'manual');
+        barcodeInput.value = '';
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function onClearAll() {
+        if (boxData.size === 0) { setStatusMessage('无数据', true); return; }
+        if (confirm('⚠️ 确定清空所有箱子记录吗？')) {
+            resetToInitialState();
+            setStatusMessage('已清空所有数据', false);
+        }
+    }
+
+    function onExport() {
+        if (boxData.size === 0) { alert('暂无数据可导出'); return; }
+        var csvRows = [['条形码', '预估数量', '实际数量', '差异', '状态', '扫码次数']];
+        var entries = Array.from(boxData.entries()).sort(function(a, b) {
+            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
+        });
+        var totalEst = 0, totalAct = 0;
+        for (var i = 0; i < entries.length; i++) {
+            var barcode = entries[i][0];
+            var data = entries[i][1];
+            var est = data.estimate || 0;
+            var act = data.actual || 0;
+            var diff = act - est;
+            var status = diff === 0 ? '一致' : (diff > 0 ? '实际多于预估' : '实际少于预估');
+            csvRows.push([barcode, est, act, diff, status, data.scanCount || 0]);
+            totalEst += est;
+            totalAct += act;
+        }
+        csvRows.push(['', '', '', '', '', '']);
+        csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '']);
+        var csvLines = [];
+        for (var x = 0; x < csvRows.length; x++) {
+            var row = csvRows[x];
+            var esc = [];
+            for (var y = 0; y < row.length; y++) {
+                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
+            }
+            csvLines.push(esc.join(','));
+        }
+        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '箱子统计_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatusMessage('导出成功', false);
+    }
+
+    function onBodyClick(e) {
+        if (modalOverlay.classList.contains('show')) return;
+        if (summaryOverlay.classList.contains('show')) return;
+        if (e.target !== barcodeInput && !e.target.closest('button') && !e.target.closest('input')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function preventFormSubmit(e) {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'number' && !e.target.closest('.modal-box')) {
+            e.preventDefault();
+        }
+    }
+
+    // ========== 初始化 ==========
+    function init() {
+        barcodeInput.addEventListener('keydown', onKeyDown);
+        addBtn.addEventListener('click', onAddManual);
+        clearInputBtn.addEventListener('click', function() {
+            barcodeInput.value = '';
+            barcodeInput.focus();
+        });
+        clearAllBtn.addEventListener('click', onClearAll);
+        exportBtn.addEventListener('click', onExport);
+        finishBtn.addEventListener('click', onFinish);
+        soundToggle.addEventListener('click', toggleSound);
+        document.body.addEventListener('click', onBodyClick);
+        document.addEventListener('keydown', preventFormSubmit);
+        modalConfirmBtn.addEventListener('click', confirmModalInput);
+        modalCancelBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        continueBtn.addEventListener('click', onContinueTask);
+        finishTaskBtn.addEventListener('click', onFinishTask);
+        summaryExportBtn.addEventListener('click', onSummaryExport);
+        summaryOverlay.addEventListener('click', function(e) {
+            if (e.target === summaryOverlay) closeSummary();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && summaryOverlay.classList.contains('show')) {
+                closeSummary();
+            }
+        });
+
+        var initAudioOnce = function() {
+            getAudioContext();
+            document.removeEventListener('click', initAudioOnce);
+            document.removeEventListener('keydown', initAudioOnce);
+            document.removeEventListener('touchstart', initAudioOnce);
+        };
+        document.addEventListener('click', initAudioOnce);
+        document.addEventListener('keydown', initAudioOnce);
+        document.addEventListener('touchstart', initAudioOnce);
+
+        bindKeypadEvents();
+        renderTable();
+        barcodeInput.focus();
+        console.log('初始化完成 - 预估输入强制为空版');
+    }
+
+    init();
+</script>
 </body>
 </html>
