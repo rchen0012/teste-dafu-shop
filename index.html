@@ -211,6 +211,7 @@
         }
         .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
+        /* 弹窗基础 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
@@ -246,6 +247,7 @@
         }
         .modal-desc { font-size: 0.78rem; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.5; }
         .modal-desc strong { color: #0f62fe; }
+        /* 弹窗显示框，防止被物理选中 */
         .modal-display {
             background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px;
             padding: 10px 16px; text-align: center; font-size: 2rem;
@@ -253,9 +255,11 @@
             min-height: 62px; display: flex; align-items: center;
             justify-content: center; margin-bottom: 12px; transition: 0.2s;
             cursor: pointer; font-family: 'Courier New', monospace;
+            user-select: none;
         }
         .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
         .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
+        .modal-display.success { border-color: #16a34a; background: #f0fdf4; }
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 10px; }
         .key {
             background: #f1f5f9; border: none; border-radius: 12px;
@@ -272,6 +276,8 @@
             font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
         .modal-btn-confirm { background: #0f62fe; color: white; flex: 2; }
+        .modal-btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .modal-btn-confirm.ready { background: #16a34a; }
         .modal-btn-confirm:active { transform: scale(0.98); }
         .modal-btn-cancel { background: #f1f5f9; color: #475569; }
 
@@ -448,19 +454,20 @@
 
         <h1>
             📦 扫码器 · 箱子计数
-            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · 🔊 提示音</span>
+            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · ⌨️ 虚拟键盘</span>
         </h1>
         <div class="sub">
-            🧾 订单号固定8位数字 | 第1次扫默认实际1+预估1 | 第2次必弹窗填预估（带提示音）| 新码置顶
+            🧾 点击扫码框只聚焦扫码枪 | 点「手动累加」弹虚拟键盘 | 数量必须虚拟键盘填
         </div>
 
         <div class="scan-panel">
             <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（仅限 8 位数字）</span></span>
-                <button id="soundToggle" class="sound-toggle" title="开/关第2次扫描提示音">🔊 提示音：开</button>
+                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（扫码枪输入或点手动累加）</span></span>
+                <button id="soundToggle" class="sound-toggle" title="开/关提示音">🔊 提示音：开</button>
             </div>
             <div class="scan-input-area">
-                <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码或手输 8 位订单号..." inputmode="numeric" maxlength="8" pattern="\d{8}" autocomplete="off" autofocus>
+                <!-- 点击输入框仅聚焦，供扫码枪输入 -->
+                <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码枪输入订单号..." inputmode="none" autocomplete="off">
                 <button id="addBtn" class="btn-primary">➕ 手动累加</button>
                 <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
             </div>
@@ -468,7 +475,7 @@
                 ✅ 就绪 | 订单号必须为 8 位数字
             </div>
             <div class="shortcut-hint">
-                💡 订单号 <b>固定 8 位数字</b> | 第1次扫 → 实际=1，预估=1 | 第2次扫 → 弹窗填预估（🔊） | 第3次起 → 实际+1
+                💡 扫码枪扫码 | 或点「手动累加」弹虚拟键盘输入订单号 | 数量弹窗只能用虚拟键盘，防扫码枪误入
             </div>
         </div>
 
@@ -520,7 +527,40 @@
     </div>
 </div>
 
-<!-- 弹窗：数字键盘 -->
+<!-- ✅ 弹窗 1：订单号虚拟键盘（仅通过「手动累加」打开） -->
+<div class="modal-overlay" id="orderModalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
+        <div class="modal-title">输入订单号</div>
+        <div class="modal-desc" style="margin-bottom:8px;">
+            订单号必须为 <strong>8 位数字</strong>
+        </div>
+
+        <div class="modal-display" id="orderDisplay">0</div>
+
+        <div class="keypad">
+            <button class="key" data-order-key="1">1</button>
+            <button class="key" data-order-key="2">2</button>
+            <button class="key" data-order-key="3">3</button>
+            <button class="key" data-order-key="4">4</button>
+            <button class="key" data-order-key="5">5</button>
+            <button class="key" data-order-key="6">6</button>
+            <button class="key" data-order-key="7">7</button>
+            <button class="key" data-order-key="8">8</button>
+            <button class="key" data-order-key="9">9</button>
+            <button class="key key-func" data-order-action="clear">清空</button>
+            <button class="key" data-order-key="0">0</button>
+            <button class="key key-delete" data-order-action="delete">⌫</button>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="orderCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="orderConfirmBtn" disabled>确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 2：预估/实际数量键盘（绝对禁止扫码枪输入） -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box">
         <div class="modal-icon" id="modalIcon">🔁</div>
@@ -531,7 +571,8 @@
             请输入该订单的<strong>预估总数</strong>
         </div>
 
-        <div class="modal-display" id="modalDisplay" tabindex="0">0</div>
+        <!-- ✅ 该显示框只展示结果，禁止扫码枪直接输入 -->
+        <div class="modal-display" id="modalDisplay">0</div>
 
         <div class="keypad">
             <button class="key" data-key="1">1</button>
@@ -604,7 +645,9 @@
     var modalMode = 'estimate';
     var lastAddTime = 0;
     var scanSeq = 0;
-    var ORDER_LENGTH = 8;   // ✅ 订单号固定 8 位
+    var ORDER_LENGTH = 8;
+
+    var orderInputValue = '';
 
     // ========== 提示音控制 ==========
     var soundEnabled = true;
@@ -638,6 +681,11 @@
     var modalConfirmBtn = document.getElementById('modalConfirmBtn');
     var modalCancelBtn = document.getElementById('modalCancelBtn');
 
+    var orderModalOverlay = document.getElementById('orderModalOverlay');
+    var orderDisplay = document.getElementById('orderDisplay');
+    var orderConfirmBtn = document.getElementById('orderConfirmBtn');
+    var orderCancelBtn = document.getElementById('orderCancelBtn');
+
     var summaryOverlay = document.getElementById('summaryOverlay');
     var summarySubtitle = document.getElementById('summarySubtitle');
     var summaryEstTotal = document.getElementById('summaryEstTotal');
@@ -652,37 +700,9 @@
 
     var statusTimer = null;
 
-    // ========== 🔒 订单号校验 ==========
+    // ========== 订单号校验 ==========
     function isValidOrderNo(code) {
         return /^\d{8}$/.test(code);
-    }
-
-    // 过滤输入：仅保留数字，最多8位
-    function sanitizeOrderNo(raw) {
-        if (!raw) return '';
-        var digits = String(raw).replace(/\D/g, '');
-        return digits.slice(0, ORDER_LENGTH);
-    }
-
-    // 实时校验输入框
-    function validateBarcodeInput(showError) {
-        var raw = barcodeInput.value;
-        var clean = sanitizeOrderNo(raw);
-        if (clean !== raw) {
-            barcodeInput.value = clean;
-        }
-        var len = clean.length;
-        if (len === ORDER_LENGTH) {
-            barcodeInput.classList.add('success');
-            barcodeInput.classList.remove('error');
-        } else {
-            barcodeInput.classList.remove('success');
-            if (showError && len > 0) {
-                barcodeInput.classList.add('error');
-                setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
-            }
-        }
-        return len;
     }
 
     // ========== 🔊 提示音 ==========
@@ -779,7 +799,104 @@
         });
     }
 
-    // ========== 虚拟键盘 ==========
+    // ========== ✅ 订单号虚拟键盘 ==========
+    function updateOrderDisplay() {
+        if (orderInputValue === '') {
+            orderDisplay.textContent = '0';
+            orderDisplay.classList.add('empty');
+            orderDisplay.classList.remove('success');
+        } else {
+            orderDisplay.textContent = orderInputValue;
+            orderDisplay.classList.remove('empty');
+            if (orderInputValue.length === ORDER_LENGTH) {
+                orderDisplay.classList.add('success');
+            } else {
+                orderDisplay.classList.remove('success');
+            }
+        }
+        if (orderInputValue.length === ORDER_LENGTH) {
+            orderConfirmBtn.disabled = false;
+            orderConfirmBtn.classList.add('ready');
+        } else {
+            orderConfirmBtn.disabled = true;
+            orderConfirmBtn.classList.remove('ready');
+        }
+    }
+
+    function openOrderModal() {
+        // 如果输入框已有内容（可能是扫码枪录入了一半），带入
+        orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
+        updateOrderDisplay();
+        orderModalOverlay.classList.add('show');
+        setTimeout(function() {
+            if (!orderModalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onOrderModalKeyDown);
+            orderDisplay.focus();
+        }, 0);
+    }
+
+    function closeOrderModal() {
+        orderModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onOrderModalKeyDown);
+        orderDisplay.blur();
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function handleOrderKey(key) {
+        if (orderInputValue.length >= ORDER_LENGTH) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            setStatusMessage('订单号最多 8 位，已忽略', true);
+            return;
+        }
+        if (orderInputValue === '0') orderInputValue = key;
+        else orderInputValue += key;
+        updateOrderDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleOrderDelete() {
+        if (orderInputValue.length > 0) {
+            orderInputValue = orderInputValue.slice(0, -1);
+            updateOrderDisplay();
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+    }
+
+    function handleOrderClear() {
+        orderInputValue = '';
+        updateOrderDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function confirmOrder() {
+        if (orderInputValue.length !== ORDER_LENGTH) {
+            orderDisplay.classList.add('error');
+            setTimeout(function() { orderDisplay.classList.remove('error'); }, 500);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('订单号必须为 8 位数字（当前 ' + orderInputValue.length + ' 位）', true);
+            return;
+        }
+        barcodeInput.value = orderInputValue;
+        barcodeInput.classList.add('success');
+        closeOrderModal();
+        addBox(orderInputValue, 'manual');
+        barcodeInput.value = '';
+        barcodeInput.classList.remove('success');
+    }
+
+    function onOrderModalKeyDown(e) {
+        if (!orderModalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleOrderKey(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); handleOrderDelete(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeOrderModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (!orderConfirmBtn.disabled) confirmOrder(); }
+        else if (e.key === 'Delete') { e.preventDefault(); handleOrderClear(); }
+    }
+
+    // ========== ✅ 预估/实际虚拟键盘（禁用物理输入） ==========
     function updateModalDisplay() {
         if (modalInputValue === '') {
             modalDisplay.textContent = '0';
@@ -812,7 +929,7 @@
     }
 
     function bindKeypadEvents() {
-        var keys = document.querySelectorAll('.key');
+        var keys = document.querySelectorAll('.key[data-key], .key[data-action]');
         for (var i = 0; i < keys.length; i++) {
             keys[i].addEventListener('click', function(e) {
                 e.preventDefault();
@@ -825,10 +942,25 @@
         }
     }
 
-    // ========== 数字键盘弹窗 ==========
+    function bindOrderKeypadEvents() {
+        var keys = document.querySelectorAll('.key[data-order-key], .key[data-order-action]');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-order-key');
+                var action = this.getAttribute('data-order-action');
+                if (action === 'delete') handleOrderDelete();
+                else if (action === 'clear') handleOrderClear();
+                else if (key !== null) handleOrderKey(key);
+            });
+        }
+    }
+
+    // ========== 预估弹窗控制 ==========
     function registerModalKeys() {
         setTimeout(function () {
             if (!modalOverlay.classList.contains('show')) return;
+            // ✅ 监听键盘，但不允许物理输入数字，仅允许功能键（防止扫码枪误入数量）
             document.addEventListener('keydown', onModalKeyDown);
             modalDisplay.focus();
         }, 0);
@@ -979,13 +1111,16 @@
         renderTable();
     }
 
+    // ✅ 在预估/实际弹窗中，拦截物理键盘数字输入（只允许虚拟键盘点击）
     function onModalKeyDown(e) {
         if (!modalOverlay.classList.contains('show')) return;
-        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleKeypadInput(e.key); }
-        else if (e.key === 'Backspace') { e.preventDefault(); handleKeypadDelete(); }
+        // 拦截数字和退格，防止扫码枪直接修改值
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
+        else if (e.key === 'Backspace') { e.preventDefault(); return; }
+        else if (e.key === 'Delete') { e.preventDefault(); return; }
+        // 以下功能键允许
         else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
         else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
-        else if (e.key === 'Delete') { e.preventDefault(); handleKeypadClear(); }
     }
 
     // ========== 表格渲染 ==========
@@ -1115,29 +1250,22 @@
         var cleanCode = barcode.trim();
         var len = cleanCode.length;
 
-        // 🚫 不足 8 位
         if (len < ORDER_LENGTH) {
             setStatusMessage('订单号不足 8 位（当前 ' + len + ' 位），请补全后再确认', true);
             playErrorSound();
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            barcodeInput.classList.add('error');
-            setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
             return false;
         }
-        // 🚫 超出 8 位（理论上输入框已拦截，双保险）
         if (len > ORDER_LENGTH) {
             setStatusMessage('订单号超出 8 位（当前 ' + len + ' 位），已忽略多余内容', true);
             playErrorSound();
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             return false;
         }
-        // 🚫 包含非数字
         if (!isValidOrderNo(cleanCode)) {
             setStatusMessage('订单号必须为纯数字（当前：' + cleanCode + '）', true);
             playErrorSound();
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            barcodeInput.classList.add('error');
-            setTimeout(function() { barcodeInput.classList.remove('error'); }, 500);
             return false;
         }
 
@@ -1254,7 +1382,7 @@
 
     function closeSummary() {
         summaryOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1271,10 +1399,13 @@
         currentBarcode = null;
         modalInputValue = '';
         modalMode = 'estimate';
+        orderInputValue = '';
 
         modalOverlay.classList.remove('show');
+        orderModalOverlay.classList.remove('show');
         summaryOverlay.classList.remove('show');
         document.removeEventListener('keydown', onModalKeyDown);
+        document.removeEventListener('keydown', onOrderModalKeyDown);
 
         barcodeInput.value = '';
         barcodeInput.classList.remove('error', 'success');
@@ -1283,6 +1414,10 @@
         modalDisplay.classList.add('empty');
         modalDisplay.classList.remove('error');
         modalDisplay.blur();
+
+        orderDisplay.textContent = '0';
+        orderDisplay.classList.add('empty');
+        orderDisplay.classList.remove('error', 'success');
 
         renderTable();
 
@@ -1357,7 +1492,7 @@
     function onKeyDown(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show')) return;
 
             var now = Date.now();
             if (now - lastAddTime < 150) {
@@ -1376,18 +1511,20 @@
                 playErrorSound();
             }
 
-            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
                 barcodeInput.focus();
             }
         }
     }
 
+    // ✅ 手动累加：没有内容时弹虚拟键盘，有内容时直接提交
     function onAddManual() {
-        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show')) return;
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show')) return;
         var val = barcodeInput.value.trim();
         if (val === '') { 
             setStatusMessage('请输入订单号', true); 
             playErrorSound();
+            openOrderModal(); // 弹出虚拟键盘
             return; 
         }
         var ok = addBox(val, 'manual');
@@ -1395,7 +1532,7 @@
             barcodeInput.value = '';
             barcodeInput.classList.remove('success', 'error');
         }
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1449,9 +1586,8 @@
     function onBodyClick(e) {
         if (modalOverlay.classList.contains('show')) return;
         if (summaryOverlay.classList.contains('show')) return;
-        if (e.target !== barcodeInput && !e.target.closest('button') && !e.target.closest('input')) {
-            barcodeInput.focus();
-        }
+        if (orderModalOverlay.classList.contains('show')) return;
+        // 点击空白处，让输入框失去焦点（不弹虚拟键盘）
     }
 
     function preventFormSubmit(e) {
@@ -1462,22 +1598,18 @@
 
     // ========== 初始化 ==========
     function init() {
+        // ✅ 扫码枪可以正常输入订单号（不弹虚拟键盘）
         barcodeInput.addEventListener('keydown', onKeyDown);
 
-        // ✅ 实时过滤：只保留数字，最多 8 位
+        // 实时过滤：扫码枪输入时，只保留数字，最多 8 位
         barcodeInput.addEventListener('input', function() {
-            validateBarcodeInput(false);
-        });
-        // ✅ 失焦时校验并提示
-        barcodeInput.addEventListener('blur', function() {
-            var len = validateBarcodeInput(false);
-            if (len > 0 && len < ORDER_LENGTH) {
-                setStatusMessage('订单号需 8 位数字（当前 ' + len + ' 位）', true);
+            var clean = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
+            if (clean !== barcodeInput.value) barcodeInput.value = clean;
+            if (clean.length === ORDER_LENGTH) {
+                barcodeInput.classList.add('success');
+            } else {
+                barcodeInput.classList.remove('success');
             }
-        });
-        // ✅ 粘贴时也过滤
-        barcodeInput.addEventListener('paste', function(e) {
-            setTimeout(function() { validateBarcodeInput(false); }, 0);
         });
 
         addBtn.addEventListener('click', onAddManual);
@@ -1496,6 +1628,12 @@
         modalCancelBtn.addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', function(e) {
             if (e.target === modalOverlay) closeModal();
+        });
+
+        orderConfirmBtn.addEventListener('click', confirmOrder);
+        orderCancelBtn.addEventListener('click', closeOrderModal);
+        orderModalOverlay.addEventListener('click', function(e) {
+            if (e.target === orderModalOverlay) closeOrderModal();
         });
 
         continueBtn.addEventListener('click', onContinueTask);
@@ -1521,9 +1659,9 @@
         document.addEventListener('touchstart', initAudioOnce);
 
         bindKeypadEvents();
+        bindOrderKeypadEvents();
         renderTable();
-        barcodeInput.focus();
-        console.log('初始化完成 - 8位订单锁定加强版');
+        console.log('初始化完成 - 正确交互版');
     }
 
     init();
