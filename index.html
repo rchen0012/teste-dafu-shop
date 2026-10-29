@@ -28,16 +28,16 @@
         h1 { font-size: 1.25rem; margin: 0 0 6px 0; color: #0a2540; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; line-height: 1.3; }
         .badge { background: #e6f7e6; color: #2e7d32; font-size: 0.65rem; padding: 3px 10px; border-radius: 40px; font-weight: 500; white-space: nowrap; }
         .sub { color: #4a5b6e; border-left: 3px solid #0f62fe; padding-left: 10px; margin: 6px 0 14px 0; font-size: 0.78rem; line-height: 1.5; }
+
         .scan-panel { background: #f8fafd; border-radius: 18px; padding: 14px; margin-bottom: 14px; border: 1px solid #e2edf7; transition: all 0.3s; position: relative; }
         .scan-panel.locked { background: #f1f5f9; border-color: #cbd5e1; opacity: 0.6; pointer-events: none; }
         .scan-panel.locked::after {
-            content: '🔒 输入预估中，扫码已锁定';
+            content: '🔒 弹窗打开中，扫码已锁定';
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(248, 250, 252, 0.85); border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.9rem; font-weight: 700; color: #b91c1c;
-            letter-spacing: 1px;
-            z-index: 10;
+            letter-spacing: 1px; z-index: 10;
         }
         .scan-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; color: #1e3a5f; }
         .scan-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -73,10 +73,13 @@
         .diff-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
         .diff-match { background: #dcfce7; color: #166534; }
         .diff-mismatch { background: #fee2e2; color: #b91c1c; }
+        .abnormal-badge { display: inline-block; margin-left: 4px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
         .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
         .row-error td { border-bottom: 1px solid #fecaca; }
         .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
         .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .row-abnormal { background: #fffbeb !important; }
+        .row-abnormal td { border-bottom: 1px solid #fde68a; }
         @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
         .error-icon { display: inline-block; margin-left: 3px; font-size: 0.8rem; animation: shake 0.5s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
@@ -94,7 +97,6 @@
         .sound-toggle { background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
-        /* 弹窗基础 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
         .modal-overlay.show { display: flex; }
         .modal-box { background: white; border-radius: 22px; padding: 20px 18px 18px; max-width: 380px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); animation: modalPop 0.25s ease-out; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
@@ -121,16 +123,16 @@
         .modal-btn-confirm:active { transform: scale(0.98); }
         .modal-btn-cancel { background: #f1f5f9; color: #475569; }
 
-        /* 超量警告弹窗专用 */
-        .warn-modal { max-width: 360px !important; padding: 24px 20px 20px !important; }
+        .warn-modal { max-width: 380px !important; padding: 24px 20px 20px !important; }
         .warn-icon { width: 60px; height: 60px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 12px; animation: shake 0.6s; }
         .warn-title { font-size: 1.25rem; font-weight: 800; color: #dc2626; text-align: center; margin-bottom: 8px; }
         .warn-code { font-family: 'Courier New', monospace; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 12px; font-weight: 700; letter-spacing: 1px; }
         .warn-desc { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 16px; line-height: 1.5; }
         .warn-desc strong { color: #dc2626; font-size: 1.1rem; }
-        .warn-buttons { display: flex; gap: 8px; }
-        .btn-warn-continue { background: #0f62fe; color: white; flex: 2; }
-        .btn-warn-fix { background: #fee2e2; color: #b91c1c; flex: 1; border: 1px solid #fca5a5; }
+        .warn-buttons { display: flex; flex-direction: column; gap: 8px; }
+        .btn-warn-fix { background: #0f62fe; color: white; }
+        .btn-warn-abnormal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .warn-tip { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.4; }
 
         .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
         .summary-header-icon { width: 54px; height: 54px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 10px; color: white; box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5); }
@@ -153,6 +155,7 @@
         .chip-est { background: #fef3c7; color: #b45309; }
         .chip-act { background: #dbeafe; color: #0f62fe; }
         .chip-diff-bad { background: #fee2e2; color: #b91c1c; }
+        .chip-abn { background: #fef3c7; color: #92400e; }
         .summary-all-good { text-align: center; padding: 26px 14px; color: #16a34a; font-size: 0.85rem; font-weight: 600; }
         .summary-all-good .big { font-size: 1.8rem; display: block; margin-bottom: 4px; }
         .summary-actions { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -328,7 +331,7 @@
     </div>
 </div>
 
-<!-- ✅ 弹窗 1：订单号虚拟键盘 -->
+<!-- 弹窗 1：订单号虚拟键盘 -->
 <div class="modal-overlay" id="orderModalOverlay">
     <div class="modal-box">
         <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
@@ -390,7 +393,7 @@
     </div>
 </div>
 
-<!-- ✅ 弹窗 3：实际数量超出预估警告 -->
+<!-- 弹窗 3：实际数量超出预估警告（必须二选一处理） -->
 <div class="modal-overlay" id="warnModalOverlay">
     <div class="modal-box warn-modal">
         <div class="warn-icon">🚨</div>
@@ -402,9 +405,10 @@
             超出预估 <strong id="warnDiff" style="color:#dc2626;">0</strong> 箱
         </div>
         <div class="warn-buttons">
-            <button class="modal-btn btn-warn-fix" id="warnFixBtn">✏️ 改预估</button>
-            <button class="modal-btn btn-warn-continue" id="warnContinueBtn">➡️ 继续扫码</button>
+            <button class="modal-btn btn-warn-fix" id="warnFixBtn">✏️ 重新填预估值</button>
+            <button class="modal-btn btn-warn-abnormal" id="warnAbnormalBtn">⚠️ 标记为异常订单</button>
         </div>
+        <div class="warn-tip">必须选择一种处理方式才能继续扫码</div>
     </div>
 </div>
 
@@ -457,6 +461,10 @@
     var ORDER_LENGTH = 8;
     var orderInputValue = '';
 
+    // 警告弹窗状态
+    var isWarnModalOpen = false;
+    var currentWarnBarcode = null;
+
     // ========== 提示音控制 ==========
     var soundEnabled = true;
     var audioCtx = null;
@@ -500,9 +508,8 @@
     var warnEstimate = document.getElementById('warnEstimate');
     var warnActual = document.getElementById('warnActual');
     var warnDiff = document.getElementById('warnDiff');
-    var warnContinueBtn = document.getElementById('warnContinueBtn');
+    var warnAbnormalBtn = document.getElementById('warnAbnormalBtn');
     var warnFixBtn = document.getElementById('warnFixBtn');
-    var currentWarnBarcode = null;
 
     var summaryOverlay = document.getElementById('summaryOverlay');
     var summarySubtitle = document.getElementById('summarySubtitle');
@@ -626,7 +633,6 @@
         });
     }
 
-    // ✅ 扫码区锁定/解锁控制
     function setScanLocked(locked) {
         if (locked) {
             scanPanel.classList.add('locked');
@@ -640,7 +646,7 @@
         }
     }
 
-    // ========== ✅ 弹窗控制 ==========
+    // ========== 弹窗控制 ==========
     function updateOrderDisplay() {
         if (orderInputValue === '') {
             orderDisplay.textContent = '0';
@@ -665,7 +671,6 @@
         orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
         updateOrderDisplay();
         orderModalOverlay.classList.add('show');
-        // 订单弹窗也锁定扫码
         setScanLocked(true);
         setTimeout(function() {
             if (!orderModalOverlay.classList.contains('show')) return;
@@ -678,7 +683,6 @@
         orderModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onOrderModalKeyDown);
         orderDisplay.blur();
-        // 如果其他弹窗没打开，解锁
         if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
@@ -818,7 +822,6 @@
         modalInputValue = '';
         updateModalDisplay();
         modalOverlay.classList.add('show');
-        // ✅ 输入预估时，锁定扫码区
         setScanLocked(true);
         registerModalKeys();
         playEstimatePromptSound();
@@ -841,7 +844,6 @@
         modalInputValue = currentActual > 0 ? String(currentActual) : '';
         updateModalDisplay();
         modalOverlay.classList.add('show');
-        // ✅ 修改实际也锁定扫码区
         setScanLocked(true);
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
@@ -864,7 +866,6 @@
         modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
         updateModalDisplay();
         modalOverlay.classList.add('show');
-        // ✅ 修改预估也锁定扫码区
         setScanLocked(true);
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
@@ -876,7 +877,6 @@
         modalInputValue = '';
         document.removeEventListener('keydown', onModalKeyDown);
         modalDisplay.blur();
-        // 如果其他弹窗没打开，解锁
         if (!summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
@@ -915,6 +915,7 @@
                 estimate: inputVal,
                 scanCount: (existing && existing.scanCount) ? existing.scanCount + 1 : 2,
                 hasFilledEstimate: true,
+                abnormal: existing ? !!existing.abnormal : false,
                 lastScanTime: ++scanSeq
             });
             var diff = newActual - inputVal;
@@ -934,6 +935,7 @@
                 estimate: est,
                 scanCount: existing ? (existing.scanCount || 2) : 1,
                 hasFilledEstimate: existing ? (existing.hasFilledEstimate || false) : false,
+                abnormal: existing ? !!existing.abnormal : false,
                 lastScanTime: existing ? (existing.lastScanTime || ++scanSeq) : ++scanSeq
             });
             setStatusMessage('订单 ' + barcode + ' 实际数量已改为 ' + inputVal + ' 箱', false);
@@ -947,6 +949,7 @@
                 estimate: inputVal,
                 scanCount: existing ? (existing.scanCount || 1) : 1,
                 hasFilledEstimate: true,
+                abnormal: existing ? !!existing.abnormal : false,
                 lastScanTime: existing ? (existing.lastScanTime || ++scanSeq) : ++scanSeq
             });
             var d = act - inputVal;
@@ -964,7 +967,6 @@
         renderTable();
     }
 
-    // ✅ 物理键盘拦截（数量弹窗）
     function onModalKeyDown(e) {
         if (!modalOverlay.classList.contains('show')) return;
         if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
@@ -974,8 +976,21 @@
         else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
     }
 
-    // ========== ✅ 超量警告控制 ==========
+    // ========== 超量警告（必须二选一） ==========
     function triggerOverWarn(barcode, actual, estimate) {
+        var alreadyOpen = warnModalOverlay.classList.contains('show');
+
+        if (alreadyOpen && currentWarnBarcode === barcode) {
+            // 同一订单已打开警告：更新数据并重播声音
+            warnEstimate.textContent = estimate;
+            warnActual.textContent = actual;
+            warnDiff.textContent = actual - estimate;
+            playOverWarningSound();
+            setScanLocked(true);
+            return;
+        }
+
+        isWarnModalOpen = true;
         currentWarnBarcode = barcode;
         warnBarcode.textContent = barcode;
         warnEstimate.textContent = estimate;
@@ -983,17 +998,22 @@
         warnDiff.textContent = actual - estimate;
 
         playOverWarningSound();
+
         warnModalOverlay.classList.add('show');
-        // ✅ 警告弹窗也锁定扫码
         setScanLocked(true);
+        barcodeInput.blur();
+        document.removeEventListener('keydown', onWarnKeyDown);
         document.addEventListener('keydown', onWarnKeyDown);
     }
 
     function closeWarnModal() {
         warnModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onWarnKeyDown);
+        isWarnModalOpen = false;
         currentWarnBarcode = null;
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
         }
@@ -1001,10 +1021,36 @@
 
     function onWarnKeyDown(e) {
         if (!warnModalOverlay.classList.contains('show')) return;
-        if (e.key === 'Escape' || e.key === 'Enter') {
+        // 只允许 Esc 触发“改预估”，不允许直接关闭；Enter 不处理（避免误关）
+        if (e.key === 'Escape') {
             e.preventDefault();
-            closeWarnModal();
+            handleWarnFix();
         }
+    }
+
+    // 选择：重新填预估值
+    function handleWarnFix() {
+        var bc = currentWarnBarcode;
+        if (!bc) { closeWarnModal(); return; }
+        closeWarnModal();
+        if (boxData.has(bc)) {
+            openEditEstimateModal(bc);
+        }
+    }
+
+    // 选择：标记为异常订单
+    function handleWarnAbnormal() {
+        var bc = currentWarnBarcode;
+        if (!bc) { closeWarnModal(); return; }
+        var data = boxData.get(bc);
+        if (data) {
+            data.abnormal = true;
+            boxData.set(bc, data);
+            setStatusMessage('订单 ' + bc + ' 已标记为异常订单', true);
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+        }
+        closeWarnModal();
+        renderTable();
     }
 
     // ========== 表格渲染 ==========
@@ -1046,20 +1092,22 @@
             var actual = data.actual || 0;
             var diff = actual - estimate;
             var isMismatch = diff !== 0;
+            var isAbnormal = !!data.abnormal;
             var diffClass = diff === 0 ? 'diff-match' : 'diff-mismatch';
             var diffText;
             if (diff === 0) diffText = '✓ 一致';
             else if (diff > 0) diffText = '⚠️ +' + diff;
             else diffText = '⚠️ ' + diff;
 
-            var rowClass = isMismatch ? 'row-error' : '';
+            var rowClass = isAbnormal ? 'row-abnormal' : (isMismatch ? 'row-error' : '');
             var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
+            var abnormalBadge = isAbnormal ? '<span class="abnormal-badge">异常</span>' : '';
 
             var safeBarcode = barcode.replace(/"/g, '&quot;');
             var row = document.createElement('tr');
             if (rowClass) row.className = rowClass;
             row.innerHTML =
-                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + '</td>' +
+                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + abnormalBadge + '</td>' +
                 '<td><span class="estimate-value">' + estimate + '</span></td>' +
                 '<td><span class="count-badge">' + actual + '</span></td>' +
                 '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
@@ -1123,11 +1171,7 @@
 
     // ========== 核心扫码逻辑 ==========
     function addBox(barcode, source) {
-        // ✅ 只要有弹窗打开，直接拒绝扫码处理
-        if (modalOverlay.classList.contains('show') ||
-            orderModalOverlay.classList.contains('show') ||
-            summaryOverlay.classList.contains('show') ||
-            warnModalOverlay.classList.contains('show')) {
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) {
             setStatusMessage('弹窗打开中，扫码已锁定', true);
             return false;
         }
@@ -1167,6 +1211,7 @@
                 estimate: 1,
                 scanCount: 1,
                 hasFilledEstimate: false,
+                abnormal: false,
                 lastScanTime: ++scanSeq
             });
             renderTable();
@@ -1191,7 +1236,8 @@
         renderTable();
         setStatusMessage('第' + existing.scanCount + '次扫码 | ' + cleanCode + ' → 实际 ' + existing.actual + ' 箱', false);
         if (navigator.vibrate) navigator.vibrate(80);
-        
+
+        // ✅ 实际 > 预估，强制警告（必须二选一处理）
         if (existing.actual > (existing.estimate || 0)) {
             triggerOverWarn(cleanCode, existing.actual, existing.estimate || 0);
         }
@@ -1206,18 +1252,21 @@
             var data = entry[1];
             var estimate = data.estimate || 0;
             var actual = data.actual || 0;
-            if (actual - estimate !== 0) {
+            if (actual - estimate !== 0 || data.abnormal) {
                 list.push({
                     barcode: barcode,
                     estimate: estimate,
                     actual: actual,
                     diff: actual - estimate,
+                    abnormal: !!data.abnormal,
                     scanCount: data.scanCount || 0,
                     lastScanTime: data.lastScanTime || 0
                 });
             }
         }
         list.sort(function(a, b) {
+            // 异常优先，然后按差异绝对值
+            if (a.abnormal !== b.abnormal) return a.abnormal ? -1 : 1;
             var absA = Math.abs(a.diff);
             var absB = Math.abs(b.diff);
             if (absA !== absB) return absB - absA;
@@ -1249,14 +1298,16 @@
             summarySubtitle.textContent = '所有订单预估与实际完全一致 🎉';
             summaryList.innerHTML = '<div class="summary-all-good"><span class="big">🎉</span>所有 ' + boxData.size + ' 个订单都一致，没有差异！</div>';
         } else {
-            summarySubtitle.textContent = '共 ' + boxData.size + ' 个订单，其中 ' + diffList.length + ' 个有差异';
+            summarySubtitle.textContent = '共 ' + boxData.size + ' 个订单，其中 ' + diffList.length + ' 个有差异/异常';
             var html = '';
             for (var i = 0; i < diffList.length; i++) {
                 var item = diffList[i];
                 var diffSign = item.diff > 0 ? '+' + item.diff : '' + item.diff;
+                var abnChip = item.abnormal ? '<span class="summary-num-chip chip-abn">异常</span>' : '';
                 html += '<div class="summary-item">' +
                     '<div class="summary-item-code">📦 ' + escapeHtml(item.barcode) + '</div>' +
                     '<div class="summary-item-nums">' +
+                        abnChip +
                         '<span class="summary-num-chip chip-est">预 ' + item.estimate + '</span>' +
                         '<span class="summary-num-chip chip-act">实 ' + item.actual + '</span>' +
                         '<span class="summary-num-chip chip-diff-bad">差 ' + diffSign + '</span>' +
@@ -1266,7 +1317,7 @@
             summaryList.innerHTML = html;
         }
         summaryOverlay.classList.add('show');
-        setScanLocked(true); // 汇总也锁
+        setScanLocked(true);
         if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]);
     }
 
@@ -1292,6 +1343,7 @@
         modalMode = 'estimate';
         orderInputValue = '';
         currentWarnBarcode = null;
+        isWarnModalOpen = false;
 
         modalOverlay.classList.remove('show');
         orderModalOverlay.classList.remove('show');
@@ -1349,19 +1401,19 @@
     function onSummaryExport() {
         var diffList = getDiffEntries();
         if (diffList.length === 0) {
-            alert('没有差异订单可导出');
+            alert('没有差异/异常订单可导出');
             return;
         }
-        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '扫码次数']];
+        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '异常标记', '扫码次数']];
         var totalEst = 0, totalAct = 0;
         for (var i = 0; i < diffList.length; i++) {
             var it = diffList[i];
-            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.scanCount]);
+            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.abnormal ? '异常' : '', it.scanCount]);
             totalEst += it.estimate;
             totalAct += it.actual;
         }
-        csvRows.push(['', '', '', '', '']);
-        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '']);
+        csvRows.push(['', '', '', '', '', '']);
+        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '', '']);
         var csvLines = [];
         for (var x = 0; x < csvRows.length; x++) {
             var row = csvRows[x];
@@ -1382,7 +1434,7 @@
 
     function onExport() {
         if (boxData.size === 0) { alert('暂无数据可导出'); return; }
-        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '状态', '扫码次数']];
+        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '状态', '异常标记', '扫码次数']];
         var entries = Array.from(boxData.entries()).sort(function(a, b) {
             return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
         });
@@ -1394,12 +1446,12 @@
             var act = data.actual || 0;
             var diff = act - est;
             var status = diff === 0 ? '一致' : (diff > 0 ? '实际多于预估' : '实际少于预估');
-            csvRows.push([barcode, est, act, diff, status, data.scanCount || 0]);
+            csvRows.push([barcode, est, act, diff, status, data.abnormal ? '异常' : '', data.scanCount || 0]);
             totalEst += est;
             totalAct += act;
         }
-        csvRows.push(['', '', '', '', '', '']);
-        csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '']);
+        csvRows.push(['', '', '', '', '', '', '']);
+        csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '', '']);
         var csvLines = [];
         for (var x = 0; x < csvRows.length; x++) {
             var row = csvRows[x];
@@ -1422,8 +1474,6 @@
     function onKeyDown(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-
-            // ✅ 任何弹窗打开时，直接拦截扫码输入
             if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) {
                 setStatusMessage('弹窗打开中，扫码已锁定', true);
                 return;
@@ -1455,11 +1505,11 @@
     function onAddManual() {
         if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) return;
         var val = barcodeInput.value.trim();
-        if (val === '') { 
-            setStatusMessage('请输入订单号', true); 
+        if (val === '') {
+            setStatusMessage('请输入订单号', true);
             playErrorSound();
             openOrderModal();
-            return; 
+            return;
         }
         var ok = addBox(val, 'manual');
         if (ok) {
@@ -1525,18 +1575,12 @@
             if (e.target === orderModalOverlay) closeOrderModal();
         });
 
-        warnContinueBtn.addEventListener('click', function() {
-            closeWarnModal();
-            setStatusMessage('已退出警告，可继续扫码', false);
-        });
-        warnFixBtn.addEventListener('click', function() {
-            closeWarnModal();
-            if (currentWarnBarcode && boxData.has(currentWarnBarcode)) {
-                openEditEstimateModal(currentWarnBarcode);
-            }
-        });
+        // 警告弹窗：只允许二选一处理，点背景不关闭
+        warnFixBtn.addEventListener('click', handleWarnFix);
+        warnAbnormalBtn.addEventListener('click', handleWarnAbnormal);
         warnModalOverlay.addEventListener('click', function(e) {
-            if (e.target === warnModalOverlay) closeWarnModal();
+            // 故意不关闭：必须选择处理方式
+            e.stopPropagation();
         });
 
         continueBtn.addEventListener('click', onContinueTask);
@@ -1562,7 +1606,7 @@
         bindKeypadEvents();
         bindOrderKeypadEvents();
         renderTable();
-        console.log('初始化完成 - 扫码区锁定版');
+        console.log('初始化完成 - 超预估强制处理版');
     }
 
     init();
