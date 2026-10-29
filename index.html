@@ -104,7 +104,6 @@
         .sound-toggle { background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
-        /* 查找定位面板 */
         .locate-panel { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
         .locate-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
         .locate-title span { font-weight: 700; font-size: 0.85rem; color: #9a3412; }
@@ -161,7 +160,6 @@
         .btn-warn-abnormal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
         .warn-tip { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.4; }
 
-        /* 定位成功弹窗 */
         .locate-modal { max-width: 340px !important; padding: 28px 20px 22px !important; text-align: center; }
         .locate-success-icon { width: 84px; height: 84px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; margin: 0 auto 16px; box-shadow: 0 10px 28px -6px rgba(34, 197, 94, 0.6); animation: locatePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes locatePop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
@@ -170,7 +168,7 @@
         .locate-success-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #16a34a; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; }
         .locate-success-btn:active { transform: scale(0.98); }
 
-        /* 手机摄像头扫码弹窗（正方形取景） */
+        /* 手机摄像头扫码弹窗（正方形取景 + 连续扫码） */
         .camera-modal { max-width: 640px !important; padding: 16px !important; }
         .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .camera-title { font-size: 1rem; font-weight: 700; color: #0a2540; display: flex; align-items: center; gap: 6px; }
@@ -187,7 +185,6 @@
         }
         #reader { width: 100%; height: 100%; }
         #reader video { border-radius: 16px; object-fit: cover; }
-        /* 扫描命中绿框闪烁 */
         .camera-flash {
             position: absolute; inset: 0; pointer-events: none;
             border-radius: 16px;
@@ -202,7 +199,25 @@
             0% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0.95), 0 0 24px 6px rgba(34,197,94,0.55); background: rgba(34,197,94,0.12); }
             100% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0), 0 0 0 0 rgba(34,197,94,0); background: rgba(34,197,94,0); }
         }
-        .camera-tip { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 10px; line-height: 1.5; }
+        .camera-last {
+            margin-top: 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            text-align: center;
+            font-weight: 600;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            word-break: break-all;
+        }
+        .camera-last.empty { background: #f8fafc; border-color: #e2e8f0; color: #94a3b8; font-weight: 400; }
+        .camera-tip { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 8px; line-height: 1.5; }
         .camera-error { background: #fff1f0; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; text-align: center; margin-top: 8px; display: none; }
 
         .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
@@ -335,10 +350,10 @@
 
         <h1>
             📦 扫码器 · 箱子计数
-            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · 🔍 查找定位 · 📷 手机扫码</span>
+            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · 🔍 查找定位 · 📷 连续扫码</span>
         </h1>
         <div class="sub">
-            🧾 扫码枪 / 📷 手机摄像头 / 手动累加 三种方式录入订单号
+            🧾 扫码枪 / 📷 手机连续扫码（仅二维码） / 手动累加
         </div>
 
         <div class="scan-panel" id="scanPanel">
@@ -356,11 +371,10 @@
                 ✅ 就绪 | 订单号必须为 8 位数字
             </div>
             <div class="shortcut-hint">
-                💡 扫码枪直接扫 | 📷 手机扫码打开摄像头 | ➕ 手动累加弹虚拟键盘输入
+                💡 扫码枪直接扫 | 📷 手机扫码打开摄像头（可连续扫） | ➕ 手动累加弹虚拟键盘
             </div>
         </div>
 
-        <!-- 查找定位面板 -->
         <div class="locate-panel">
             <div class="locate-title">
                 <span>🔍 查找定位</span>
@@ -515,23 +529,24 @@
     </div>
 </div>
 
-<!-- 弹窗 5：手机摄像头扫码（正方形取景 + 命中绿框闪烁） -->
+<!-- 弹窗 5：手机摄像头连续扫码（仅二维码 + 正方形框） -->
 <div class="modal-overlay" id="cameraModalOverlay">
     <div class="modal-box camera-modal">
         <div class="camera-header">
-            <div class="camera-title">📷 手机扫码</div>
+            <div class="camera-title">📷 连续扫码（仅二维码）</div>
             <button class="camera-close" id="cameraCloseBtn">✖ 关闭</button>
         </div>
         <div class="camera-stage">
             <div id="reader"></div>
             <div class="camera-flash" id="cameraFlash"></div>
         </div>
+        <div class="camera-last empty" id="cameraLast">等待扫码…</div>
         <div class="camera-error" id="cameraError"></div>
-        <div class="camera-tip">将二维码/条形码放入正方形取景框，识别成功后绿框闪烁并响铃</div>
+        <div class="camera-tip">将二维码放入正方形取景框，命中后绿框闪烁并响铃，可连续扫下一张</div>
     </div>
 </div>
 
-<!-- 弹窗 6：查找定位输入（虚拟键盘，禁止物理键盘/扫码枪） -->
+<!-- 弹窗 6：查找定位输入（虚拟键盘） -->
 <div class="modal-overlay" id="locateInputModalOverlay">
     <div class="modal-box">
         <div class="modal-icon" style="background:#ffedd5;">🔍</div>
@@ -610,23 +625,23 @@
     var ORDER_LENGTH = 8;
     var orderInputValue = '';
 
-    // 查找定位输入弹窗状态
     var locateInputValue = '';
 
-    // 警告弹窗状态
     var isWarnModalOpen = false;
     var currentWarnBarcode = null;
 
-    // 查找定位状态
     var locateTarget = '';
     var locateActive = false;
     var locateHitSeq = 0;
 
-    // 手机扫码状态
+    // 手机扫码状态（连续扫码）
     var html5QrCode = null;
     var cameraRunning = false;
     var cameraCooldownUntil = 0;
     var cameraFlashTimer = null;
+    var lastCameraCode = '';
+    var lastCameraCodeTime = 0;
+    var lastCameraResult = null;
 
     // ========== 提示音控制 ==========
     var soundEnabled = true;
@@ -687,7 +702,6 @@
     var continueBtn = document.getElementById('continueBtn');
     var finishTaskBtn = document.getElementById('finishTaskBtn');
 
-    // 查找定位 DOM
     var locateInput = document.getElementById('locateInput');
     var locateOnBtn = document.getElementById('locateOnBtn');
     var locateOffBtn = document.getElementById('locateOffBtn');
@@ -696,18 +710,17 @@
     var locateModalCode = document.getElementById('locateModalCode');
     var locateModalOkBtn = document.getElementById('locateModalOkBtn');
 
-    // 查找定位输入弹窗 DOM
     var locateInputModalOverlay = document.getElementById('locateInputModalOverlay');
     var locateDisplay = document.getElementById('locateDisplay');
     var locateInputCancelBtn = document.getElementById('locateInputCancelBtn');
     var locateInputConfirmBtn = document.getElementById('locateInputConfirmBtn');
 
-    // 手机摄像头扫码 DOM
     var cameraModalOverlay = document.getElementById('cameraModalOverlay');
     var cameraCloseBtn = document.getElementById('cameraCloseBtn');
     var cameraError = document.getElementById('cameraError');
     var readerEl = document.getElementById('reader');
     var cameraFlash = document.getElementById('cameraFlash');
+    var cameraLast = document.getElementById('cameraLast');
 
     var statusTimer = null;
 
@@ -755,7 +768,6 @@
         if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
     }
 
-    // 确认音（扫码命中/普通确认）：双音更明显
     function playConfirmSound() {
         if (!soundEnabled) return;
         var ctx = getAudioContext();
@@ -796,14 +808,13 @@
         if (navigator.vibrate) navigator.vibrate([50, 40, 50, 40, 120]);
     }
 
-    // 扫码命中音：更清脆的上行三音
     function playScanHitSound() {
         if (!soundEnabled) return;
         var ctx = getAudioContext();
         if (!ctx) return;
         var now = ctx.currentTime;
-        playTone(1568, now, 0.07, 0.3);        // G6
-        playTone(2093, now + 0.09, 0.12, 0.32); // C7
+        playTone(1568, now, 0.07, 0.3);
+        playTone(2093, now + 0.09, 0.12, 0.32);
         if (navigator.vibrate) navigator.vibrate(60);
     }
 
@@ -1033,7 +1044,27 @@
         }
     }
 
-    // ========== 手机摄像头扫码 ==========
+    // ========== 手机摄像头连续扫码（仅二维码 + 正方形框） ==========
+    function updateCameraLast(result) {
+        if (!result) {
+            cameraLast.classList.add('empty');
+            cameraLast.textContent = '等待扫码…';
+            return;
+        }
+        cameraLast.classList.remove('empty');
+        if (result.ok) {
+            cameraLast.innerHTML = '✅ 已识别：<strong>' + escapeHtml(result.code) + '</strong>（可继续扫下一张）';
+            cameraLast.style.background = '#f0fdf4';
+            cameraLast.style.borderColor = '#bbf7d0';
+            cameraLast.style.color = '#166534';
+        } else {
+            cameraLast.innerHTML = '⚠️ 识别到：' + escapeHtml(result.raw) + '（不是 8 位数字，已忽略，可继续扫）';
+            cameraLast.style.background = '#fff7ed';
+            cameraLast.style.borderColor = '#fed7aa';
+            cameraLast.style.color = '#9a3412';
+        }
+    }
+
     function openCameraModal() {
         if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
             setStatusMessage('请先关闭当前弹窗再打开摄像头', true);
@@ -1045,6 +1076,11 @@
         }
         cameraError.style.display = 'none';
         cameraError.textContent = '';
+        lastCameraCode = '';
+        lastCameraCodeTime = 0;
+        lastCameraResult = null;
+        cameraCooldownUntil = 0;
+        updateCameraLast(null);
         cameraModalOverlay.classList.add('show');
         setScanLocked(true);
         startCameraScanner();
@@ -1053,16 +1089,13 @@
     function startCameraScanner() {
         if (cameraRunning) return;
         cameraRunning = true;
-        // 先请求一次摄像头权限，提高 iOS/部分安卓启动成功率
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
                 .then(function(stream) {
-                    // 权限已获取，立即停止这条测试流，再交给 html5-qrcode
                     stream.getTracks().forEach(function(t) { t.stop(); });
                     setTimeout(startHtml5QrCode, 80);
                 })
-                .catch(function(err) {
-                    // 权限失败也尝试直接启动，让 html5-qrcode 给出具体错误
+                .catch(function() {
                     setTimeout(startHtml5QrCode, 80);
                 });
         } else {
@@ -1074,27 +1107,18 @@
         if (!cameraModalOverlay.classList.contains('show')) { cameraRunning = false; return; }
         try {
             html5QrCode = new Html5Qrcode("reader", {
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.CODE_93,
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.UPC_E,
-                    Html5QrcodeSupportedFormats.ITF
-                ],
+                // 只扫二维码，提升速度与准确率
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
                 verbose: false
             });
             html5QrCode.start(
                 { facingMode: "environment" },
                 {
                     fps: 12,
-                    // 正方形取景框
+                    // 正方形取景框（只扫二维码）
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
                         var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                        var size = Math.floor(minEdge * 0.72);
+                        var size = Math.floor(minEdge * 0.7);
                         return { width: size, height: size };
                     },
                     aspectRatio: 1.0,
@@ -1122,7 +1146,6 @@
     function flashCameraFrame() {
         if (cameraFlashTimer) clearTimeout(cameraFlashTimer);
         cameraFlash.classList.remove('flash');
-        // 强制重排以重启动画
         void cameraFlash.offsetWidth;
         cameraFlash.classList.add('flash');
         cameraFlashTimer = setTimeout(function() {
@@ -1133,36 +1156,39 @@
 
     function onCameraScanSuccess(decodedText, decodedResult) {
         var now = Date.now();
+        // 冷却期（避免同一条码每帧都触发）
         if (now < cameraCooldownUntil) return;
-        cameraCooldownUntil = now + 1400;
-
-        // 绿框闪烁 + 命中音
-        flashCameraFrame();
-        playScanHitSound();
 
         var clean = (decodedText || '').trim();
         var digits = clean.replace(/\D/g, '');
-        if (digits.length >= ORDER_LENGTH) {
-            digits = digits.slice(0, ORDER_LENGTH);
+        if (digits.length >= ORDER_LENGTH) digits = digits.slice(0, ORDER_LENGTH);
+
+        // 同一条码 1.5s 内不重复计数
+        if (digits && digits === lastCameraCode && (now - lastCameraCodeTime) < 1500) {
+            return;
         }
 
+        // 命中反馈
+        flashCameraFrame();
         if (isValidOrderNo(digits)) {
-            // 稍等让绿框动画可见，再关闭摄像头
-            setTimeout(function() {
-                closeCameraModal(true);
-                barcodeInput.value = '';
-                barcodeInput.classList.remove('error', 'success');
-                addBox(digits, 'camera');
-            }, 260);
+            playScanHitSound();
         } else {
-            barcodeInput.value = digits;
-            barcodeInput.classList.add('error');
-            setStatusMessage('摄像头识别到「' + escapeHtml(clean) + '」，但不是 8 位数字，请手动修正', true);
             playErrorSound();
-            setTimeout(function() {
-                closeCameraModal(true);
-                barcodeInput.focus();
-            }, 260);
+        }
+
+        lastCameraCode = digits;
+        lastCameraCodeTime = now;
+        cameraCooldownUntil = now + 1200; // 冷却 1.2s，可连续扫不同码
+
+        if (isValidOrderNo(digits)) {
+            lastCameraResult = { ok: true, code: digits };
+            updateCameraLast(lastCameraResult);
+            // 直接进入计数逻辑，不关闭摄像头，继续扫下一张
+            addBox(digits, 'camera');
+        } else {
+            lastCameraResult = { ok: false, raw: clean };
+            updateCameraLast(lastCameraResult);
+            setStatusMessage('摄像头识别到「' + escapeHtml(clean) + '」，但不是 8 位数字，已忽略，可继续扫', true);
         }
     }
 
@@ -1211,6 +1237,10 @@
         cameraError.style.display = 'none';
         cameraError.textContent = '';
         cameraCooldownUntil = 0;
+        lastCameraCode = '';
+        lastCameraCodeTime = 0;
+        lastCameraResult = null;
+        updateCameraLast(null);
     }
 
     // ========== 弹窗控制 ==========
@@ -1771,7 +1801,6 @@
             return false;
         }
 
-        // 查找定位命中检查
         var hitTarget = checkLocateHit(cleanCode);
 
         var existing = boxData.get(cleanCode);
@@ -2227,7 +2256,7 @@
         updateLocateStatusUI();
         updateLocateDisplay();
         renderTable();
-        console.log('初始化完成 - 摄像头正方形绿框版');
+        console.log('初始化完成 - 连续扫码正方形版');
     }
 
     init();
