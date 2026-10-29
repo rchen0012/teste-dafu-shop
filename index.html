@@ -6,6 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>扫码器 - 箱子计数（第2箱必弹窗填预估）</title>
+    <!-- 手机摄像头扫码库 -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
         html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -54,6 +56,8 @@
         .btn-secondary { background: #eef2f6; border: 1px solid #ccdae5; color: #2c3e50; font-weight: 500; padding: 0 16px; height: 40px; border-radius: 60px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; }
         .btn-success { background: #16a34a; border: none; color: white; font-weight: 700; padding: 0 22px; height: 46px; border-radius: 60px; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.4); white-space: nowrap; }
         .btn-success:hover { background: #15803d; }
+        .btn-camera { background: #7c3aed; border: none; color: white; font-weight: 600; padding: 0 18px; height: 44px; border-radius: 60px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.4); }
+        .btn-camera:hover { background: #6d28d9; }
         .status { margin-top: 10px; background: #e9f3fe; padding: 8px 14px; border-radius: 40px; font-size: 0.78rem; color: #0050b3; line-height: 1.4; word-break: break-all; transition: all 0.2s; }
         .diff-summary { background: linear-gradient(135deg, #1e3a5f 0%, #0f62fe 100%); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 8px; color: white; }
         .diff-summary-item { text-align: center; flex: 1; min-width: 70px; }
@@ -74,12 +78,15 @@
         .diff-match { background: #dcfce7; color: #166534; }
         .diff-mismatch { background: #fee2e2; color: #b91c1c; }
         .abnormal-badge { display: inline-block; margin-left: 4px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+        .target-badge { display: inline-block; margin-left: 4px; background: #dbeafe; color: #0f62fe; border: 1px solid #93c5fd; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
         .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
         .row-error td { border-bottom: 1px solid #fecaca; }
         .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
         .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
         .row-abnormal { background: #fffbeb !important; }
         .row-abnormal td { border-bottom: 1px solid #fde68a; }
+        .row-target { background: #eff6ff !important; box-shadow: inset 3px 0 0 #0f62fe; }
+        .row-target td { border-bottom: 1px solid #bfdbfe; }
         @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
         .error-icon { display: inline-block; margin-left: 3px; font-size: 0.8rem; animation: shake 0.5s ease-in-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
@@ -96,6 +103,26 @@
         .shortcut-hint { font-size: 0.62rem; color: #5f7d9c; margin-top: 6px; padding: 4px 10px; background: #f0f4f9; border-radius: 20px; display: inline-block; line-height: 1.5; }
         .sound-toggle { background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
         .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        /* 查找定位面板 */
+        .locate-panel { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
+        .locate-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .locate-title span { font-weight: 700; font-size: 0.85rem; color: #9a3412; }
+        .locate-status { font-size: 0.68rem; font-weight: 600; color: #c2410c; background: #ffedd5; border: 1px solid #fed7aa; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+        .locate-status.on { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .locate-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .locate-input {
+            flex: 1 1 180px; min-width: 0; background: white; border: 2px solid #fed7aa;
+            border-radius: 60px; padding: 10px 16px; font-size: 0.95rem;
+            font-family: 'Courier New', monospace; outline: none; letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .locate-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15); }
+        .locate-input.hit { border-color: #16a34a; background: #f0fdf4; }
+        .locate-input[readonly] { background: #fffbf5; }
+        .btn-locate-on { background: #ea580c; border: none; color: white; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .btn-locate-on:hover { background: #c2410c; }
+        .btn-locate-off { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
         .modal-overlay.show { display: flex; }
@@ -133,6 +160,25 @@
         .btn-warn-fix { background: #0f62fe; color: white; }
         .btn-warn-abnormal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
         .warn-tip { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.4; }
+
+        /* 定位成功弹窗 */
+        .locate-modal { max-width: 340px !important; padding: 28px 20px 22px !important; text-align: center; }
+        .locate-success-icon { width: 84px; height: 84px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; margin: 0 auto 16px; box-shadow: 0 10px 28px -6px rgba(34, 197, 94, 0.6); animation: locatePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes locatePop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+        .locate-success-title { font-size: 1.3rem; font-weight: 800; color: #15803d; margin-bottom: 8px; }
+        .locate-success-code { font-family: 'Courier New', monospace; font-size: 1rem; color: #0a2540; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 9px 14px; border-radius: 12px; margin-bottom: 16px; font-weight: 700; letter-spacing: 1px; word-break: break-all; }
+        .locate-success-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #16a34a; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .locate-success-btn:active { transform: scale(0.98); }
+
+        /* 手机摄像头扫码弹窗 */
+        .camera-modal { max-width: 640px !important; padding: 16px !important; }
+        .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .camera-title { font-size: 1rem; font-weight: 700; color: #0a2540; display: flex; align-items: center; gap: 6px; }
+        .camera-close { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 700; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; cursor: pointer; }
+        #reader { width: 100%; border-radius: 14px; overflow: hidden; background: #0a2540; min-height: 240px; }
+        #reader video { border-radius: 14px; }
+        .camera-tip { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 10px; line-height: 1.5; }
+        .camera-error { background: #fff1f0; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; text-align: center; margin-top: 8px; display: none; }
 
         .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
         .summary-header-icon { width: 54px; height: 54px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 10px; color: white; box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5); }
@@ -176,7 +222,7 @@
             .scan-panel { padding: 10px; border-radius: 14px; margin-bottom: 10px; }
             .scan-input-area { gap: 6px; }
             .barcode-input { flex: 1 1 100%; font-size: 0.95rem; padding: 10px 14px; }
-            .btn-primary, .btn-secondary { height: 40px; font-size: 0.8rem; padding: 0 14px; flex: 1; min-width: 0; }
+            .btn-primary, .btn-secondary, .btn-camera { height: 40px; font-size: 0.8rem; padding: 0 14px; flex: 1; min-width: 0; }
             .btn-success { width: 100%; }
             .diff-summary { padding: 10px; margin-bottom: 10px; }
             .diff-summary-item .value { font-size: 1.05rem; }
@@ -204,6 +250,11 @@
             .summary-list { max-height: 200px; }
             .summary-item { padding: 8px 9px; }
             .summary-item-code { font-size: 0.68rem; }
+            .locate-panel { padding: 10px; }
+            .locate-input { flex: 1 1 100%; font-size: 0.9rem; padding: 9px 14px; }
+            .btn-locate-on, .btn-locate-off { flex: 1; min-width: 0; }
+            .camera-modal { padding: 12px !important; }
+            #reader { min-height: 200px; }
         }
         @media (max-height: 500px) and (orientation: landscape) {
             body { padding: 6px 12px; align-items: flex-start; }
@@ -259,19 +310,20 @@
 
         <h1>
             📦 扫码器 · 箱子计数
-            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · ⌨️ 虚拟键盘</span>
+            <span class="badge">🔁 新码置顶 · 🔒 8位订单 · 🔍 查找定位 · 📷 手机扫码</span>
         </h1>
         <div class="sub">
-            🧾 点击扫码框只聚焦扫码枪 | 点「手动累加」弹虚拟键盘 | 数量必须虚拟键盘填
+            🧾 扫码枪 / 📷 手机摄像头 / 手动累加 三种方式录入订单号
         </div>
 
         <div class="scan-panel" id="scanPanel">
             <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（扫码枪输入或点手动累加）</span></span>
+                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（扫码枪输入 / 手机扫码 / 手动累加）</span></span>
                 <button id="soundToggle" class="sound-toggle" title="开/关提示音">🔊 提示音：开</button>
             </div>
             <div class="scan-input-area">
                 <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码枪输入订单号..." inputmode="none" autocomplete="off">
+                <button id="cameraBtn" class="btn-camera">📷 手机扫码</button>
                 <button id="addBtn" class="btn-primary">➕ 手动累加</button>
                 <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
             </div>
@@ -279,7 +331,23 @@
                 ✅ 就绪 | 订单号必须为 8 位数字
             </div>
             <div class="shortcut-hint">
-                💡 扫码枪扫码 | 或点「手动累加」弹虚拟键盘输入订单号 | 数量弹窗只能用虚拟键盘，防扫码枪误入
+                💡 扫码枪直接扫 | 📷 手机扫码打开摄像头 | ➕ 手动累加弹虚拟键盘输入
+            </div>
+        </div>
+
+        <!-- 查找定位面板（输入框只读，点击弹虚拟键盘） -->
+        <div class="locate-panel">
+            <div class="locate-title">
+                <span>🔍 查找定位</span>
+                <span class="locate-status" id="locateStatus">未开启</span>
+            </div>
+            <div class="locate-input-area">
+                <input type="text" id="locateInput" class="locate-input" placeholder="点击输入目标单号（8位）" inputmode="none" autocomplete="off" readonly>
+                <button id="locateOnBtn" class="btn-locate-on">🎯 开启定位</button>
+                <button id="locateOffBtn" class="btn-locate-off" style="display:none;">✖ 关闭定位</button>
+            </div>
+            <div class="shortcut-hint" style="margin-top:8px;">
+                💡 点击输入框弹虚拟键盘输入 8 位目标单号；扫到目标单号会响提示音并弹勾，表格高亮
             </div>
         </div>
 
@@ -412,6 +480,59 @@
     </div>
 </div>
 
+<!-- 弹窗 4：查找定位成功 ✅ -->
+<div class="modal-overlay" id="locateModalOverlay">
+    <div class="modal-box locate-modal">
+        <div class="locate-success-icon">✓</div>
+        <div class="locate-success-title">找到目标单号</div>
+        <div class="locate-success-code" id="locateModalCode">-</div>
+        <button class="locate-success-btn" id="locateModalOkBtn">知道了</button>
+    </div>
+</div>
+
+<!-- 弹窗 5：手机摄像头扫码 -->
+<div class="modal-overlay" id="cameraModalOverlay">
+    <div class="modal-box camera-modal">
+        <div class="camera-header">
+            <div class="camera-title">📷 手机扫码</div>
+            <button class="camera-close" id="cameraCloseBtn">✖ 关闭</button>
+        </div>
+        <div id="reader"></div>
+        <div class="camera-error" id="cameraError"></div>
+        <div class="camera-tip">将订单号条形码/二维码对准摄像头，识别成功后自动填入</div>
+    </div>
+</div>
+
+<!-- 弹窗 6：查找定位输入（虚拟键盘，禁止物理键盘/扫码枪） -->
+<div class="modal-overlay" id="locateInputModalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:#ffedd5;">🔍</div>
+        <div class="modal-title">输入查找目标单号</div>
+        <div class="modal-desc" style="margin-bottom:8px;">
+            目标单号必须为 <strong>8 位数字</strong>（仅虚拟键盘可输入）
+        </div>
+        <div class="modal-display" id="locateDisplay">0</div>
+        <div class="keypad">
+            <button class="key" data-locate-key="1">1</button>
+            <button class="key" data-locate-key="2">2</button>
+            <button class="key" data-locate-key="3">3</button>
+            <button class="key" data-locate-key="4">4</button>
+            <button class="key" data-locate-key="5">5</button>
+            <button class="key" data-locate-key="6">6</button>
+            <button class="key" data-locate-key="7">7</button>
+            <button class="key" data-locate-key="8">8</button>
+            <button class="key" data-locate-key="9">9</button>
+            <button class="key key-func" data-locate-action="clear">清空</button>
+            <button class="key" data-locate-key="0">0</button>
+            <button class="key key-delete" data-locate-action="delete">⌫</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="locateInputCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="locateInputConfirmBtn" disabled>确认</button>
+        </div>
+    </div>
+</div>
+
 <!-- 完成汇总弹窗 -->
 <div class="modal-overlay" id="summaryOverlay">
     <div class="modal-box summary-modal">
@@ -461,9 +582,22 @@
     var ORDER_LENGTH = 8;
     var orderInputValue = '';
 
+    // 查找定位输入弹窗状态
+    var locateInputValue = '';
+
     // 警告弹窗状态
     var isWarnModalOpen = false;
     var currentWarnBarcode = null;
+
+    // 查找定位状态
+    var locateTarget = '';
+    var locateActive = false;
+    var locateHitSeq = 0;
+
+    // 手机扫码状态
+    var html5QrCode = null;
+    var cameraRunning = false;
+    var cameraCooldownUntil = 0;
 
     // ========== 提示音控制 ==========
     var soundEnabled = true;
@@ -472,6 +606,7 @@
     // ========== DOM ==========
     var barcodeInput = document.getElementById('barcodeInput');
     var addBtn = document.getElementById('addBtn');
+    var cameraBtn = document.getElementById('cameraBtn');
     var clearInputBtn = document.getElementById('clearInputBtn');
     var clearAllBtn = document.getElementById('clearAllBtn');
     var exportBtn = document.getElementById('exportBtn');
@@ -522,6 +657,27 @@
     var summaryExportBtn = document.getElementById('summaryExportBtn');
     var continueBtn = document.getElementById('continueBtn');
     var finishTaskBtn = document.getElementById('finishTaskBtn');
+
+    // 查找定位 DOM
+    var locateInput = document.getElementById('locateInput');
+    var locateOnBtn = document.getElementById('locateOnBtn');
+    var locateOffBtn = document.getElementById('locateOffBtn');
+    var locateStatus = document.getElementById('locateStatus');
+    var locateModalOverlay = document.getElementById('locateModalOverlay');
+    var locateModalCode = document.getElementById('locateModalCode');
+    var locateModalOkBtn = document.getElementById('locateModalOkBtn');
+
+    // 查找定位输入弹窗 DOM
+    var locateInputModalOverlay = document.getElementById('locateInputModalOverlay');
+    var locateDisplay = document.getElementById('locateDisplay');
+    var locateInputCancelBtn = document.getElementById('locateInputCancelBtn');
+    var locateInputConfirmBtn = document.getElementById('locateInputConfirmBtn');
+
+    // 手机摄像头扫码 DOM
+    var cameraModalOverlay = document.getElementById('cameraModalOverlay');
+    var cameraCloseBtn = document.getElementById('cameraCloseBtn');
+    var cameraError = document.getElementById('cameraError');
+    var readerEl = document.getElementById('reader');
 
     var statusTimer = null;
 
@@ -597,6 +753,17 @@
         if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
     }
 
+    function playLocateHitSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(784, now, 0.12, 0.35);
+        playTone(1046.5, now + 0.14, 0.12, 0.4);
+        playTone(1318.5, now + 0.28, 0.3, 0.45);
+        if (navigator.vibrate) navigator.vibrate([50, 40, 50, 40, 120]);
+    }
+
     function toggleSound() {
         soundEnabled = !soundEnabled;
         if (soundEnabled) {
@@ -646,6 +813,329 @@
         }
     }
 
+    // ========== 查找定位逻辑 ==========
+    function updateLocateStatusUI() {
+        if (locateActive && locateTarget) {
+            locateStatus.textContent = '🎯 定位中：' + locateTarget;
+            locateStatus.classList.add('on');
+            locateInput.classList.add('hit');
+            locateOnBtn.style.display = 'none';
+            locateOffBtn.style.display = '';
+        } else {
+            locateStatus.textContent = '未开启';
+            locateStatus.classList.remove('on');
+            locateInput.classList.remove('hit');
+            locateOnBtn.style.display = '';
+            locateOffBtn.style.display = 'none';
+        }
+    }
+
+    // 查找定位输入弹窗：显示值
+    function updateLocateDisplay() {
+        if (locateInputValue === '') {
+            locateDisplay.textContent = '0';
+            locateDisplay.classList.add('empty');
+            locateDisplay.classList.remove('success');
+        } else {
+            locateDisplay.textContent = locateInputValue;
+            locateDisplay.classList.remove('empty');
+            if (locateInputValue.length === ORDER_LENGTH) locateDisplay.classList.add('success');
+            else locateDisplay.classList.remove('success');
+        }
+        if (locateInputValue.length === ORDER_LENGTH) {
+            locateInputConfirmBtn.disabled = false;
+            locateInputConfirmBtn.classList.add('ready');
+        } else {
+            locateInputConfirmBtn.disabled = true;
+            locateInputConfirmBtn.classList.remove('ready');
+        }
+    }
+
+    function openLocateInputModal() {
+        // 若已开启定位，点输入框先关闭定位再编辑？这里保留当前值让用户修改
+        locateInputValue = (locateTarget || '').slice(0, ORDER_LENGTH);
+        updateLocateDisplay();
+        locateInputModalOverlay.classList.add('show');
+        setScanLocked(true);
+        setTimeout(function() {
+            if (!locateInputModalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onLocateInputModalKeyDown);
+            locateDisplay.focus();
+        }, 0);
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function closeLocateInputModal() {
+        locateInputModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onLocateInputModalKeyDown);
+        locateDisplay.blur();
+        if (!modalOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !warnModalOverlay.classList.contains('show') &&
+            !locateModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function handleLocateKey(key) {
+        if (locateInputValue.length >= ORDER_LENGTH) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            setStatusMessage('目标单号最多 8 位，已忽略', true);
+            return;
+        }
+        if (locateInputValue === '0') locateInputValue = key;
+        else locateInputValue += key;
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleLocateDelete() {
+        if (locateInputValue.length > 0) locateInputValue = locateInputValue.slice(0, -1);
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleLocateClear() {
+        locateInputValue = '';
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function confirmLocateInput() {
+        if (locateInputValue.length !== ORDER_LENGTH) {
+            locateDisplay.classList.add('error');
+            setTimeout(function() { locateDisplay.classList.remove('error'); }, 500);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('目标单号必须为 8 位数字（当前 ' + locateInputValue.length + ' 位）', true);
+            return;
+        }
+        locateInput.value = locateInputValue;
+        closeLocateInputModal();
+        // 自动开启定位
+        locateTarget = locateInputValue;
+        locateActive = true;
+        updateLocateStatusUI();
+        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
+        playConfirmSound();
+        renderTable();
+    }
+
+    function onLocateInputModalKeyDown(e) {
+        if (!locateInputModalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
+        else if (e.key === 'Backspace') { e.preventDefault(); return; }
+        else if (e.key === 'Delete') { e.preventDefault(); return; }
+        else if (e.key === 'Escape') { e.preventDefault(); closeLocateInputModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (!locateInputConfirmBtn.disabled) confirmLocateInput(); }
+    }
+
+    function bindLocateKeypadEvents() {
+        var keys = document.querySelectorAll('.key[data-locate-key], .key[data-locate-action]');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-locate-key');
+                var action = this.getAttribute('data-locate-action');
+                if (action === 'delete') handleLocateDelete();
+                else if (action === 'clear') handleLocateClear();
+                else if (key !== null) handleLocateKey(key);
+            });
+        }
+    }
+
+    function onLocateOn() {
+        // 若输入框有值且满 8 位，直接开启；否则打开虚拟键盘
+        var v = (locateInput.value || '').replace(/\D/g, '').slice(0, ORDER_LENGTH);
+        if (v.length !== ORDER_LENGTH) {
+            openLocateInputModal();
+            return;
+        }
+        locateTarget = v;
+        locateActive = true;
+        updateLocateStatusUI();
+        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
+        playConfirmSound();
+        renderTable();
+    }
+
+    function onLocateOff() {
+        locateActive = false;
+        locateTarget = '';
+        locateInput.value = '';
+        updateLocateStatusUI();
+        renderTable();
+        setStatusMessage('已关闭查找定位', false);
+    }
+
+    function checkLocateHit(barcode) {
+        if (!locateActive || !locateTarget) return false;
+        if (barcode !== locateTarget) return false;
+        locateHitSeq++;
+        playLocateHitSound();
+        locateModalCode.textContent = barcode;
+        locateModalOverlay.classList.add('show');
+        return true;
+    }
+
+    function closeLocateModal() {
+        locateModalOverlay.classList.remove('show');
+        if (!modalOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !warnModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show') &&
+            !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    // ========== 手机摄像头扫码 ==========
+    function openCameraModal() {
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
+            setStatusMessage('请先关闭当前弹窗再打开摄像头', true);
+            return;
+        }
+        if (typeof Html5Qrcode === 'undefined') {
+            alert('摄像头扫码库未加载成功，请检查网络后刷新页面。\n如果无法使用摄像头，可继续使用扫码枪或手动累加。');
+            return;
+        }
+        cameraError.style.display = 'none';
+        cameraError.textContent = '';
+        cameraModalOverlay.classList.add('show');
+        setScanLocked(true);
+        startCameraScanner();
+    }
+
+    function startCameraScanner() {
+        if (cameraRunning) return;
+        cameraRunning = true;
+        setTimeout(function() {
+            if (!cameraModalOverlay.classList.contains('show')) { cameraRunning = false; return; }
+            try {
+                html5QrCode = new Html5Qrcode("reader", {
+                    formatsToSupport: [
+                        Html5QrcodeSupportedFormats.QR_CODE,
+                        Html5QrcodeSupportedFormats.CODE_128,
+                        Html5QrcodeSupportedFormats.CODE_39,
+                        Html5QrcodeSupportedFormats.CODE_93,
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.EAN_8,
+                        Html5QrcodeSupportedFormats.UPC_A,
+                        Html5QrcodeSupportedFormats.UPC_E,
+                        Html5QrcodeSupportedFormats.ITF
+                    ]
+                });
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: function(viewfinderWidth, viewfinderHeight) {
+                            var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                            var size = Math.floor(minEdge * 0.7);
+                            return { width: size, height: Math.floor(size * 0.55) };
+                        },
+                        aspectRatio: 1.0,
+                        disableFlip: false
+                    },
+                    onCameraScanSuccess,
+                    function(errorMessage) {}
+                ).catch(function(err) {
+                    cameraRunning = false;
+                    showCameraError('无法启动摄像头：' + (err && err.message ? err.message : err));
+                });
+            } catch (e) {
+                cameraRunning = false;
+                showCameraError('初始化摄像头失败：' + e.message);
+            }
+        }, 120);
+    }
+
+    function showCameraError(msg) {
+        cameraError.style.display = 'block';
+        cameraError.textContent = msg;
+        setStatusMessage(msg, true);
+        playErrorSound();
+    }
+
+    function onCameraScanSuccess(decodedText, decodedResult) {
+        var now = Date.now();
+        if (now < cameraCooldownUntil) return;
+        cameraCooldownUntil = now + 1200;
+
+        var clean = (decodedText || '').trim();
+        var digits = clean.replace(/\D/g, '');
+        if (digits.length >= ORDER_LENGTH) {
+            digits = digits.slice(0, ORDER_LENGTH);
+        }
+
+        playConfirmSound();
+        if (navigator.vibrate) navigator.vibrate(60);
+
+        if (isValidOrderNo(digits)) {
+            closeCameraModal(true);
+            barcodeInput.value = '';
+            barcodeInput.classList.remove('error', 'success');
+            addBox(digits, 'camera');
+        } else {
+            barcodeInput.value = digits;
+            barcodeInput.classList.add('error');
+            setStatusMessage('摄像头识别到「' + escapeHtml(clean) + '」，但不是 8 位数字，请手动修正', true);
+            playErrorSound();
+            closeCameraModal(true);
+            barcodeInput.focus();
+        }
+    }
+
+    function stopCameraScanner(callback) {
+        if (!html5QrCode) {
+            cameraRunning = false;
+            if (callback) callback();
+            return;
+        }
+        try {
+            html5QrCode.stop().then(function() {
+                html5QrCode.clear();
+                html5QrCode = null;
+                cameraRunning = false;
+                if (callback) callback();
+            }).catch(function() {
+                try { html5QrCode.clear(); } catch (e) {}
+                html5QrCode = null;
+                cameraRunning = false;
+                if (callback) callback();
+            });
+        } catch (e) {
+            html5QrCode = null;
+            cameraRunning = false;
+            if (callback) callback();
+        }
+    }
+
+    function closeCameraModal(keepLockCheck) {
+        cameraModalOverlay.classList.remove('show');
+        stopCameraScanner(function() {
+            if (!keepLockCheck) {
+                if (!modalOverlay.classList.contains('show') &&
+                    !orderModalOverlay.classList.contains('show') &&
+                    !summaryOverlay.classList.contains('show') &&
+                    !warnModalOverlay.classList.contains('show') &&
+                    !locateModalOverlay.classList.contains('show') &&
+                    !locateInputModalOverlay.classList.contains('show')) {
+                    setScanLocked(false);
+                    barcodeInput.focus();
+                }
+            }
+        });
+        cameraError.style.display = 'none';
+        cameraError.textContent = '';
+        cameraCooldownUntil = 0;
+    }
+
     // ========== 弹窗控制 ==========
     function updateOrderDisplay() {
         if (orderInputValue === '') {
@@ -683,7 +1173,7 @@
         orderModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onOrderModalKeyDown);
         orderDisplay.blur();
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
         }
@@ -877,7 +1367,7 @@
         modalInputValue = '';
         document.removeEventListener('keydown', onModalKeyDown);
         modalDisplay.blur();
-        if (!summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show')) {
+        if (!summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
         }
@@ -981,7 +1471,6 @@
         var alreadyOpen = warnModalOverlay.classList.contains('show');
 
         if (alreadyOpen && currentWarnBarcode === barcode) {
-            // 同一订单已打开警告：更新数据并重播声音
             warnEstimate.textContent = estimate;
             warnActual.textContent = actual;
             warnDiff.textContent = actual - estimate;
@@ -1013,7 +1502,10 @@
         currentWarnBarcode = null;
         if (!modalOverlay.classList.contains('show') &&
             !summaryOverlay.classList.contains('show') &&
-            !orderModalOverlay.classList.contains('show')) {
+            !orderModalOverlay.classList.contains('show') &&
+            !locateModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show') &&
+            !locateInputModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
         }
@@ -1021,14 +1513,12 @@
 
     function onWarnKeyDown(e) {
         if (!warnModalOverlay.classList.contains('show')) return;
-        // 只允许 Esc 触发“改预估”，不允许直接关闭；Enter 不处理（避免误关）
         if (e.key === 'Escape') {
             e.preventDefault();
             handleWarnFix();
         }
     }
 
-    // 选择：重新填预估值
     function handleWarnFix() {
         var bc = currentWarnBarcode;
         if (!bc) { closeWarnModal(); return; }
@@ -1038,7 +1528,6 @@
         }
     }
 
-    // 选择：标记为异常订单
     function handleWarnAbnormal() {
         var bc = currentWarnBarcode;
         if (!bc) { closeWarnModal(); return; }
@@ -1093,21 +1582,23 @@
             var diff = actual - estimate;
             var isMismatch = diff !== 0;
             var isAbnormal = !!data.abnormal;
+            var isTarget = locateActive && locateTarget && barcode === locateTarget;
             var diffClass = diff === 0 ? 'diff-match' : 'diff-mismatch';
             var diffText;
             if (diff === 0) diffText = '✓ 一致';
             else if (diff > 0) diffText = '⚠️ +' + diff;
             else diffText = '⚠️ ' + diff;
 
-            var rowClass = isAbnormal ? 'row-abnormal' : (isMismatch ? 'row-error' : '');
+            var rowClass = isTarget ? 'row-target' : (isAbnormal ? 'row-abnormal' : (isMismatch ? 'row-error' : ''));
             var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
             var abnormalBadge = isAbnormal ? '<span class="abnormal-badge">异常</span>' : '';
+            var targetBadge = isTarget ? '<span class="target-badge">🎯 目标</span>' : '';
 
             var safeBarcode = barcode.replace(/"/g, '&quot;');
             var row = document.createElement('tr');
             if (rowClass) row.className = rowClass;
             row.innerHTML =
-                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + abnormalBadge + '</td>' +
+                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + abnormalBadge + targetBadge + '</td>' +
                 '<td><span class="estimate-value">' + estimate + '</span></td>' +
                 '<td><span class="count-badge">' + actual + '</span></td>' +
                 '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
@@ -1171,7 +1662,7 @@
 
     // ========== 核心扫码逻辑 ==========
     function addBox(barcode, source) {
-        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) {
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
             setStatusMessage('弹窗打开中，扫码已锁定', true);
             return false;
         }
@@ -1203,6 +1694,9 @@
             return false;
         }
 
+        // 查找定位命中检查
+        var hitTarget = checkLocateHit(cleanCode);
+
         var existing = boxData.get(cleanCode);
 
         if (!existing) {
@@ -1215,7 +1709,8 @@
                 lastScanTime: ++scanSeq
             });
             renderTable();
-            setStatusMessage((source === 'scan' ? '第1次扫码' : '手动添加') + ' | ' + cleanCode + ' → 实际=1，预估=1（下次扫码将弹窗填预估）', false);
+            var srcLabel = source === 'scan' ? '第1次扫码' : (source === 'camera' ? '手机扫码' : '手动添加');
+            setStatusMessage(srcLabel + ' | ' + cleanCode + ' → 实际=1，预估=1（下次扫码将弹窗填预估）', false);
             if (navigator.vibrate) navigator.vibrate(80);
             return true;
         }
@@ -1237,7 +1732,6 @@
         setStatusMessage('第' + existing.scanCount + '次扫码 | ' + cleanCode + ' → 实际 ' + existing.actual + ' 箱', false);
         if (navigator.vibrate) navigator.vibrate(80);
 
-        // ✅ 实际 > 预估，强制警告（必须二选一处理）
         if (existing.actual > (existing.estimate || 0)) {
             triggerOverWarn(cleanCode, existing.actual, existing.estimate || 0);
         }
@@ -1265,7 +1759,6 @@
             }
         }
         list.sort(function(a, b) {
-            // 异常优先，然后按差异绝对值
             if (a.abnormal !== b.abnormal) return a.abnormal ? -1 : 1;
             var absA = Math.abs(a.diff);
             var absB = Math.abs(b.diff);
@@ -1323,7 +1816,7 @@
 
     function closeSummary() {
         summaryOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
             setScanLocked(false);
             barcodeInput.focus();
         }
@@ -1342,16 +1835,32 @@
         modalInputValue = '';
         modalMode = 'estimate';
         orderInputValue = '';
+        locateInputValue = '';
         currentWarnBarcode = null;
         isWarnModalOpen = false;
+
+        locateActive = false;
+        locateTarget = '';
+        locateHitSeq = 0;
+        locateInput.value = '';
+        updateLocateStatusUI();
+        updateLocateDisplay();
+
+        if (cameraRunning) {
+            closeCameraModal(true);
+        }
 
         modalOverlay.classList.remove('show');
         orderModalOverlay.classList.remove('show');
         summaryOverlay.classList.remove('show');
         warnModalOverlay.classList.remove('show');
+        locateModalOverlay.classList.remove('show');
+        cameraModalOverlay.classList.remove('show');
+        locateInputModalOverlay.classList.remove('show');
         document.removeEventListener('keydown', onModalKeyDown);
         document.removeEventListener('keydown', onOrderModalKeyDown);
         document.removeEventListener('keydown', onWarnKeyDown);
+        document.removeEventListener('keydown', onLocateInputModalKeyDown);
         setScanLocked(false);
 
         barcodeInput.value = '';
@@ -1365,6 +1874,10 @@
         orderDisplay.textContent = '0';
         orderDisplay.classList.add('empty');
         orderDisplay.classList.remove('error', 'success');
+
+        locateDisplay.textContent = '0';
+        locateDisplay.classList.add('empty');
+        locateDisplay.classList.remove('error', 'success');
 
         renderTable();
 
@@ -1474,7 +1987,7 @@
     function onKeyDown(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) {
+            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
                 setStatusMessage('弹窗打开中，扫码已锁定', true);
                 return;
             }
@@ -1496,14 +2009,14 @@
                 playErrorSound();
             }
 
-            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show')) {
+            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
                 barcodeInput.focus();
             }
         }
     }
 
     function onAddManual() {
-        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) return;
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
         var val = barcodeInput.value.trim();
         if (val === '') {
             setStatusMessage('请输入订单号', true);
@@ -1516,7 +2029,7 @@
             barcodeInput.value = '';
             barcodeInput.classList.remove('success', 'error');
         }
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show')) {
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
     }
@@ -1530,7 +2043,7 @@
     }
 
     function onBodyClick(e) {
-        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show')) return;
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
     }
 
     function preventFormSubmit(e) {
@@ -1550,7 +2063,21 @@
             else barcodeInput.classList.remove('success');
         });
 
+        // 查找定位输入框：只读，点击弹虚拟键盘
+        locateInput.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+            openLocateInputModal();
+        });
+        locateInput.addEventListener('focus', function(e) {
+            // 防止物理键盘聚焦时输入
+            e.target.blur();
+            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+            openLocateInputModal();
+        });
+
         addBtn.addEventListener('click', onAddManual);
+        cameraBtn.addEventListener('click', openCameraModal);
         clearInputBtn.addEventListener('click', function() {
             barcodeInput.value = '';
             barcodeInput.classList.remove('success', 'error');
@@ -1562,6 +2089,27 @@
         soundToggle.addEventListener('click', toggleSound);
         document.body.addEventListener('click', onBodyClick);
         document.addEventListener('keydown', preventFormSubmit);
+
+        locateOnBtn.addEventListener('click', onLocateOn);
+        locateOffBtn.addEventListener('click', onLocateOff);
+        locateModalOkBtn.addEventListener('click', closeLocateModal);
+        locateModalOverlay.addEventListener('click', function(e) {
+            if (e.target === locateModalOverlay) closeLocateModal();
+        });
+
+        // 查找定位输入弹窗
+        locateInputCancelBtn.addEventListener('click', closeLocateInputModal);
+        locateInputConfirmBtn.addEventListener('click', confirmLocateInput);
+        locateInputModalOverlay.addEventListener('click', function(e) {
+            if (e.target === locateInputModalOverlay) closeLocateInputModal();
+        });
+        bindLocateKeypadEvents();
+
+        // 摄像头弹窗
+        cameraCloseBtn.addEventListener('click', function() { closeCameraModal(); });
+        cameraModalOverlay.addEventListener('click', function(e) {
+            if (e.target === cameraModalOverlay) closeCameraModal();
+        });
 
         modalConfirmBtn.addEventListener('click', confirmModalInput);
         modalCancelBtn.addEventListener('click', closeModal);
@@ -1575,11 +2123,9 @@
             if (e.target === orderModalOverlay) closeOrderModal();
         });
 
-        // 警告弹窗：只允许二选一处理，点背景不关闭
         warnFixBtn.addEventListener('click', handleWarnFix);
         warnAbnormalBtn.addEventListener('click', handleWarnAbnormal);
         warnModalOverlay.addEventListener('click', function(e) {
-            // 故意不关闭：必须选择处理方式
             e.stopPropagation();
         });
 
@@ -1605,8 +2151,10 @@
 
         bindKeypadEvents();
         bindOrderKeypadEvents();
+        updateLocateStatusUI();
+        updateLocateDisplay();
         renderTable();
-        console.log('初始化完成 - 超预估强制处理版');
+        console.log('初始化完成 - 定位虚拟键盘版');
     }
 
     init();
