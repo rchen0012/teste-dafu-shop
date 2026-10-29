@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>扫码器 - 箱子计数（超量警告 + 预估安全阈值）</title>
+    <title>扫码器 - 强制虚拟键盘填预估</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
@@ -235,14 +235,17 @@
         }
         .modal-desc strong { color: #0f62fe; }
 
+        /* ✅ 修改：禁用焦点和选中 */
         .modal-display {
             background: #f8fafc; border: 2px solid #e2e8f0;
             border-radius: 14px; padding: 8px 16px; text-align: center;
             font-size: 2.4rem; font-weight: 800; color: #0f62fe;
             letter-spacing: 2px; min-height: 72px;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 8px; cursor: pointer;
+            margin-bottom: 8px; cursor: default;
             font-family: 'Courier New', monospace; transition: 0.15s;
+            user-select: none; -webkit-user-select: none;
+            pointer-events: none; /* 完全阻断点击 */
         }
         .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
         .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
@@ -406,7 +409,6 @@
         .btn-ignore-over { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         .btn-fix-over { background: #0f62fe; color: white; }
 
-        /* ✅ 新增：输入超限提示 */
         .input-hint {
             font-size: 0.68rem;
             color: #6c86a3;
@@ -520,7 +522,7 @@
                 <button id="clearInputBtn" class="btn btn-secondary">🗑️ 清空</button>
             </div>
             <div id="statusMsg" class="status">
-                ✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告
+                ✅ 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效
             </div>
         </div>
 
@@ -573,9 +575,10 @@
             请输入该订单的<strong>预估总数</strong>
         </div>
 
-        <div class="modal-display" id="modalDisplay" tabindex="0">0</div>
+        <!-- 禁用焦点、触摸、点击的纯展示框 -->
+        <div class="modal-display" id="modalDisplay">0</div>
 
-        <!-- ✅ 输入提示（实时反馈能否确认） -->
+        <!-- 输入提示 -->
         <div class="input-hint" id="inputHint">
             最多可输入 <span class="limit-tag">999</span> 箱
         </div>
@@ -676,8 +679,8 @@
 
 <script>
     // ========== 配置 ==========
-    var MAX_ESTIMATE = 999;          // ✅ 预估数量安全阈值（超过无法确认）
-    var MAX_INPUT_DIGITS = 5;        // ✅ 最大输入位数（允许临时输入 1000-99999）
+    var MAX_ESTIMATE = 999;
+    var MAX_INPUT_DIGITS = 5;
 
     // ========== 数据 ==========
     var boxData = new Map();
@@ -785,7 +788,6 @@
         playTone(330, now + 0.32, 0.2, 0.5, 'square');
         if (navigator.vibrate) navigator.vibrate([150, 80, 150, 80, 250]);
     }
-    // ✅ 输入超限（错误）音
     function playInputLimitSound() {
         if (!soundEnabled) return;
         var ctx = getAudioContext(); if (!ctx) return;
@@ -816,7 +818,7 @@
         statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
         statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
         statusTimer = setTimeout(function() {
-            statusMsgDiv.innerHTML = '📌 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告';
+            statusMsgDiv.innerHTML = '📌 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效';
             statusMsgDiv.style.background = '#e9f3fe';
             statusMsgDiv.style.color = '#0050b3';
         }, 3000);
@@ -849,12 +851,11 @@
         modalConfirmBtn.disabled = false;
     }
 
-    // ✅ 显示超限错误
     function showLimitError() {
         modalDisplay.classList.add('error', 'warn-limit');
         inputHint.innerHTML = '⚠️ 预估数量不能超过 <span class="limit-tag">999</span>！';
         inputHint.classList.add('error');
-        modalConfirmBtn.disabled = true; // 禁用确认按钮
+        modalConfirmBtn.disabled = true;
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         playInputLimitSound();
         setTimeout(function() {
@@ -862,14 +863,12 @@
         }, 500);
     }
 
-    // ✅ 数字输入逻辑
     function handleKeypadInput(key) {
         var newValue;
         if (modalInputValue === '0') newValue = key;
         else if (modalInputValue === '' && key === '0') newValue = '0';
         else newValue = modalInputValue + key;
 
-        // ✅ 长度拦截（防止无限输入）
         if (newValue.length > MAX_INPUT_DIGITS) {
             if (navigator.vibrate) navigator.vibrate(30);
             return;
@@ -878,7 +877,6 @@
         modalInputValue = newValue;
         updateModalDisplay();
 
-        // ✅ 数值超限（>999）：显示红色警告 + 禁用确认
         var numVal = parseInt(modalInputValue, 10);
         if (!isNaN(numVal) && numVal > MAX_ESTIMATE) {
             showLimitError();
@@ -892,7 +890,7 @@
     function handleKeypadDelete() {
         if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
         updateModalDisplay();
-        resetInputHint(); // 删除后清除错误状态
+        resetInputHint();
         if (navigator.vibrate) navigator.vibrate(20);
     }
     function handleKeypadClear() {
@@ -915,14 +913,14 @@
         }
     }
 
-    // ========== 数字键盘弹窗 ==========
+    // ========== 弹窗控制 ==========
     function registerModalKeys() {
         setTimeout(function () {
             if (!modalOverlay.classList.contains('show')) return;
             document.addEventListener('keydown', onModalKeyDown);
-            modalDisplay.focus();
         }, 0);
     }
+    
     function openEstimateModal(barcode) {
         modalMode = 'estimate';
         currentBarcode = barcode;
@@ -943,6 +941,7 @@
         registerModalKeys();
         playEstimatePromptSound();
     }
+    
     function openEditActualModal(barcode) {
         modalMode = 'actual';
         currentBarcode = barcode;
@@ -964,6 +963,7 @@
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
     }
+    
     function openEditEstimateModal(barcode) {
         modalMode = 'edit-estimate';
         currentBarcode = barcode;
@@ -985,12 +985,12 @@
         registerModalKeys();
         if (navigator.vibrate) navigator.vibrate(40);
     }
+    
     function closeModal() {
         modalOverlay.classList.remove('show');
         currentBarcode = null;
         modalInputValue = '';
         document.removeEventListener('keydown', onModalKeyDown);
-        modalDisplay.blur();
         if (!summaryOverlay.classList.contains('show') && !overWarnOverlay.classList.contains('show')) {
             barcodeInput.focus();
         }
@@ -1013,7 +1013,6 @@
             setStatusMessage('请输入有效数量（≥0）', true);
             return;
         }
-        // ✅ 校验阈值：超过 999 拒绝确认
         if (inputVal > MAX_ESTIMATE) {
             showLimitError();
             setStatusMessage('预估数量不能超过 ' + MAX_ESTIMATE, true);
@@ -1067,13 +1066,23 @@
         closeModal();
         renderList();
     }
+
+    // ✅ 核心：弹窗打开时拦截键盘，扫码枪的输入全部无效
     function onModalKeyDown(e) {
         if (!modalOverlay.classList.contains('show')) return;
-        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleKeypadInput(e.key); }
-        else if (e.key === 'Backspace') { e.preventDefault(); handleKeypadDelete(); }
-        else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
-        else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
-        else if (e.key === 'Delete') { e.preventDefault(); handleKeypadClear(); }
+        // 允许 Tab 和 Shift
+        if (e.key === 'Tab' || e.key === 'Shift') return;
+        
+        // 拦截所有其他按键（数字、字母、回车、退格、Delete、Esc）
+        // 扫码枪：数字键和 Enter 都不会生效
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 可选：给个轻微反馈，表示拦截了扫码枪
+        if (e.key >= '0' && e.key <= '9') {
+            if (navigator.vibrate) navigator.vibrate(30);
+            setStatusMessage('弹窗内请点击下方虚拟键盘输入', true);
+        }
     }
 
     // ========== 超量警告弹窗 ==========
@@ -1211,7 +1220,6 @@
         });
     }
 
-    // ✅ 通用超量检查
     function checkOverAndWarn(barcode) {
         var data = boxData.get(barcode);
         if (!data) return false;
@@ -1279,7 +1287,7 @@
             boxData.set(cleanCode, existing);
             renderList();
             openEstimateModal(cleanCode);
-            setStatusMessage('第2次扫码 ' + cleanCode + ' | 请输入预估（≤999）', false);
+            setStatusMessage('第2次扫码 ' + cleanCode + ' | 请用虚拟键盘输入预估', false);
             return true;
         }
         existing.actual = (existing.actual || 0) + 1;
@@ -1396,13 +1404,12 @@
         modalDisplay.textContent = '0';
         modalDisplay.classList.add('empty');
         modalDisplay.classList.remove('error', 'warn-limit');
-        modalDisplay.blur();
         resetInputHint();
 
         renderList();
 
         if (statusTimer) clearTimeout(statusTimer);
-        statusMsgDiv.innerHTML = '✅ 就绪 | 第1次实际1+预估1，第2次弹窗填预估（超999无法确认），超出警告';
+        statusMsgDiv.innerHTML = '✅ 就绪 | 弹窗预估只能用虚拟键盘，扫码枪无效';
         statusMsgDiv.style.background = '#e9f3fe';
         statusMsgDiv.style.color = '#0050b3';
 
@@ -1605,7 +1612,7 @@
         bindKeypadEvents();
         renderList();
         barcodeInput.focus();
-        console.log('初始化完成 - 阈值拦截版');
+        console.log('初始化完成 - 强制虚拟键盘版');
     }
 
     init();
