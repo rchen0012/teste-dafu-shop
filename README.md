@@ -1,43 +1,38 @@
-# 订单箱数核验
+# 订单箱数核验 · Google Sheets 多人协作
 
-根目录 `index.html` 为 GitHub Pages 多人协作入口。打开网站后点击“进入多人协作”，连接仓库电脑上的工作台。
+直接打开 [扫码网站](https://rchen0012.github.io/teste-dafu-shop/)。网页连接 Google Apps Script，数据保存到 Google Sheets，**无需本地服务器、仓库电脑常开或安装自签名证书**。设备需要能访问 Google 服务。
 
-## 仓库多人协作版
+## 使用
 
-完整程序位于 [`warehouse-collab/`](warehouse-collab/README.md)，支持扫码枪与手机摄像头、同一任务多人共享累计、操作记录、数量修改冲突检查、归档及 CSV 导出。
+1. 填写姓名和任务名称，点击“创建任务”。创建人拥有该任务的管理员权限。
+2. 其他成员填写姓名和任务码加入。任务码仅发给获准协作的人。
+3. 手机摄像头、扫码枪、手动输入共用同一个任务。每次扫描完整的8位订单号，实际箱数加一。
+4. 点击“预估”填写共享预估箱数；调整实际数量会记录原因和操作人。
+5. 本机操作保存后立即更新，其他设备约15秒自动同步一次。页面显示结果待确认时，使用原操作重试，不要重新扫描同一箱。
+6. 管理员结束并归档任务，历史数据保留，可导出 CSV 和操作记录。
 
-```text
-手机 / 扫码枪设备 → 仓库电脑 Node.js 服务 → SQLite 或 Google Sheets
-```
+手机使用浏览器打开正式网站，并允许摄像头。摄像头内同一个码只计一次；下一箱也是同一订单时，点击“同一订单：扫描下一箱”。扫码枪设置为键盘模式，并在扫码后发送回车。
 
-每扫描一次完整的8位订单号，实际箱数加一。Google Sheets 模式通过签名请求、Apps Script 脚本锁和原子批量更新处理累计及去重。
+管理员身份保存在当前浏览器会话中。请勿清理站点存储或使用无痕模式；任务码不能恢复管理员身份。
 
-### 在仓库电脑运行
+## 数据与权限
 
-1. 安装 Node.js 24 或更新版本。
-2. 下载此仓库，进入 `warehouse-collab`。
-3. 双击 `start.cmd`，按启动窗口给出的内网地址访问。
-4. 手机摄像头需要受信任的 HTTPS，参见[部署说明](warehouse-collab/README.md)。
+- Google 表格保持“受限”，扫码成员不需要表格编辑权限。
+- 浏览器只保存自己的成员会话令牌，公开代码不包含服务端密钥。
+- 同一任务的读写需要成员会话，归档需要管理员身份。
+- 脚本锁串行处理计数，订单数量、任务版本与操作记录通过同一原子批次保存。重复操作 ID 不会重复加箱。
+- 公开页面只能调用任务业务接口，无法调用签名保护的历史导入接口。
+- 不要直接修改、排序或删除数据页中的行。业务修改在网页操作，否则可能破坏版本和去重记录。
+- Google API 配额或连接故障会暂停提交，不支持离线扫码。
 
-无需 `npm install`。扫码库已随程序保存，保留其许可证。
+## 源码
 
-### Google Sheets 后端
+- `index.html`：正式扫码界面。
+- `assets/cloud-client.js`：浏览器与 Google 托管接口的通信。
+- `assets/collaboration.js`：任务、成员、扫码及同步逻辑。
+- `warehouse-collab/google-sheets/Code.gs`：Google Apps Script 后端。
+- `warehouse-collab/test/`：权限、累计、去重及迁移测试。
 
-[配置说明和部署步骤](warehouse-collab/google-sheets/README.md)，[数据表结构模板](warehouse-collab/google-sheets/warehouse-schema.xlsx)。
+`warehouse-collab` 中的 Node.js、SQLite、内网证书脚本保留为历史方案和备份，正式网站不再依赖它们，也不需要运行 `start.cmd`。
 
-Google 账户授权、Apps Script Web 应用部署和数据迁移已完成。真实接口验收中，两位成员各扫描一次得到 2 箱，重试同一操作后仍为 2 箱。仓库电脑仍需运行本服务并联网。
-
-GitHub Pages 只托管入口，计数由仓库服务和 Google Sheets 处理。首页的默认服务地址为仓库电脑内网地址，若路由器分配地址变化，可在首页修改。
-
-## 验证
-
-```sh
-cd warehouse-collab
-npm test
-```
-
-Google Sheets 相关测试使用模拟服务，仍需在真实 Google 部署后进行双设备验收。
-
-## 本地运行数据
-
-仓库不包含数据库、操作备份、HTTPS 私钥或 Google 服务密钥。`data/` 和 `certs/` 仅保存在部署电脑，不应提交到 Git。
+后端授权和部署步骤见 [Google Sheets 直连配置](DIRECT_SHEETS.md)。
