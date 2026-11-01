@@ -14,7 +14,7 @@ function fakeGoogle(){
   const grids={},ids={tasks:1,members:2,orders:3,operations:4};
   const props={WAREHOUSE_SECRET:secret,SPREADSHEET_ID:'test',SHEET_IDS:JSON.stringify(ids)};
   let held=false,busy=false,failCommit=false;
-  const ctx=vm.createContext({console,Utilities:{DigestAlgorithm:{SHA_256:1},Charset:{UTF_8:1},computeDigest:(_,s)=>Array.from(createHash('sha256').update(s).digest()),computeHmacSha256Signature:(s,key)=>Array.from(createHmac('sha256',key).update(s).digest())},
+  const ctx=vm.createContext({console,Utilities:{getUuid:randomUUID,DigestAlgorithm:{SHA_256:1},Charset:{UTF_8:1},computeDigest:(_,s)=>Array.from(createHash('sha256').update(s).digest()),computeHmacSha256Signature:(s,key)=>Array.from(createHmac('sha256',key).update(s).digest())},
     PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k],setProperty:(k,v)=>props[k]=v})},
     ContentService:{MimeType:{JSON:1},createTextOutput:s=>({setMimeType:()=>s})},
     LockService:{getScriptLock:()=>({tryLock:()=>{if(busy||held)return false;held=true;return true;},hasLock:()=>held,releaseLock:()=>held=false})},
@@ -43,6 +43,29 @@ test('setup creates a secret only once and validates the bound sheet schema',()=
   g.ctx.setupWarehouse();const created=g.props.WAREHOUSE_SECRET;assert.match(created,/^[a-f0-9]{64}$/);
   g.ctx.setupWarehouse();assert.equal(g.props.WAREHOUSE_SECRET,created);
   assert.deepEqual(JSON.parse(g.props.SHEET_IDS),g.ids);
+});
+test('browser client uses scoped membership, dedupes writes and cannot invoke privileged APIs',()=>{
+  const g=fakeGoogle(),rpc=(action,args={},token='')=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+  assert.equal(rpc('ping').data.version,2);
+  assert.equal(rpc('health').status,403);assert.equal(rpc('import').status,403);
+  assert.equal(rpc('state',{},'c'.repeat(48)).status,401);
+  const a='a'.repeat(48),b='b'.repeat(48);
+  const made=rpc('create',{name:'云端管理员',title:'直连核验',taskId:'user-chosen',code:'BAD'},a);
+  assert.equal(made.ok,true);assert.notEqual(made.data.task.id,'user-chosen');assert.notEqual(made.data.task.code,'BAD');
+  const retry=rpc('create',{name:'云端管理员',title:'直连核验'},a);assert.equal(retry.data.task.id,made.data.task.id);
+  const joined=rpc('join',{name:'云端成员',code:made.data.task.code},b);assert.equal(joined.data.me.role,'member');
+  const op={id:randomUUID(),kind:'scan',barcode:'00000001'};
+  assert.equal(rpc('op',op,a).data.orders[0].actual,1);
+  assert.equal(rpc('op',{...op,id:randomUUID()},b).data.orders[0].actual,2);
+  assert.equal(rpc('op',op,a).data.orders[0].actual,2);
+  assert.equal(rpc('op',{id:randomUUID(),kind:'archive'},b).status,403);
+  assert.equal(rpc('op',{id:randomUUID(),kind:'archive'},a).data.task.status,'archived');
+  assert.equal(rpc('op',{...op,id:randomUUID()},b).status,409);
+  assert.equal(g.grids[g.ids.operations].rows.length-1,3);
+  g.ctx.HtmlService={XFrameOptionsMode:{ALLOWALL:1},createHtmlOutput:html=>({setXFrameOptionsMode:()=>({html})})};
+  const bridge=g.ctx.doGet({parameter:{channel:'e'.repeat(32)}}).html;
+  assert.ok(bridge.includes('https://rchen0012.github.io'));assert.ok(bridge.includes('event.source!==window.top'));
+  assert.equal(bridge.includes(secret),false);assert.equal(bridge.includes(a),false);
 });
 test('Google Sheets signed API: atomic updates, dedupe, conflicts and import retry',async()=>{
   const g=fakeGoogle(),rpc=(a,b={},t='')=>callSheets(config,a,b,t,g.fetcher);
