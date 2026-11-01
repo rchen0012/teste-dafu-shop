@@ -165,3 +165,41 @@ function doPost(e){
   finally{if(lock&&lock.hasLock())lock.releaseLock();}
 }
 function json_(value){return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);}
+
+// Browser transport. Membership tokens protect task data; privileged import/health stay HMAC-only.
+function browserRequest(request){
+  var lock;
+  try{
+    if(!request||JSON.stringify(request).length>10000)reject_('请求格式错误');
+    var action=request.action;
+    if(action==='ping')return{ok:true,data:{online:true,backend:'Google Sheets',version:2}};
+    if(!['create','join','state','op','history'].includes(action))reject_('浏览器不允许调用此接口',403);
+    if(!/^[a-f0-9]{48}$/.test(request.token||''))reject_('会话无效，请重新加入任务',401);
+    lock=LockService.getScriptLock();if(!lock.tryLock(20000))reject_('云端正在处理其他操作，请稍后用原编号重试',503);
+    var props=PropertiesService.getScriptProperties(),id=props.getProperty('SPREADSHEET_ID'),ids=JSON.parse(props.getProperty('SHEET_IDS')||'null');
+    if(!id||!ids)reject_('表格尚未初始化',503);
+    var args=Object.assign({},request.args||{});
+    if(action==='create'){
+      args.taskId=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,48);
+      args.code=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,16).toUpperCase();
+    }
+    var tables=readTables_(id,ids),result=plan_(tables,action,args,request.token);
+    commit_(id,tables,result.changes);
+    return{ok:true,data:result.data};
+  }catch(error){return{ok:false,status:error.status||503,error:error.status?error.message:'Google Sheets 暂时不可用，结果待确认，请使用原编号重试'};}
+  finally{if(lock&&lock.hasLock())lock.releaseLock();}
+}
+function doGet(e){
+  var channel=String(e&&e.parameter&&e.parameter.channel||'');
+  if(!/^[a-f0-9]{32}$/.test(channel))return json_({online:true,service:'仓库箱数核验',transport:'Google Sheets',version:2});
+  var origin='https://rchen0012.github.io';
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Google Sheets connection</title></head><body><script>'+
+    'const channel='+JSON.stringify(channel)+',origin='+JSON.stringify(origin)+';'+
+    'function send(value){window.top.postMessage(Object.assign({channel:channel},value),origin);}'+
+    'const ready=setInterval(()=>send({type:"warehouse-ready",version:2}),1000);send({type:"warehouse-ready",version:2});'+
+    'window.addEventListener("message",function(event){const d=event.data;if(event.origin!==origin||event.source!==window.top||!d||d.channel!==channel||d.type!=="warehouse-request")return;clearInterval(ready);'+
+    'google.script.run.withSuccessHandler(function(result){send({type:"warehouse-response",id:d.id,result:result});})'+
+    '.withFailureHandler(function(){send({type:"warehouse-response",id:d.id,result:{ok:false,status:503,error:"Google Sheets 请求失败，结果待确认"}});}).browserRequest(d.request);});'+
+    '</script></body></html>';
+  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
