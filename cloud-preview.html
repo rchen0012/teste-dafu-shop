@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>订单箱数核验 · Google Sheets 多人协作</title>
+    <!-- 手机摄像头扫码库 -->
+    <script src="./assets/html5-qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f1f5f9; min-height: 100vh; min-height: 100dvh;
+            padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+            display: flex; justify-content: center; align-items: flex-start; font-size: 14px;
+        }
+        .card { max-width: 1200px; width: 100%; background: white; border-radius: 24px; box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15); overflow: hidden; }
+        .inner { padding: 16px 18px 22px; }
+        .logo-area { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .logo-img { width: 40px; height: 40px; flex-shrink: 0; background: linear-gradient(135deg, #0f62fe 0%, #1e3a5f 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+        .logo-text { font-size: 1rem; font-weight: 700; color: #1e3a5f; line-height: 1.2; }
+        .logo-text small { font-size: 0.6rem; font-weight: 400; color: #6c86a3; display: block; }
+        .company-info { text-align: right; font-size: 0.72rem; line-height: 1.4; }
+        .company-name { color: #8ba0bc; }
+        .company-name strong { color: #1e3a5f; }
+        h1 { font-size: 1.25rem; margin: 0 0 6px 0; color: #0a2540; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; line-height: 1.3; }
+        .badge { background: #e6f7e6; color: #2e7d32; font-size: 0.65rem; padding: 3px 10px; border-radius: 40px; font-weight: 500; white-space: nowrap; }
+        .sub { color: #4a5b6e; border-left: 3px solid #0f62fe; padding-left: 10px; margin: 6px 0 14px 0; font-size: 0.78rem; line-height: 1.5; }
+
+        .scan-panel { background: #f8fafd; border-radius: 18px; padding: 14px; margin-bottom: 14px; border: 1px solid #e2edf7; transition: all 0.3s; position: relative; }
+        .scan-panel.locked { background: #f1f5f9; border-color: #cbd5e1; opacity: 0.6; pointer-events: none; }
+        .scan-panel.locked::after {
+            content: '🔒 弹窗打开中，扫码已锁定';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(248, 250, 252, 0.85); border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; font-weight: 700; color: #b91c1c;
+            letter-spacing: 1px; z-index: 10;
+        }
+        .scan-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; color: #1e3a5f; }
+        .scan-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .barcode-input {
+            flex: 1 1 220px; min-width: 0; background: white; border: 2px solid #cbdde9;
+            border-radius: 60px; padding: 11px 16px; font-size: 1rem;
+            font-family: 'Courier New', monospace; outline: none; letter-spacing: 1px;
+        }
+        .barcode-input:focus { border-color: #0f62fe; box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.1); }
+        .barcode-input.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; background: #fff5f5; }
+        .barcode-input.success { border-color: #16a34a; background: #f0fdf4; }
+        .btn-primary { background: #0f62fe; border: none; color: white; font-weight: 600; padding: 0 20px; height: 44px; border-radius: 60px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .btn-primary:hover { background: #0353e9; }
+        .btn-secondary { background: #eef2f6; border: 1px solid #ccdae5; color: #2c3e50; font-weight: 500; padding: 0 16px; height: 40px; border-radius: 60px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; }
+        .btn-success { background: #16a34a; border: none; color: white; font-weight: 700; padding: 0 22px; height: 46px; border-radius: 60px; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.4); white-space: nowrap; }
+        .btn-success:hover { background: #15803d; }
+        .btn-camera { background: #7c3aed; border: none; color: white; font-weight: 600; padding: 0 18px; height: 44px; border-radius: 60px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.4); }
+        .btn-camera:hover { background: #6d28d9; }
+        .status { margin-top: 10px; background: #e9f3fe; padding: 8px 14px; border-radius: 40px; font-size: 0.78rem; color: #0050b3; line-height: 1.4; word-break: break-all; transition: all 0.2s; }
+        .diff-summary { background: linear-gradient(135deg, #1e3a5f 0%, #0f62fe 100%); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 8px; color: white; }
+        .diff-summary-item { text-align: center; flex: 1; min-width: 70px; }
+        .diff-summary-item .label { font-size: 0.65rem; opacity: 0.85; margin-bottom: 3px; }
+        .diff-summary-item .value { font-size: 1.25rem; font-weight: 700; }
+        .stats-card { background: white; border-radius: 16px; border: 1px solid #e9edf2; overflow: hidden; }
+        .stats-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #e8f0fe; border-bottom: 1px solid #bdd4ff; flex-wrap: wrap; gap: 8px; }
+        .stats-header h3 { margin: 0; font-size: 0.9rem; }
+        .clear-btn { background: none; border: none; color: #c2410c; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 30px; font-size: 0.72rem; }
+        .table-wrapper { overflow-x: auto; overflow-y: auto; max-height: 55vh; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 0.75rem; }
+        th { text-align: left; padding: 9px 8px; background: #f9fbfd; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; white-space: nowrap; font-size: 0.72rem; z-index: 2; }
+        td { padding: 9px 8px; border-bottom: 1px solid #edf2f7; white-space: nowrap; vertical-align: middle; }
+        .barcode-cell { font-family: 'Courier New', monospace; word-break: break-all; font-size: 0.72rem; max-width: 180px; white-space: normal; }
+        .count-badge { background: #0f62fe10; color: #0f62fe; font-weight: 800; padding: 2px 10px; border-radius: 40px; display: inline-block; }
+        .estimate-value { font-weight: 600; color: #b45309; }
+        .diff-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
+        .diff-match { background: #dcfce7; color: #166534; }
+        .diff-mismatch { background: #fee2e2; color: #b91c1c; }
+        .abnormal-badge { display: inline-block; margin-left: 4px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+        .target-badge { display: inline-block; margin-left: 4px; background: #dbeafe; color: #0f62fe; border: 1px solid #93c5fd; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+        .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
+        .row-error td { border-bottom: 1px solid #fecaca; }
+        .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
+        .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .row-abnormal { background: #fffbeb !important; }
+        .row-abnormal td { border-bottom: 1px solid #fde68a; }
+        .row-target { background: #eff6ff !important; box-shadow: inset 3px 0 0 #0f62fe; }
+        .row-target td { border-bottom: 1px solid #bfdbfe; }
+        @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
+        .error-icon { display: inline-block; margin-left: 3px; font-size: 0.8rem; animation: shake 0.5s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+        .adjust-btn { width: 26px; height: 26px; border-radius: 50%; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.1s; user-select: none; }
+        .adjust-plus { background: #dcfce7; color: #166534; }
+        .adjust-minus { background: #fee2e2; color: #b91c1c; }
+        .adjust-btn:active { transform: scale(0.9); }
+        .action-group { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+        .edit-btn { background: none; border: 1px solid #0f62fe; color: #0f62fe; font-size: 0.66rem; padding: 3px 8px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+        .edit-est-btn { border-color: #b45309; color: #b45309; }
+        .total-row { background: #f1f5f9; font-weight: 700; }
+        .empty-row td { text-align: center; padding: 36px 16px; color: #8ba0bc; white-space: normal; }
+        .footer-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .shortcut-hint { font-size: 0.62rem; color: #5f7d9c; margin-top: 6px; padding: 4px 10px; background: #f0f4f9; border-radius: 20px; display: inline-block; line-height: 1.5; }
+        .sound-toggle { background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+        .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+        .locate-panel { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
+        .locate-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .locate-title span { font-weight: 700; font-size: 0.85rem; color: #9a3412; }
+        .locate-status { font-size: 0.68rem; font-weight: 600; color: #c2410c; background: #ffedd5; border: 1px solid #fed7aa; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+        .locate-status.on { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .locate-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .locate-input {
+            flex: 1 1 180px; min-width: 0; background: white; border: 2px solid #fed7aa;
+            border-radius: 60px; padding: 10px 16px; font-size: 0.95rem;
+            font-family: 'Courier New', monospace; outline: none; letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .locate-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15); }
+        .locate-input.hit { border-color: #16a34a; background: #f0fdf4; }
+        .locate-input[readonly] { background: #fffbf5; }
+        .btn-locate-on { background: #ea580c; border: none; color: white; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .btn-locate-on:hover { background: #c2410c; }
+        .btn-locate-off { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: white; border-radius: 22px; padding: 20px 18px 18px; max-width: 380px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); animation: modalPop 0.25s ease-out; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
+        @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-icon { width: 46px; height: 46px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; }
+        .modal-title { font-size: 1.05rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
+        .modal-barcode { font-family: 'Courier New', monospace; font-size: 0.82rem; color: #0f62fe; background: #eff6ff; padding: 7px 14px; border-radius: 10px; text-align: center; margin-bottom: 10px; word-break: break-all; font-weight: 700; letter-spacing: 1px; }
+        .modal-desc { font-size: 0.78rem; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.5; }
+        .modal-desc strong { color: #0f62fe; }
+        .modal-display { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; padding: 10px 16px; text-align: center; font-size: 2rem; font-weight: 800; color: #0f62fe; letter-spacing: 2px; min-height: 62px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: 0.2s; cursor: pointer; font-family: 'Courier New', monospace; user-select: none; }
+        .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
+        .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
+        .modal-display.success { border-color: #16a34a; background: #f0fdf4; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 10px; }
+        .key { background: #f1f5f9; border: none; border-radius: 12px; padding: 14px 0; font-size: 1.3rem; font-weight: 700; color: #1e293b; cursor: pointer; transition: 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .key:active { background: #cbd5e1; transform: scale(0.95); }
+        .key-func { background: #e0e7ff; color: #3730a3; font-size: 0.95rem; }
+        .key-delete { background: #fee2e2; color: #b91c1c; font-size: 1.15rem; }
+        .modal-buttons { display: flex; gap: 8px; margin-top: 4px; }
+        .modal-btn { flex: 1; padding: 13px; border-radius: 14px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .modal-btn-confirm { background: #0f62fe; color: white; flex: 2; }
+        .modal-btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .modal-btn-confirm.ready { background: #16a34a; }
+        .modal-btn-confirm:active { transform: scale(0.98); }
+        .modal-btn-cancel { background: #f1f5f9; color: #475569; }
+
+        .warn-modal { max-width: 380px !important; padding: 24px 20px 20px !important; }
+        .warn-icon { width: 60px; height: 60px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 12px; animation: shake 0.6s; }
+        .warn-title { font-size: 1.25rem; font-weight: 800; color: #dc2626; text-align: center; margin-bottom: 8px; }
+        .warn-code { font-family: 'Courier New', monospace; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 12px; font-weight: 700; letter-spacing: 1px; }
+        .warn-desc { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 16px; line-height: 1.5; }
+        .warn-desc strong { color: #dc2626; font-size: 1.1rem; }
+        .warn-buttons { display: flex; flex-direction: column; gap: 8px; }
+        .btn-warn-fix { background: #0f62fe; color: white; }
+        .btn-warn-abnormal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .warn-tip { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.4; }
+
+        .locate-modal { max-width: 340px !important; padding: 28px 20px 22px !important; text-align: center; }
+        .locate-success-icon { width: 84px; height: 84px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; margin: 0 auto 16px; box-shadow: 0 10px 28px -6px rgba(34, 197, 94, 0.6); animation: locatePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes locatePop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+        .locate-success-title { font-size: 1.3rem; font-weight: 800; color: #15803d; margin-bottom: 8px; }
+        .locate-success-code { font-family: 'Courier New', monospace; font-size: 1rem; color: #0a2540; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 9px 14px; border-radius: 12px; margin-bottom: 16px; font-weight: 700; letter-spacing: 1px; word-break: break-all; }
+        .locate-success-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #16a34a; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .locate-success-btn:active { transform: scale(0.98); }
+
+        /* 手机摄像头扫码弹窗（正方形自定义取景框） */
+        .camera-modal { max-width: 640px !important; padding: 16px !important; }
+        .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .camera-title { font-size: 1rem; font-weight: 700; color: #0a2540; display: flex; align-items: center; gap: 6px; }
+        .camera-close { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 700; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; cursor: pointer; }
+        
+        .camera-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-height: 60vh;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0a2540;
+            margin: 0 auto;
+        }
+        #reader { width: 100%; height: 100%; }
+        #reader video { border-radius: 16px; object-fit: cover; }
+        
+        /* 隐藏 html5-qrcode 默认的扫描框（虚线/方框） */
+        #reader__scan_region { background: transparent !important; }
+        #reader__scan_region img { display: none !important; } /* 隐藏默认中间的图标/线 */
+        #reader__dashboard { display: none !important; }
+        #qr-shaded-region { display: none !important; }
+
+        /* 自定义正方形取景框（白角） */
+        .custom-scan-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* 宽高由 JS 在启动时根据画布尺寸计算并设置，确保绝对正方形 */
+            width: 240px;
+            height: 240px;
+            border-radius: 8px;
+            box-shadow: 0 0 0 4000px rgba(15, 23, 42, 0.55); /* 遮罩外部 */
+            z-index: 2;
+            pointer-events: none;
+        }
+        .custom-scan-box::before,
+        .custom-scan-box::after,
+        .custom-scan-box .corner-br,
+        .custom-scan-box .corner-bl {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 4px solid #fff;
+            border-radius: 4px;
+        }
+        .custom-scan-box::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 8px; }
+        .custom-scan-box::after { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 8px; }
+        .custom-scan-box .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 8px; }
+        .custom-scan-box .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 8px; }
+
+        .camera-flash {
+            position: absolute; inset: 0; pointer-events: none;
+            border-radius: 16px;
+            box-shadow: inset 0 0 0 0 rgba(34, 197, 94, 0);
+            transition: box-shadow 0.15s ease;
+            z-index: 5;
+        }
+        .camera-flash.flash {
+            animation: cameraFlash 0.45s ease-out;
+        }
+        @keyframes cameraFlash {
+            0% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0.95), 0 0 24px 6px rgba(34,197,94,0.55); background: rgba(34,197,94,0.12); }
+            100% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0), 0 0 0 0 rgba(34,197,94,0); background: rgba(34,197,94,0); }
+        }
+        .camera-last {
+            margin-top: 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            text-align: center;
+            font-weight: 600;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            word-break: break-all;
+        }
+        .camera-last.empty { background: #f8fafc; border-color: #e2e8f0; color: #94a3b8; font-weight: 400; }
+        .camera-tip { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 8px; line-height: 1.5; }
+        .camera-error { background: #fff1f0; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; text-align: center; margin-top: 8px; display: none; }
+
+        .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
+        .summary-header-icon { width: 54px; height: 54px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 10px; color: white; box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5); }
+        .summary-title { font-size: 1.2rem; font-weight: 800; color: #0a2540; text-align: center; margin-bottom: 4px; }
+        .summary-subtitle { font-size: 0.76rem; color: #64748b; text-align: center; margin-bottom: 14px; }
+        .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+        .summary-stat { background: #f8fafc; border-radius: 12px; padding: 8px 6px; text-align: center; border: 1px solid #e2e8f0; }
+        .summary-stat .lbl { font-size: 0.62rem; color: #64748b; margin-bottom: 2px; }
+        .summary-stat .val { font-size: 1.15rem; font-weight: 800; color: #0f62fe; }
+        .summary-stat.diff-ok .val { color: #16a34a; }
+        .summary-stat.diff-bad .val { color: #dc2626; }
+        .summary-list-title { font-size: 0.78rem; font-weight: 700; color: #0a2540; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .summary-list-title .count-tag { background: #fee2e2; color: #b91c1c; font-size: 0.66rem; padding: 1px 8px; border-radius: 20px; font-weight: 700; }
+        .summary-list { max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 14px; background: #fafbfc; -webkit-overflow-scrolling: touch; }
+        .summary-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; border-bottom: 1px solid #edf2f7; gap: 8px; }
+        .summary-item:last-child { border-bottom: none; }
+        .summary-item-code { font-family: 'Courier New', monospace; font-size: 0.72rem; color: #0a2540; word-break: break-all; flex: 1; font-weight: 600; }
+        .summary-item-nums { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .summary-num-chip { font-size: 0.66rem; padding: 2px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+        .chip-est { background: #fef3c7; color: #b45309; }
+        .chip-act { background: #dbeafe; color: #0f62fe; }
+        .chip-diff-bad { background: #fee2e2; color: #b91c1c; }
+        .chip-abn { background: #fef3c7; color: #92400e; }
+        .summary-all-good { text-align: center; padding: 26px 14px; color: #16a34a; font-size: 0.85rem; font-weight: 600; }
+        .summary-all-good .big { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+        .summary-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+        .summary-actions .modal-btn { padding: 11px 12px; font-size: 0.85rem; flex: 1 1 0; min-width: 70px; }
+        .btn-continue { background: #0f62fe; color: white; }
+        .btn-finish { background: #dc2626; color: white; }
+        .btn-export-in-summary { background: #f0f4f9; color: #334155; border: 1px solid #cbd5e1; }
+
+        @media (max-width: 700px) {
+            body { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); align-items: flex-start; font-size: 13px; }
+            .card { border-radius: 18px; }
+            .inner { padding: 12px 12px 16px; }
+            .logo-area { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .company-info { text-align: left; }
+            h1 { font-size: 1.05rem; }
+            .badge { font-size: 0.6rem; padding: 2px 8px; }
+            .sub { font-size: 0.72rem; margin: 4px 0 10px 0; }
+            .scan-panel { padding: 10px; border-radius: 14px; margin-bottom: 10px; }
+            .scan-input-area { gap: 6px; }
+            .barcode-input { flex: 1 1 100%; font-size: 0.95rem; padding: 10px 14px; }
+            .btn-primary, .btn-secondary, .btn-camera { height: 40px; font-size: 0.8rem; padding: 0 14px; flex: 1; min-width: 0; }
+            .btn-success { width: 100%; }
+            .diff-summary { padding: 10px; margin-bottom: 10px; }
+            .diff-summary-item .value { font-size: 1.05rem; }
+            .stats-header { padding: 8px 10px; }
+            .stats-header h3 { font-size: 0.82rem; }
+            .clear-btn { font-size: 0.68rem; }
+            .table-wrapper { max-height: 50vh; }
+            table { font-size: 0.72rem; min-width: 580px; }
+            th, td { padding: 7px 6px; }
+            .footer-buttons { flex-direction: column; gap: 6px; }
+            .footer-buttons button { width: 100%; }
+            .shortcut-hint { font-size: 0.58rem; padding: 4px 8px; }
+            .modal-box { padding: 16px 14px 14px; border-radius: 18px; max-width: 100%; }
+            .modal-title { font-size: 0.98rem; }
+            .modal-barcode { font-size: 0.78rem; padding: 6px 10px; }
+            .modal-desc { font-size: 0.73rem; }
+            .modal-display { font-size: 1.8rem; min-height: 58px; }
+            .keypad { gap: 6px; }
+            .key { padding: 13px 0; font-size: 1.2rem; }
+            .modal-btn { padding: 12px; font-size: 0.9rem; }
+            .summary-modal { padding: 18px 14px 14px !important; }
+            .summary-title { font-size: 1.1rem; }
+            .summary-stats { grid-template-columns: repeat(3, 1fr); }
+            .summary-stat .val { font-size: 1rem; }
+            .summary-list { max-height: 200px; }
+            .summary-item { padding: 8px 9px; }
+            .summary-item-code { font-size: 0.68rem; }
+            .locate-panel { padding: 10px; }
+            .locate-input { flex: 1 1 100%; font-size: 0.9rem; padding: 9px 14px; }
+            .btn-locate-on, .btn-locate-off { flex: 1; min-width: 0; }
+            .camera-modal { padding: 12px !important; }
+            .camera-stage { max-height: 70vh; }
+        }
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding: 6px 12px; align-items: flex-start; }
+            .inner { padding: 10px 14px 14px; }
+            h1 { font-size: 1rem; }
+            .scan-panel { padding: 8px 10px; margin-bottom: 8px; }
+            .diff-summary { padding: 8px 12px; margin-bottom: 8px; }
+            .table-wrapper { max-height: 38vh; }
+            .modal-box { max-width: 480px; padding: 14px 16px; }
+            .modal-display { min-height: 50px; font-size: 1.6rem; }
+            .key { padding: 10px 0; font-size: 1.05rem; }
+            .keypad { gap: 5px; margin-bottom: 6px; }
+            .modal-buttons { margin-top: 2px; }
+            .modal-btn { padding: 10px; font-size: 0.85rem; }
+        }
+        @media (max-width: 360px) {
+            h1 { font-size: 0.95rem; }
+            .logo-text { font-size: 0.88rem; }
+            .scan-panel { padding: 8px; }
+            .diff-summary-item .value { font-size: 0.95rem; }
+            table { min-width: 540px; font-size: 0.68rem; }
+            .key { padding: 11px 0; font-size: 1.1rem; }
+            .summary-actions .modal-btn { font-size: 0.78rem; padding: 10px 8px; }
+        }
+        @media (min-width: 1200px) {
+            .inner { padding: 24px 28px 32px; }
+            h1 { font-size: 1.6rem; }
+            .card { border-radius: 32px; }
+            .barcode-input { font-size: 1.05rem; padding: 13px 20px; }
+            .btn-primary { height: 50px; font-size: 0.95rem; }
+            table { font-size: 0.82rem; }
+        }
+    </style>
+<link rel="stylesheet" href="./assets/collaboration.css">
+</head>
+<body>
+<div class="card">
+    <div class="inner">
+        <section class="collab-panel" aria-label="多人协作">
+          <strong>Google Sheets 多人协作 · 每扫一次 +1 箱</strong>
+          <span id="connectionState" role="status" aria-live="polite">未加入任务</span>
+          <div id="collabLobby">
+            <div class="collab-row"><input id="operatorName" placeholder="你的姓名" maxlength="40" aria-label="操作人姓名"></div>
+            <div class="collab-row"><input id="newTaskTitle" placeholder="新任务名称" maxlength="80" aria-label="新任务名称"><button id="createTask">创建任务</button></div>
+            <div class="collab-row"><input id="joinCode" placeholder="输入管理员提供的任务码" maxlength="16" aria-label="任务码"><button id="joinTask">加入任务</button></div>
+          </div>
+          <div id="collabTask" hidden>
+            <div class="collab-row"><strong id="taskTitle"></strong><span id="memberLabel"></span></div>
+            <div class="collab-row">任务码：<code id="taskCode"></code><button id="copyTask" class="quiet">复制任务码</button></div>
+            <div class="collab-row"><button id="downloadHistory" class="quiet">导出操作记录</button><button id="archiveTask" class="danger">结束并归档任务</button><button id="leaveTask" class="quiet">退出任务</button></div>
+            <details><summary>最近 100 条操作记录（成员数是已加入人数）</summary><div id="collabLogs"></div></details>
+          </div>
+          <div id="pendingBox" hidden><div id="pendingText"></div><button id="retryPending">核对并重试（不会重复计数）</button></div>
+          <div id="collabError" role="alert"></div>
+          <p id="httpsHint" class="collab-notice" hidden>手机摄像头需要 HTTPS，请从正式网站打开此页面。</p>
+          <p class="collab-notice">直接连接 Google Sheets，无需本地服务器或证书。其他设备约15秒同步一次。断线或结果不明时请先核对，不要重复扫描同一箱。</p>
+        </section>
+        <div class="logo-area">
+            <div class="logo">
+                <div class="logo-img">📦</div>
+                <div class="logo-text">
+                    订单箱数验证程序
+                    <small>Box Counter System</small>
+                </div>
+            </div>
+            <div class="company-info">
+                <div class="company-name">
+                    <strong>预估 vs 实际</strong><br>
+                    8位订单 · 多人共享累计
+                </div>
+            </div>
+        </div>
+
+        <h1>
+            📦 · 箱子计数
+            <span class="badge">🔁 新码置顶 · 🔒 订单 · 🔍 查找定位 · 📷 连续扫码</span>
+        </h1>
+        <div class="sub">
+            🧾 扫码枪 / 📷 手机扫码（二维码 / 条形码） / 手动累加
+        </div>
+
+        <div class="scan-panel" id="scanPanel">
+            <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（扫码枪输入 / 手机扫码 / 手动累加）</span></span>
+                <button id="soundToggle" class="sound-toggle" title="开/关提示音">🔊 提示音：开</button>
+            </div>
+            <div class="scan-input-area">
+                <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码枪输入订单号..." inputmode="none" autocomplete="off">
+                <button id="cameraBtn" class="btn-camera">📷 手机扫码</button>
+                <button id="addBtn" class="btn-primary">➕ 手动累加</button>
+                <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
+            </div>
+            <div id="statusMsg" class="status">
+                ✅ 就绪 | 订单号必须为 8 位数字
+            </div>
+            <div class="shortcut-hint">
+                💡 扫码枪直接扫 | 📷 手机扫码打开摄像头（可连续扫） | ➕ 手动累加弹虚拟键盘
+            </div>
+        </div>
+
+        <div class="locate-panel">
+            <div class="locate-title">
+                <span>🔍 查找定位</span>
+                <span class="locate-status" id="locateStatus">未开启</span>
+            </div>
+            <div class="locate-input-area">
+                <input type="text" id="locateInput" class="locate-input" placeholder="点击输入目标单号（8位）" inputmode="none" autocomplete="off" readonly>
+                <button id="locateOnBtn" class="btn-locate-on">🎯 开启定位</button>
+                <button id="locateOffBtn" class="btn-locate-off" style="display:none;">✖ 关闭定位</button>
+            </div>
+            <div class="shortcut-hint" style="margin-top:8px;">
+                💡 点击输入框弹虚拟键盘输入 8 位目标单号；扫到目标单号会响提示音并弹勾，表格高亮
+            </div>
+        </div>
+
+        <div class="diff-summary">
+            <div class="diff-summary-item">
+                <div class="label">📊 预估总计</div>
+                <div class="value" id="estimateTotal">0</div>
+            </div>
+            <div class="diff-summary-item">
+                <div class="label">📦 实际总计</div>
+                <div class="value" id="actualTotal">0</div>
+            </div>
+            <div class="diff-summary-item">
+                <div class="label">⚠️ 差异</div>
+                <div class="value" id="diffTotal">0</div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-header">
+                <h3>📦 箱子清单 <span style="font-size:0.68rem;">(新码置顶 · 8位订单)</span></h3>
+                <button id="clearAllBtn" class="clear-btn">🧹 清空全部</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="boxTable">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>预估</th>
+                            <th>实际</th>
+                            <th>对比</th>
+                            <th>调整</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="empty-row"><td colspan="5">暂无订单记录，加入任务后请扫码添加</td></tr>
+                    </tbody>
+                    <tfoot id="tableFoot" style="display: none;">
+                        <tr class="total-row"><td><strong>总计</strong></td><th id="estimateFooter">0</th><th id="actualFooter">0</th><th id="diffFooter">0</th><th></th></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer-buttons">
+            <button id="exportBtn" class="btn-secondary">📎 导出 CSV</button>
+            <button id="finishBtn" class="btn-success">✅ 完成 (汇总差异)</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 1：订单号虚拟键盘 -->
+<div class="modal-overlay" id="orderModalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
+        <div class="modal-title">输入订单号</div>
+        <div class="modal-desc" style="margin-bottom:8px;">
+            订单号必须为 <strong>8 位数字</strong>
+        </div>
+        <div class="modal-display" id="orderDisplay">0</div>
+        <div class="keypad">
+            <button class="key" data-order-key="1">1</button>
+            <button class="key" data-order-key="2">2</button>
+            <button class="key" data-order-key="3">3</button>
+            <button class="key" data-order-key="4">4</button>
+            <button class="key" data-order-key="5">5</button>
+            <button class="key" data-order-key="6">6</button>
+            <button class="key" data-order-key="7">7</button>
+            <button class="key" data-order-key="8">8</button>
+            <button class="key" data-order-key="9">9</button>
+            <button class="key key-func" data-order-action="clear">清空</button>
+            <button class="key" data-order-key="0">0</button>
+            <button class="key key-delete" data-order-action="delete">⌫</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="orderCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="orderConfirmBtn" disabled>确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 2：预估/实际数量键盘 -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" id="modalIcon">🔁</div>
+        <div class="modal-title" id="modalTitle">输入预估总数</div>
+        <div class="modal-barcode" id="modalBarcode">-</div>
+        <div class="modal-desc" id="modalDesc">
+            填写该订单的共享预估<br>
+            请输入该订单的<strong>预估总数</strong>
+        </div>
+        <div class="modal-display" id="modalDisplay">0</div>
+        <div class="keypad">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key key-func" data-action="clear">清空</button>
+            <button class="key" data-key="0">0</button>
+            <button class="key key-delete" data-action="delete">⌫</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 3：实际数量超出预估警告（必须二选一处理） -->
+<div class="modal-overlay" id="warnModalOverlay">
+    <div class="modal-box warn-modal">
+        <div class="warn-icon">🚨</div>
+        <div class="warn-title">实际数量超出预估</div>
+        <div class="warn-code" id="warnBarcode">-</div>
+        <div class="warn-desc">
+            当前预估：<strong id="warnEstimate">0</strong> 箱<br>
+            当前实际：<strong id="warnActual" style="color:#dc2626;">0</strong> 箱<br>
+            超出预估 <strong id="warnDiff" style="color:#dc2626;">0</strong> 箱
+        </div>
+        <div class="warn-buttons">
+            <button class="modal-btn btn-warn-fix" id="warnFixBtn">✏️ 重新填预估值</button>
+            <button class="modal-btn btn-warn-abnormal" id="warnAbnormalBtn">⚠️ 标记为异常订单</button>
+        </div>
+        <div class="warn-tip">必须选择一种处理方式才能继续扫码</div>
+    </div>
+</div>
+
+<!-- 弹窗 4：查找定位成功 ✅ -->
+<div class="modal-overlay" id="locateModalOverlay">
+    <div class="modal-box locate-modal">
+        <div class="locate-success-icon">✓</div>
+        <div class="locate-success-title">找到目标单号</div>
+        <div class="locate-success-code" id="locateModalCode">-</div>
+        <button class="locate-success-btn" id="locateModalOkBtn">知道了</button>
+    </div>
+</div>
+
+<!-- 弹窗 5：手机摄像头连续扫码 -->
+<div class="modal-overlay" id="cameraModalOverlay">
+    <div class="modal-box camera-modal">
+        <div class="camera-header">
+            <div class="camera-title">📷 连续扫码（二维码 / 条形码）</div>
+            <button class="camera-close" id="cameraCloseBtn">✖ 关闭</button>
+        </div>
+        <div class="camera-stage">
+            <div id="reader"></div>
+            <!-- 自定义正方形取景框 -->
+            <div class="custom-scan-box" id="customScanBox">
+                <div class="corner-br"></div>
+                <div class="corner-bl"></div>
+            </div>
+            <div class="camera-flash" id="cameraFlash"></div>
+        </div>
+        <div class="camera-last empty" id="cameraLast">等待扫码…</div>
+            <button type="button" class="btn-secondary" id="cameraNextBox">同一订单：扫描下一箱</button>
+            <p class="collab-notice">同一码停在镜头中只计一次。下一箱也是同一订单时，先移开上一箱，再点击此按钮重新扫描。</p>
+        <div class="camera-error" id="cameraError"></div>
+        <div class="camera-tip">将二维码放入正方形取景框，命中后绿框闪烁并响铃，可连续扫下一张</div>
+    </div>
+</div>
+
+<!-- 弹窗 6：查找定位输入（虚拟键盘） -->
+<div class="modal-overlay" id="locateInputModalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:#ffedd5;">🔍</div>
+        <div class="modal-title">输入查找目标单号</div>
+        <div class="modal-desc" style="margin-bottom:8px;">
+            目标单号必须为 <strong>8 位数字</strong>（仅虚拟键盘可输入）
+        </div>
+        <div class="modal-display" id="locateDisplay">0</div>
+        <div class="keypad">
+            <button class="key" data-locate-key="1">1</button>
+            <button class="key" data-locate-key="2">2</button>
+            <button class="key" data-locate-key="3">3</button>
+            <button class="key" data-locate-key="4">4</button>
+            <button class="key" data-locate-key="5">5</button>
+            <button class="key" data-locate-key="6">6</button>
+            <button class="key" data-locate-key="7">7</button>
+            <button class="key" data-locate-key="8">8</button>
+            <button class="key" data-locate-key="9">9</button>
+            <button class="key key-func" data-locate-action="clear">清空</button>
+            <button class="key" data-locate-key="0">0</button>
+            <button class="key key-delete" data-locate-action="delete">⌫</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="locateInputCancelBtn">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="locateInputConfirmBtn" disabled>确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 完成汇总弹窗 -->
+<div class="modal-overlay" id="summaryOverlay">
+    <div class="modal-box summary-modal">
+        <div class="summary-header-icon">✅</div>
+        <div class="summary-title">任务完成汇总</div>
+        <div class="summary-subtitle" id="summarySubtitle">以下为有差异的订单清单</div>
+        <div class="summary-stats">
+            <div class="summary-stat">
+                <div class="lbl">总预估</div>
+                <div class="val" id="summaryEstTotal">0</div>
+            </div>
+            <div class="summary-stat">
+                <div class="lbl">总实际</div>
+                <div class="val" id="summaryActTotal">0</div>
+            </div>
+            <div class="summary-stat" id="summaryDiffStat">
+                <div class="lbl">总差异</div>
+                <div class="val" id="summaryDiffTotal">0</div>
+            </div>
+        </div>
+        <div class="summary-list-title">
+            📋 差异订单清单
+            <span class="count-tag" id="summaryDiffCount">0 条</span>
+        </div>
+        <div class="summary-list" id="summaryList">
+            <div class="summary-all-good">
+                <span class="big">🎉</span>
+                所有订单都一致，没有差异！
+            </div>
+        </div>
+        <div class="summary-actions">
+            <button class="modal-btn btn-export-in-summary" id="summaryExportBtn">📎 导出</button>
+            <button class="modal-btn btn-continue" id="continueBtn">🔄 继续</button>
+            <button class="modal-btn btn-finish" id="finishTaskBtn">🏁 结束</button>
+        </div>
+    </div>
+</div>
+
+<script src="./assets/cloud-client.js"></script>
+<script src="./assets/collaboration.js"></script>
+<script>
+    // ========== 数据存储 ==========
+    var boxData = new Map();
+    var currentBarcode = null;
+    var modalInputValue = '';
+    var modalMode = 'estimate';
+    var lastAddTime = 0;
+    var scanSeq = 0;
+    var ORDER_LENGTH = 8;
+    var orderInputValue = '';
+
+    var locateInputValue = '';
+
+    var isWarnModalOpen = false;
+    var currentWarnBarcode = null;
+
+    var locateTarget = '';
+    var locateActive = false;
+    var locateHitSeq = 0;
+
+    // 手机扫码状态（连续扫码）
+    var html5QrCode = null;
+    var cameraRunning = false;
+    var cameraCooldownUntil = 0;
+    var cameraFlashTimer = null;
+    var lastCameraCode = '';
+    var lastCameraCodeTime = 0;
+    var lastCameraResult = null;
+
+    // ========== 提示音控制 ==========
+    var soundEnabled = true;
+    var audioCtx = null;
+
+    // ========== DOM ==========
+    var barcodeInput = document.getElementById('barcodeInput');
+    var addBtn = document.getElementById('addBtn');
+    var cameraBtn = document.getElementById('cameraBtn');
+    var clearInputBtn = document.getElementById('clearInputBtn');
+    var clearAllBtn = document.getElementById('clearAllBtn');
+    var exportBtn = document.getElementById('exportBtn');
+    var finishBtn = document.getElementById('finishBtn');
+    var soundToggle = document.getElementById('soundToggle');
+    var statusMsgDiv = document.getElementById('statusMsg');
+    var tableBody = document.getElementById('tableBody');
+    var tableFoot = document.getElementById('tableFoot');
+    var scanPanel = document.getElementById('scanPanel');
+
+    var estimateTotalSpan = document.getElementById('estimateTotal');
+    var actualTotalSpan = document.getElementById('actualTotal');
+    var diffTotalSpan = document.getElementById('diffTotal');
+    var estimateFooter = document.getElementById('estimateFooter');
+    var actualFooter = document.getElementById('actualFooter');
+    var diffFooter = document.getElementById('diffFooter');
+
+    var modalOverlay = document.getElementById('modalOverlay');
+    var modalIcon = document.getElementById('modalIcon');
+    var modalBarcode = document.getElementById('modalBarcode');
+    var modalDesc = document.getElementById('modalDesc');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalDisplay = document.getElementById('modalDisplay');
+    var modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    var modalCancelBtn = document.getElementById('modalCancelBtn');
+
+    var orderModalOverlay = document.getElementById('orderModalOverlay');
+    var orderDisplay = document.getElementById('orderDisplay');
+    var orderConfirmBtn = document.getElementById('orderConfirmBtn');
+    var orderCancelBtn = document.getElementById('orderCancelBtn');
+
+    var warnModalOverlay = document.getElementById('warnModalOverlay');
+    var warnBarcode = document.getElementById('warnBarcode');
+    var warnEstimate = document.getElementById('warnEstimate');
+    var warnActual = document.getElementById('warnActual');
+    var warnDiff = document.getElementById('warnDiff');
+    var warnAbnormalBtn = document.getElementById('warnAbnormalBtn');
+    var warnFixBtn = document.getElementById('warnFixBtn');
+
+    var summaryOverlay = document.getElementById('summaryOverlay');
+    var summarySubtitle = document.getElementById('summarySubtitle');
+    var summaryEstTotal = document.getElementById('summaryEstTotal');
+    var summaryActTotal = document.getElementById('summaryActTotal');
+    var summaryDiffTotal = document.getElementById('summaryDiffTotal');
+    var summaryDiffStat = document.getElementById('summaryDiffStat');
+    var summaryDiffCount = document.getElementById('summaryDiffCount');
+    var summaryList = document.getElementById('summaryList');
+    var summaryExportBtn = document.getElementById('summaryExportBtn');
+    var continueBtn = document.getElementById('continueBtn');
+    var finishTaskBtn = document.getElementById('finishTaskBtn');
+
+    var locateInput = document.getElementById('locateInput');
+    var locateOnBtn = document.getElementById('locateOnBtn');
+    var locateOffBtn = document.getElementById('locateOffBtn');
+    var locateStatus = document.getElementById('locateStatus');
+    var locateModalOverlay = document.getElementById('locateModalOverlay');
+    var locateModalCode = document.getElementById('locateModalCode');
+    var locateModalOkBtn = document.getElementById('locateModalOkBtn');
+
+    var locateInputModalOverlay = document.getElementById('locateInputModalOverlay');
+    var locateDisplay = document.getElementById('locateDisplay');
+    var locateInputCancelBtn = document.getElementById('locateInputCancelBtn');
+    var locateInputConfirmBtn = document.getElementById('locateInputConfirmBtn');
+
+    var cameraModalOverlay = document.getElementById('cameraModalOverlay');
+    var cameraCloseBtn = document.getElementById('cameraCloseBtn');
+    var cameraError = document.getElementById('cameraError');
+    var readerEl = document.getElementById('reader');
+    var cameraFlash = document.getElementById('cameraFlash');
+    var cameraLast = document.getElementById('cameraLast');
+    var customScanBox = document.getElementById('customScanBox');
+
+    var statusTimer = null;
+
+    // ========== 校验 & 工具 ==========
+    function isValidOrderNo(code) {
+        return /^\d{8}$/.test(code);
+    }
+
+    function getAudioContext() {
+        if (!audioCtx) {
+            try {
+                var Ctx = window.AudioContext || window.webkitAudioContext;
+                if (Ctx) audioCtx = new Ctx();
+            } catch (e) {}
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function(){});
+        }
+        return audioCtx;
+    }
+
+    function playTone(freq, startTime, duration, volume) {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+    }
+
+    function playEstimatePromptSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(1046.5, now, 0.18, 0.35);
+        playTone(880, now + 0.2, 0.28, 0.35);
+        if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+    }
+
+    function playConfirmSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(1318.5, now, 0.09, 0.3);
+        playTone(1760, now + 0.1, 0.12, 0.28);
+    }
+
+    function playErrorSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(280, now, 0.15, 0.3);
+        playTone(220, now + 0.16, 0.2, 0.3);
+    }
+
+    function playOverWarningSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(880, now, 0.15, 0.4);
+        playTone(880, now + 0.2, 0.15, 0.4);
+        playTone(880, now + 0.4, 0.25, 0.4);
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+
+    function playLocateHitSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(784, now, 0.12, 0.35);
+        playTone(1046.5, now + 0.14, 0.12, 0.4);
+        playTone(1318.5, now + 0.28, 0.3, 0.45);
+        if (navigator.vibrate) navigator.vibrate([50, 40, 50, 40, 120]);
+    }
+
+    function playScanHitSound() {
+        if (!soundEnabled) return;
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        var now = ctx.currentTime;
+        playTone(1568, now, 0.07, 0.3);
+        playTone(2093, now + 0.09, 0.12, 0.32);
+        if (navigator.vibrate) navigator.vibrate(60);
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+            soundToggle.textContent = '🔊 提示音：开';
+            soundToggle.classList.remove('muted');
+            playConfirmSound();
+            setStatusMessage('提示音已开启', false);
+        } else {
+            soundToggle.textContent = '🔇 提示音：关';
+            soundToggle.classList.add('muted');
+            setStatusMessage('提示音已关闭', true);
+        }
+    }
+
+    function setStatusMessage(msg, isError) {
+        if (statusTimer) clearTimeout(statusTimer);
+        statusMsgDiv.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
+        statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
+        statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
+        statusTimer = setTimeout(function() {
+            statusMsgDiv.innerHTML = '📌 就绪 | 订单号必须为 8 位数字';
+            statusMsgDiv.style.background = '#e9f3fe';
+            statusMsgDiv.style.color = '#0050b3';
+        }, 3000);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function setScanLocked(locked) {
+        if (locked) {
+            scanPanel.classList.add('locked');
+            barcodeInput.setAttribute('readonly', 'readonly');
+            barcodeInput.setAttribute('tabindex', '-1');
+            barcodeInput.blur();
+        } else {
+            scanPanel.classList.remove('locked');
+            barcodeInput.removeAttribute('readonly');
+            barcodeInput.removeAttribute('tabindex');
+        }
+    }
+
+    // ========== 查找定位逻辑 ==========
+    function updateLocateStatusUI() {
+        if (locateActive && locateTarget) {
+            locateStatus.textContent = '🎯 定位中：' + locateTarget;
+            locateStatus.classList.add('on');
+            locateInput.classList.add('hit');
+            locateOnBtn.style.display = 'none';
+            locateOffBtn.style.display = '';
+        } else {
+            locateStatus.textContent = '未开启';
+            locateStatus.classList.remove('on');
+            locateInput.classList.remove('hit');
+            locateOnBtn.style.display = '';
+            locateOffBtn.style.display = 'none';
+        }
+    }
+
+    function updateLocateDisplay() {
+        if (locateInputValue === '') {
+            locateDisplay.textContent = '0';
+            locateDisplay.classList.add('empty');
+            locateDisplay.classList.remove('success');
+        } else {
+            locateDisplay.textContent = locateInputValue;
+            locateDisplay.classList.remove('empty');
+            if (locateInputValue.length === ORDER_LENGTH) locateDisplay.classList.add('success');
+            else locateDisplay.classList.remove('success');
+        }
+        if (locateInputValue.length === ORDER_LENGTH) {
+            locateInputConfirmBtn.disabled = false;
+            locateInputConfirmBtn.classList.add('ready');
+        } else {
+            locateInputConfirmBtn.disabled = true;
+            locateInputConfirmBtn.classList.remove('ready');
+        }
+    }
+
+    function openLocateInputModal() {
+        locateInputValue = (locateTarget || '').slice(0, ORDER_LENGTH);
+        updateLocateDisplay();
+        locateInputModalOverlay.classList.add('show');
+        setScanLocked(true);
+        setTimeout(function() {
+            if (!locateInputModalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onLocateInputModalKeyDown);
+            locateDisplay.focus();
+        }, 0);
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function closeLocateInputModal() {
+        locateInputModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onLocateInputModalKeyDown);
+        locateDisplay.blur();
+        if (!modalOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !warnModalOverlay.classList.contains('show') &&
+            !locateModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function handleLocateKey(key) {
+        if (locateInputValue.length >= ORDER_LENGTH) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            setStatusMessage('目标单号最多 8 位，已忽略', true);
+            return;
+        }
+        if (locateInputValue === '0') locateInputValue = key;
+        else locateInputValue += key;
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleLocateDelete() {
+        if (locateInputValue.length > 0) locateInputValue = locateInputValue.slice(0, -1);
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleLocateClear() {
+        locateInputValue = '';
+        updateLocateDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function confirmLocateInput() {
+        if (locateInputValue.length !== ORDER_LENGTH) {
+            locateDisplay.classList.add('error');
+            setTimeout(function() { locateDisplay.classList.remove('error'); }, 500);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('目标单号必须为 8 位数字（当前 ' + locateInputValue.length + ' 位）', true);
+            return;
+        }
+        locateInput.value = locateInputValue;
+        closeLocateInputModal();
+        locateTarget = locateInputValue;
+        locateActive = true;
+        updateLocateStatusUI();
+        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
+        playConfirmSound();
+        renderTable();
+    }
+
+    function onLocateInputModalKeyDown(e) {
+        if (!locateInputModalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
+        else if (e.key === 'Backspace') { e.preventDefault(); return; }
+        else if (e.key === 'Delete') { e.preventDefault(); return; }
+        else if (e.key === 'Escape') { e.preventDefault(); closeLocateInputModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (!locateInputConfirmBtn.disabled) confirmLocateInput(); }
+    }
+
+    function bindLocateKeypadEvents() {
+        var keys = document.querySelectorAll('.key[data-locate-key], .key[data-locate-action]');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-locate-key');
+                var action = this.getAttribute('data-locate-action');
+                if (action === 'delete') handleLocateDelete();
+                else if (action === 'clear') handleLocateClear();
+                else if (key !== null) handleLocateKey(key);
+            });
+        }
+    }
+
+    function onLocateOn() {
+        var v = (locateInput.value || '').replace(/\D/g, '').slice(0, ORDER_LENGTH);
+        if (v.length !== ORDER_LENGTH) {
+            openLocateInputModal();
+            return;
+        }
+        locateTarget = v;
+        locateActive = true;
+        updateLocateStatusUI();
+        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
+        playConfirmSound();
+        renderTable();
+    }
+
+    function onLocateOff() {
+        locateActive = false;
+        locateTarget = '';
+        locateInput.value = '';
+        updateLocateStatusUI();
+        renderTable();
+        setStatusMessage('已关闭查找定位', false);
+    }
+
+    function checkLocateHit(barcode) {
+        if (!locateActive || !locateTarget) return false;
+        if (barcode !== locateTarget) return false;
+        locateHitSeq++;
+        playLocateHitSound();
+        locateModalCode.textContent = barcode;
+        locateModalOverlay.classList.add('show');
+        return true;
+    }
+
+    function closeLocateModal() {
+        locateModalOverlay.classList.remove('show');
+        if (!modalOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !warnModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show') &&
+            !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    // ========== 手机摄像头连续扫码（正方形自定义框） ==========
+    function updateCameraLast(result) {
+        if (!result) {
+            cameraLast.classList.add('empty');
+            cameraLast.textContent = '等待扫码…';
+            return;
+        }
+        cameraLast.classList.remove('empty');
+        if (result.ok) {
+            cameraLast.innerHTML = '✅ 已识别：<strong>' + escapeHtml(result.code) + '</strong>（同一订单下一箱请点击下方按钮）';
+            cameraLast.style.background = '#f0fdf4';
+            cameraLast.style.borderColor = '#bbf7d0';
+            cameraLast.style.color = '#166534';
+        } else {
+            cameraLast.innerHTML = '⚠️ 识别到：' + escapeHtml(result.raw) + '（不是 8 位数字，已忽略，可继续扫）';
+            cameraLast.style.background = '#fff7ed';
+            cameraLast.style.borderColor = '#fed7aa';
+            cameraLast.style.color = '#9a3412';
+        }
+    }
+
+    function openCameraModal() {
+        if (!Coop.ready()) return;
+        if (!window.isSecureContext) { alert('手机摄像头需要 HTTPS，请从正式网站打开此页面。'); return; }
+        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show') || locateModalOverlay.classList.contains('show')) {
+            setStatusMessage('请先关闭当前弹窗再打开摄像头', true);
+            return;
+        }
+        if (typeof Html5Qrcode === 'undefined') {
+            alert('摄像头扫码库未加载成功，请检查服务器文件是否完整后刷新页面。\n如果无法使用摄像头，可继续使用扫码枪或手动累加。');
+            return;
+        }
+        cameraError.style.display = 'none';
+        cameraError.textContent = '';
+        lastCameraCode = '';
+        lastCameraCodeTime = 0;
+        lastCameraResult = null;
+        cameraCooldownUntil = 0;
+        updateCameraLast(null);
+        cameraModalOverlay.classList.add('show');
+        setScanLocked(true);
+        startCameraScanner();
+    }
+
+    function startCameraScanner() {
+        if (cameraRunning) return;
+        cameraRunning = true;
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+                .then(function(stream) {
+                    stream.getTracks().forEach(function(t) { t.stop(); });
+                    setTimeout(startHtml5QrCode, 80);
+                })
+                .catch(function() {
+                    setTimeout(startHtml5QrCode, 80);
+                });
+        } else {
+            setTimeout(startHtml5QrCode, 80);
+        }
+    }
+
+    function startHtml5QrCode() {
+        if (!cameraModalOverlay.classList.contains('show')) { cameraRunning = false; return; }
+        try {
+            html5QrCode = new Html5Qrcode("reader", {
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.ITF, Html5QrcodeSupportedFormats.EAN_8 ],
+                verbose: false
+            });
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 12,
+                    // 这里设置正方型区域，配合 CSS 自定义框，确保识别区域是正方形
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        var size = Math.floor(minEdge * 0.7);
+                        return { width: size, height: size };
+                    },
+                    aspectRatio: 1.0,
+                    disableFlip: true
+                },
+                onCameraScanSuccess,
+                function(errorMessage) { /* 每帧失败忽略 */ }
+            ).catch(function(err) {
+                cameraRunning = false;
+                showCameraError('无法启动摄像头：' + (err && err.message ? err.message : err));
+            });
+        } catch (e) {
+            cameraRunning = false;
+            showCameraError('初始化摄像头失败：' + e.message);
+        }
+    }
+
+    function showCameraError(msg) {
+        cameraError.style.display = 'block';
+        cameraError.textContent = msg;
+        setStatusMessage(msg, true);
+        playErrorSound();
+    }
+
+    function flashCameraFrame() {
+        if (cameraFlashTimer) clearTimeout(cameraFlashTimer);
+        cameraFlash.classList.remove('flash');
+        void cameraFlash.offsetWidth;
+        cameraFlash.classList.add('flash');
+        cameraFlashTimer = setTimeout(function() {
+            cameraFlash.classList.remove('flash');
+            cameraFlashTimer = null;
+        }, 500);
+    }
+
+    function onCameraScanSuccess(decodedText) {
+        if (!cameraModalOverlay.classList.contains('show')) return;
+        var code = String(decodedText || '').trim();
+        if (code === lastCameraCode) return;
+        if (Date.now() < cameraCooldownUntil) return;
+        if (!/^\d{8}$/.test(code)) {
+            lastCameraCode = code;
+            updateCameraLast({ok:false,raw:code});
+            playErrorSound();
+            return;
+        }
+        if (!Coop.ready()) return;
+        lastCameraCode = code;
+        cameraCooldownUntil = Date.now() + 700;
+        cameraLast.textContent = '识别到 ' + code + '，提交中…';
+        flashCameraFrame();
+        addBox(code, 'camera');
+    }
+
+    function stopCameraScanner(callback) {
+        if (!html5QrCode) {
+            cameraRunning = false;
+            if (callback) callback();
+            return;
+        }
+        try {
+            html5QrCode.stop().then(function() {
+                try { html5QrCode.clear(); } catch (e) {}
+                html5QrCode = null;
+                cameraRunning = false;
+                if (callback) callback();
+            }).catch(function() {
+                try { html5QrCode.clear(); } catch (e) {}
+                html5QrCode = null;
+                cameraRunning = false;
+                if (callback) callback();
+            });
+        } catch (e) {
+            html5QrCode = null;
+            cameraRunning = false;
+            if (callback) callback();
+        }
+    }
+
+    function closeCameraModal(keepLockCheck) {
+        cameraModalOverlay.classList.remove('show');
+        if (cameraFlashTimer) { clearTimeout(cameraFlashTimer); cameraFlashTimer = null; }
+        cameraFlash.classList.remove('flash');
+        stopCameraScanner(function() {
+            if (!keepLockCheck) {
+                if (!modalOverlay.classList.contains('show') &&
+                    !orderModalOverlay.classList.contains('show') &&
+                    !summaryOverlay.classList.contains('show') &&
+                    !warnModalOverlay.classList.contains('show') &&
+                    !locateModalOverlay.classList.contains('show') &&
+                    !locateInputModalOverlay.classList.contains('show')) {
+                    setScanLocked(false);
+                    barcodeInput.focus();
+                }
+            }
+        });
+        cameraError.style.display = 'none';
+        cameraError.textContent = '';
+        cameraCooldownUntil = 0;
+        lastCameraCode = '';
+        lastCameraCodeTime = 0;
+        lastCameraResult = null;
+        updateCameraLast(null);
+    }
+
+    // ========== 弹窗控制 ==========
+    function updateOrderDisplay() {
+        if (orderInputValue === '') {
+            orderDisplay.textContent = '0';
+            orderDisplay.classList.add('empty');
+            orderDisplay.classList.remove('success');
+        } else {
+            orderDisplay.textContent = orderInputValue;
+            orderDisplay.classList.remove('empty');
+            if (orderInputValue.length === ORDER_LENGTH) orderDisplay.classList.add('success');
+            else orderDisplay.classList.remove('success');
+        }
+        if (orderInputValue.length === ORDER_LENGTH) {
+            orderConfirmBtn.disabled = false;
+            orderConfirmBtn.classList.add('ready');
+        } else {
+            orderConfirmBtn.disabled = true;
+            orderConfirmBtn.classList.remove('ready');
+        }
+    }
+
+    function openOrderModal() {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
+        if (cameraRunning) closeCameraModal(true);
+        
+        orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
+        updateOrderDisplay();
+        orderModalOverlay.classList.add('show');
+        setScanLocked(true);
+        setTimeout(function() {
+            if (!orderModalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onOrderModalKeyDown);
+            orderDisplay.focus();
+        }, 0);
+    }
+
+    function closeOrderModal() {
+        orderModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onOrderModalKeyDown);
+        orderDisplay.blur();
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function handleOrderKey(key) {
+        if (orderInputValue.length >= ORDER_LENGTH) {
+            if (navigator.vibrate) navigator.vibrate(30);
+            setStatusMessage('订单号最多 8 位，已忽略', true);
+            return;
+        }
+        if (orderInputValue === '0') orderInputValue = key;
+        else orderInputValue += key;
+        updateOrderDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleOrderDelete() {
+        if (orderInputValue.length > 0) orderInputValue = orderInputValue.slice(0, -1);
+        updateOrderDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleOrderClear() {
+        orderInputValue = '';
+        updateOrderDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function confirmOrder() {
+        if (orderInputValue.length !== ORDER_LENGTH) {
+            orderDisplay.classList.add('error');
+            setTimeout(function() { orderDisplay.classList.remove('error'); }, 500);
+            playErrorSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            setStatusMessage('订单号必须为 8 位数字（当前 ' + orderInputValue.length + ' 位）', true);
+            return;
+        }
+        barcodeInput.value = orderInputValue;
+        barcodeInput.classList.add('success');
+        closeOrderModal();
+        addBox(orderInputValue, 'manual');
+        barcodeInput.value = '';
+        barcodeInput.classList.remove('success');
+    }
+
+    function onOrderModalKeyDown(e) {
+        if (!orderModalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleOrderKey(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); handleOrderDelete(); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeOrderModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (!orderConfirmBtn.disabled) confirmOrder(); }
+        else if (e.key === 'Delete') { e.preventDefault(); handleOrderClear(); }
+    }
+
+    function updateModalDisplay() {
+        if (modalInputValue === '') {
+            modalDisplay.textContent = '0';
+            modalDisplay.classList.add('empty');
+        } else {
+            modalDisplay.textContent = modalInputValue;
+            modalDisplay.classList.remove('empty');
+        }
+    }
+
+    function handleKeypadInput(key) {
+        if (modalInputValue === '0') modalInputValue = key;
+        else if (modalInputValue === '' && key === '0') modalInputValue = '0';
+        else if (modalInputValue.length >= 9) return;
+        else modalInputValue += key;
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleKeypadDelete() {
+        if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function handleKeypadClear() {
+        modalInputValue = '';
+        updateModalDisplay();
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function bindKeypadEvents() {
+        var keys = document.querySelectorAll('.key[data-key], .key[data-action]');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-key');
+                var action = this.getAttribute('data-action');
+                if (action === 'delete') handleKeypadDelete();
+                else if (action === 'clear') handleKeypadClear();
+                else if (key !== null) handleKeypadInput(key);
+            });
+        }
+    }
+
+    function bindOrderKeypadEvents() {
+        var keys = document.querySelectorAll('.key[data-order-key], .key[data-order-action]');
+        for (var i = 0; i < keys.length; i++) {
+            keys[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var key = this.getAttribute('data-order-key');
+                var action = this.getAttribute('data-order-action');
+                if (action === 'delete') handleOrderDelete();
+                else if (action === 'clear') handleOrderClear();
+                else if (key !== null) handleOrderKey(key);
+            });
+        }
+    }
+
+    function registerModalKeys() {
+        setTimeout(function () {
+            if (!modalOverlay.classList.contains('show')) return;
+            document.addEventListener('keydown', onModalKeyDown);
+            modalDisplay.focus();
+        }, 0);
+    }
+
+    function openEstimateModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
+        if (cameraRunning) closeCameraModal(true);
+
+        modalMode = 'estimate';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        Coop.capture(existing);
+        var currentActual = existing ? existing.actual : 0;
+
+        modalIcon.textContent = '🔁';
+        modalTitle.textContent = '输入预估总数';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '填写该订单的共享预估<br>' +
+            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '请输入该订单的<strong>预估总数</strong>（用于对比）';
+
+        modalInputValue = '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        setScanLocked(true);
+        registerModalKeys();
+        playEstimatePromptSound();
+    }
+
+    function openEditActualModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
+        if (cameraRunning) closeCameraModal(true);
+
+        modalMode = 'actual';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        Coop.capture(existing);
+        var currentActual = existing ? existing.actual : 0;
+        var currentEstimate = existing ? existing.estimate : 0;
+
+        modalIcon.textContent = '📦';
+        modalTitle.textContent = '修改实际数量';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
+            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '请输入该订单的<strong>实际总件数</strong>';
+
+        modalInputValue = currentActual > 0 ? String(currentActual) : '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        setScanLocked(true);
+        registerModalKeys();
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function openEditEstimateModal(barcode) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
+        if (cameraRunning) closeCameraModal(true);
+
+        modalMode = 'edit-estimate';
+        currentBarcode = barcode;
+        var existing = boxData.get(barcode);
+        Coop.capture(existing);
+        var currentEstimate = existing ? existing.estimate : 0;
+        var currentActual = existing ? existing.actual : 0;
+
+        modalIcon.textContent = '📊';
+        modalTitle.textContent = '修改预估数量';
+        modalBarcode.textContent = barcode;
+        modalDesc.innerHTML = '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
+            '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
+            '请输入新的<strong>预估总数</strong>';
+
+        modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
+        updateModalDisplay();
+        modalOverlay.classList.add('show');
+        setScanLocked(true);
+        registerModalKeys();
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('show');
+        currentBarcode = null;
+        modalInputValue = '';
+        document.removeEventListener('keydown', onModalKeyDown);
+        modalDisplay.blur();
+        if (!summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function confirmModalInput() { return Coop.confirmInput(); }
+
+    function onModalKeyDown(e) {
+        if (!modalOverlay.classList.contains('show')) return;
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
+        else if (e.key === 'Backspace') { e.preventDefault(); return; }
+        else if (e.key === 'Delete') { e.preventDefault(); return; }
+        else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
+    }
+
+    // ========== 超量警告（必须二选一） ==========
+    function triggerOverWarn(barcode, actual, estimate) {
+        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
+        if (cameraRunning) closeCameraModal(true);
+
+        var alreadyOpen = warnModalOverlay.classList.contains('show');
+
+        if (alreadyOpen && currentWarnBarcode === barcode) {
+            warnEstimate.textContent = estimate;
+            warnActual.textContent = actual;
+            warnDiff.textContent = actual - estimate;
+            playOverWarningSound();
+            setScanLocked(true);
+            return;
+        }
+
+        isWarnModalOpen = true;
+        currentWarnBarcode = barcode;
+        warnBarcode.textContent = barcode;
+        warnEstimate.textContent = estimate;
+        warnActual.textContent = actual;
+        warnDiff.textContent = actual - estimate;
+
+        playOverWarningSound();
+
+        warnModalOverlay.classList.add('show');
+        setScanLocked(true);
+        barcodeInput.blur();
+        document.removeEventListener('keydown', onWarnKeyDown);
+        document.addEventListener('keydown', onWarnKeyDown);
+    }
+
+    function closeWarnModal() {
+        warnModalOverlay.classList.remove('show');
+        document.removeEventListener('keydown', onWarnKeyDown);
+        isWarnModalOpen = false;
+        currentWarnBarcode = null;
+        if (!modalOverlay.classList.contains('show') &&
+            !summaryOverlay.classList.contains('show') &&
+            !orderModalOverlay.classList.contains('show') &&
+            !locateModalOverlay.classList.contains('show') &&
+            !cameraModalOverlay.classList.contains('show') &&
+            !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function onWarnKeyDown(e) {
+        if (!warnModalOverlay.classList.contains('show')) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            handleWarnFix();
+        }
+    }
+
+    function handleWarnFix() {
+        var bc = currentWarnBarcode;
+        if (!bc) { closeWarnModal(); return; }
+        closeWarnModal();
+        if (boxData.has(bc)) {
+            openEditEstimateModal(bc);
+        }
+    }
+
+    function handleWarnAbnormal() { return Coop.mark(); }
+
+    function updateTotals() {
+        var totalEstimate = 0, totalActual = 0;
+        for (var entry of boxData.entries()) {
+            var data = entry[1];
+            totalEstimate += data.estimate || 0;
+            totalActual += data.actual || 0;
+        }
+        var totalDiff = totalActual - totalEstimate;
+        estimateTotalSpan.innerText = totalEstimate;
+        actualTotalSpan.innerText = totalActual;
+        diffTotalSpan.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        diffTotalSpan.style.color = totalDiff === 0 ? '#a5f3c3' : '#fecaca';
+        estimateFooter.innerText = totalEstimate;
+        actualFooter.innerText = totalActual;
+        diffFooter.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        diffFooter.style.color = totalDiff === 0 ? '#166534' : '#b91c1c';
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        if (boxData.size === 0) {
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无订单记录，请扫码添加</td></tr>';
+            tableFoot.style.display = 'none';
+            updateTotals();
+            return;
+        }
+
+        var sorted = Array.from(boxData.entries()).sort(function(a, b) {
+            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
+        });
+
+        for (var i = 0; i < sorted.length; i++) {
+            var barcode = sorted[i][0];
+            var data = sorted[i][1];
+            var estimate = data.estimate || 0;
+            var actual = data.actual || 0;
+            var diff = actual - estimate;
+            var isMismatch = data.hasFilledEstimate && diff !== 0;
+            var isAbnormal = !!data.abnormal;
+            var isTarget = locateActive && locateTarget && barcode === locateTarget;
+            var diffClass = !data.hasFilledEstimate || diff === 0 ? 'diff-match' : 'diff-mismatch';
+            var diffText;
+            if (!data.hasFilledEstimate) diffText = '待填预估';
+            else if (diff === 0) diffText = '✓ 一致';
+            else if (diff > 0) diffText = '⚠️ +' + diff;
+            else diffText = '⚠️ ' + diff;
+
+            var rowClass = isTarget ? 'row-target' : (isAbnormal ? 'row-abnormal' : (isMismatch ? 'row-error' : ''));
+            var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
+            var abnormalBadge = isAbnormal ? '<span class="abnormal-badge">异常</span>' : '';
+            var targetBadge = isTarget ? '<span class="target-badge">🎯 目标</span>' : '';
+
+            var safeBarcode = barcode.replace(/"/g, '&quot;');
+            var row = document.createElement('tr');
+            if (rowClass) row.className = rowClass;
+            row.innerHTML =
+                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + abnormalBadge + targetBadge + '</td>' +
+                '<td><span class="estimate-value">' + (data.hasFilledEstimate ? estimate : '待填写') + '</span></td>' +
+                '<td><span class="count-badge">' + actual + '</span></td>' +
+                '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
+                '<td>' +
+                    '<div class="action-group">' +
+                        '<button class="adjust-btn adjust-minus" data-barcode="' + safeBarcode + '" data-action="minus" title="实际-1">−</button>' +
+                        '<button class="adjust-btn adjust-plus" data-barcode="' + safeBarcode + '" data-action="plus" title="实际+1">+</button>' +
+                        '<button class="edit-btn edit-est-btn" data-barcode="' + safeBarcode + '" data-action="edit-estimate">✏️预估</button>' +
+                        '<button class="edit-btn" data-barcode="' + safeBarcode + '" data-action="edit-actual">✏️实际</button>' +
+                    '</div>' +
+                '</td>';
+            tableBody.appendChild(row);
+        }
+        tableFoot.style.display = 'table-footer-group';
+        updateTotals();
+
+        var adjustBtns = document.querySelectorAll('.adjust-btn');
+        for (var j = 0; j < adjustBtns.length; j++) adjustBtns[j].onclick = handleAdjustActual;
+
+        var editEstBtns = document.querySelectorAll('[data-action="edit-estimate"]');
+        for (var k = 0; k < editEstBtns.length; k++) {
+            editEstBtns[k].onclick = function(e) {
+                openEditEstimateModal(e.currentTarget.getAttribute('data-barcode'));
+            };
+        }
+
+        var editActBtns = document.querySelectorAll('[data-action="edit-actual"]');
+        for (var m = 0; m < editActBtns.length; m++) {
+            editActBtns[m].onclick = function(e) {
+                openEditActualModal(e.currentTarget.getAttribute('data-barcode'));
+            };
+        }
+    }
+
+    // ========== 调整实际数量（+/-） ==========
+    function handleAdjustActual(e) { return Coop.adjust(e); }
+
+    function addBox(barcode, source) { return Coop.add(barcode, source); }
+
+    function getDiffEntries() {
+        var list = [];
+        for (var entry of boxData.entries()) {
+            var barcode = entry[0];
+            var data = entry[1];
+            var estimate = data.estimate || 0;
+            var actual = data.actual || 0;
+            if (actual - estimate !== 0 || data.abnormal) {
+                list.push({
+                    barcode: barcode,
+                    estimate: estimate,
+                    actual: actual,
+                    diff: actual - estimate,
+                    abnormal: !!data.abnormal,
+                    scanCount: data.scanCount || 0,
+                    lastScanTime: data.lastScanTime || 0
+                });
+            }
+        }
+        list.sort(function(a, b) {
+            if (a.abnormal !== b.abnormal) return a.abnormal ? -1 : 1;
+            var absA = Math.abs(a.diff);
+            var absB = Math.abs(b.diff);
+            if (absA !== absB) return absB - absA;
+            return b.lastScanTime - a.lastScanTime;
+        });
+        return list;
+    }
+
+    function onFinish() {
+        if (boxData.size === 0) {
+            setStatusMessage('暂无数据，无需完成', true);
+            return;
+        }
+        var totalEst = 0, totalAct = 0;
+        for (var entry of boxData.entries()) {
+            totalEst += entry[1].estimate || 0;
+            totalAct += entry[1].actual || 0;
+        }
+        var totalDiff = totalAct - totalEst;
+        var diffList = getDiffEntries();
+
+        summaryEstTotal.innerText = totalEst;
+        summaryActTotal.innerText = totalAct;
+        summaryDiffTotal.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
+        summaryDiffStat.className = 'summary-stat ' + (totalDiff === 0 ? 'diff-ok' : 'diff-bad');
+        summaryDiffCount.innerText = diffList.length + ' 条';
+
+        if (diffList.length === 0) {
+            summarySubtitle.textContent = '所有订单预估与实际完全一致 🎉';
+            summaryList.innerHTML = '<div class="summary-all-good"><span class="big">🎉</span>所有 ' + boxData.size + ' 个订单都一致，没有差异！</div>';
+        } else {
+            summarySubtitle.textContent = '共 ' + boxData.size + ' 个订单，其中 ' + diffList.length + ' 个有差异/异常';
+            var html = '';
+            for (var i = 0; i < diffList.length; i++) {
+                var item = diffList[i];
+                var diffSign = item.diff > 0 ? '+' + item.diff : '' + item.diff;
+                var abnChip = item.abnormal ? '<span class="summary-num-chip chip-abn">异常</span>' : '';
+                html += '<div class="summary-item">' +
+                    '<div class="summary-item-code">📦 ' + escapeHtml(item.barcode) + '</div>' +
+                    '<div class="summary-item-nums">' +
+                        abnChip +
+                        '<span class="summary-num-chip chip-est">预 ' + item.estimate + '</span>' +
+                        '<span class="summary-num-chip chip-act">实 ' + item.actual + '</span>' +
+                        '<span class="summary-num-chip chip-diff-bad">差 ' + diffSign + '</span>' +
+                    '</div>' +
+                    '</div>';
+            }
+            summaryList.innerHTML = html;
+        }
+        summaryOverlay.classList.add('show');
+        setScanLocked(true);
+        if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]);
+    }
+
+    function closeSummary() {
+        summaryOverlay.classList.remove('show');
+        if (!modalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
+            setScanLocked(false);
+            barcodeInput.focus();
+        }
+    }
+
+    function onContinueTask() {
+        closeSummary();
+        setStatusMessage('已继续任务，可继续扫码', false);
+    }
+
+    // ========== 结束任务：彻底还原 ==========
+    function resetToInitialState() { return Coop.archive(); }
+
+    function onFinishTask() { return Coop.archive(); }
+
+    function onSummaryExport() {
+        var diffList = getDiffEntries();
+        if (diffList.length === 0) {
+            alert('没有差异/异常订单可导出');
+            return;
+        }
+        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '异常标记', '扫码次数']];
+        var totalEst = 0, totalAct = 0;
+        for (var i = 0; i < diffList.length; i++) {
+            var it = diffList[i];
+            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.abnormal ? '异常' : '', it.scanCount]);
+            totalEst += it.estimate;
+            totalAct += it.actual;
+        }
+        csvRows.push(['', '', '', '', '', '']);
+        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '', '']);
+        var csvLines = [];
+        for (var x = 0; x < csvRows.length; x++) {
+            var row = csvRows[x];
+            var esc = [];
+            for (var y = 0; y < row.length; y++) {
+                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
+            }
+            csvLines.push(esc.join(','));
+        }
+        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '差异订单_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatusMessage('差异订单已导出', false);
+    }
+
+    function onExport() {
+        if (boxData.size === 0) { alert('暂无数据可导出'); return; }
+        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '状态', '异常标记', '扫码次数']];
+        var entries = Array.from(boxData.entries()).sort(function(a, b) {
+            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
+        });
+        var totalEst = 0, totalAct = 0;
+        for (var i = 0; i < entries.length; i++) {
+            var barcode = entries[i][0];
+            var data = entries[i][1];
+            var est = data.estimate || 0;
+            var act = data.actual || 0;
+            var diff = act - est;
+            var status = diff === 0 ? '一致' : (diff > 0 ? '实际多于预估' : '实际少于预估');
+            csvRows.push([barcode, est, act, diff, status, data.abnormal ? '异常' : '', data.scanCount || 0]);
+            totalEst += est;
+            totalAct += act;
+        }
+        csvRows.push(['', '', '', '', '', '', '']);
+        csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '', '']);
+        var csvLines = [];
+        for (var x = 0; x < csvRows.length; x++) {
+            var row = csvRows[x];
+            var esc = [];
+            for (var y = 0; y < row.length; y++) {
+                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
+            }
+            csvLines.push(esc.join(','));
+        }
+        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '订单统计_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatusMessage('导出成功', false);
+    }
+
+    // ========== 事件绑定 ==========
+    function onKeyDown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
+                setStatusMessage('弹窗打开中，扫码已锁定', true);
+                return;
+            }
+
+            var now = Date.now();
+
+            lastAddTime = now;
+
+            var val = barcodeInput.value.trim();
+            if (val !== '') {
+                barcodeInput.value = '';
+                barcodeInput.classList.remove('success', 'error');
+                addBox(val, 'scan');
+            } else {
+                setStatusMessage('请先扫描或输入订单号', true);
+                playErrorSound();
+            }
+
+            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
+                barcodeInput.focus();
+            }
+        }
+    }
+
+    function onAddManual() {
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+        var val = barcodeInput.value.trim();
+        if (val === '') {
+            setStatusMessage('请输入订单号', true);
+            playErrorSound();
+            openOrderModal();
+            return;
+        }
+        var ok = addBox(val, 'manual');
+        if (ok) {
+            barcodeInput.value = '';
+            barcodeInput.classList.remove('success', 'error');
+        }
+        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
+            barcodeInput.focus();
+        }
+    }
+
+    function onClearAll() { return Coop.archive(); }
+
+    function onBodyClick(e) {
+        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+    }
+
+    function preventFormSubmit(e) {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'number' && !e.target.closest('.modal-box')) {
+            e.preventDefault();
+        }
+    }
+
+    // ========== 初始化 ==========
+    function init() {
+        barcodeInput.addEventListener('keydown', onKeyDown);
+
+        barcodeInput.addEventListener('input', function() {
+            var clean = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
+            if (clean !== barcodeInput.value) barcodeInput.value = clean;
+            if (clean.length === ORDER_LENGTH) barcodeInput.classList.add('success');
+            else barcodeInput.classList.remove('success');
+        });
+
+        locateInput.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+            openLocateInputModal();
+        });
+        locateInput.addEventListener('focus', function(e) {
+            e.target.blur();
+            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
+            openLocateInputModal();
+        });
+
+        addBtn.addEventListener('click', onAddManual);
+        cameraBtn.addEventListener('click', openCameraModal);
+        clearInputBtn.addEventListener('click', function() {
+            barcodeInput.value = '';
+            barcodeInput.classList.remove('success', 'error');
+            barcodeInput.focus();
+        });
+        clearAllBtn.addEventListener('click', onClearAll);
+        exportBtn.addEventListener('click', onExport);
+        finishBtn.addEventListener('click', onFinish);
+        soundToggle.addEventListener('click', toggleSound);
+        document.body.addEventListener('click', onBodyClick);
+        document.addEventListener('keydown', preventFormSubmit);
+
+        locateOnBtn.addEventListener('click', onLocateOn);
+        locateOffBtn.addEventListener('click', onLocateOff);
+        locateModalOkBtn.addEventListener('click', closeLocateModal);
+        locateModalOverlay.addEventListener('click', function(e) {
+            if (e.target === locateModalOverlay) closeLocateModal();
+        });
+
+        locateInputCancelBtn.addEventListener('click', closeLocateInputModal);
+        locateInputConfirmBtn.addEventListener('click', confirmLocateInput);
+        locateInputModalOverlay.addEventListener('click', function(e) {
+            if (e.target === locateInputModalOverlay) closeLocateInputModal();
+        });
+        bindLocateKeypadEvents();
+
+        cameraCloseBtn.addEventListener('click', function() { closeCameraModal(); });
+        cameraModalOverlay.addEventListener('click', function(e) {
+            if (e.target === cameraModalOverlay) closeCameraModal();
+        });
+
+        modalConfirmBtn.addEventListener('click', confirmModalInput);
+        modalCancelBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        orderConfirmBtn.addEventListener('click', confirmOrder);
+        orderCancelBtn.addEventListener('click', closeOrderModal);
+        orderModalOverlay.addEventListener('click', function(e) {
+            if (e.target === orderModalOverlay) closeOrderModal();
+        });
+
+        warnFixBtn.addEventListener('click', handleWarnFix);
+        warnAbnormalBtn.addEventListener('click', handleWarnAbnormal);
+        warnModalOverlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        continueBtn.addEventListener('click', onContinueTask);
+        finishTaskBtn.addEventListener('click', onFinishTask);
+        summaryExportBtn.addEventListener('click', onSummaryExport);
+        summaryOverlay.addEventListener('click', function(e) {
+            if (e.target === summaryOverlay) closeSummary();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && summaryOverlay.classList.contains('show')) closeSummary();
+        });
+
+        var initAudioOnce = function() {
+            getAudioContext();
+            document.removeEventListener('click', initAudioOnce);
+            document.removeEventListener('keydown', initAudioOnce);
+            document.removeEventListener('touchstart', initAudioOnce);
+        };
+        document.addEventListener('click', initAudioOnce);
+        document.addEventListener('keydown', initAudioOnce);
+        document.addEventListener('touchstart', initAudioOnce);
+
+        bindKeypadEvents();
+        bindOrderKeypadEvents();
+        updateLocateStatusUI();
+        updateLocateDisplay();
+        renderTable();
+        console.log('初始化完成 - 弹窗优先连续扫码正方形版');
+    }
+
+    init();
+    Coop.boot();
+    document.getElementById('cameraNextBox').onclick = function() {
+        if (!Coop.ready()) return;
+        lastCameraCode = ''; cameraCooldownUntil = Date.now() + 400;
+        cameraLast.textContent = '已准备扫描下一箱，请将新箱条码放入镜头';
+    };
+</script>
+</body>
+</html>
