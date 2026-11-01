@@ -1,0 +1,10 @@
+**/data/
+**/certs/
+**/node_modules/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.pfx
+*.key
+*.log
+Thumbs.db
