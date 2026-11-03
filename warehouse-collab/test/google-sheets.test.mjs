@@ -173,7 +173,7 @@ test('manual batches merge two offline members exactly once and preserve rejecte
 
 test('new UI stores scans locally until manual refresh, survives reload, and merges two members',async()=>{
  const g=fakeGoogle();
- const html=fs.readFileSync(new URL('../../../work/github-sync/manual-preview.html',import.meta.url),'utf8');
+ const html=fs.readFileSync(new URL('../../manual-preview.html',import.meta.url),'utf8');
  function browser(sharedStorage=new Map()){
   const elements=new Map();
   class Element{
@@ -193,7 +193,7 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
    window:{scrollY:0,addEventListener:()=>{}},
    CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
   });
-  vm.runInContext(fs.readFileSync(new URL('../../../work/github-sync/assets/manual-queue.js',import.meta.url),'utf8'),ctx);
+  vm.runInContext(fs.readFileSync(new URL('../../assets/manual-queue.js',import.meta.url),'utf8'),ctx);
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
   return{get,store:sharedStorage,calls:()=>calls,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
  }
