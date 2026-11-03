@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>DAFU 订单箱数核验 · 下拉同步</title>
+<style>
+:root{--blue:#0862c8;--dark:#084b9e;--pale:#eaf3ff;--line:#d6e2f2;--green:#087b38;--red:#cf2636}*{box-sizing:border-box}body{overscroll-behavior-y:contain;margin:0;background:#edf3fb;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#18283e}button,input{font:inherit}button{cursor:pointer}.app{max-width:540px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 25px #143a6412}.hero{background:linear-gradient(125deg,#064998,#0873db);color:white;padding:24px 17px 18px}.hero h1{margin:0;font-size:23px}.hero p{margin:7px 0 0;font-size:13px;opacity:.92}.sheet{margin:14px 12px 0;border-radius:13px;background:white;padding:13px;box-shadow:0 2px 10px #123b6420;color:#172b43}.sheetline{display:flex;justify-content:space-between;gap:8px;align-items:center}.sheetline strong{font-size:15px}.sub{font-size:12px;color:#54667b;margin-top:8px}.ok{color:var(--green);font-size:12px}.offline{color:#bd5b09;font-size:12px}.tabs{display:grid;grid-template-columns:repeat(5,1fr);margin:14px 10px 0;border-bottom:1px solid var(--line)}.tabs button{background:none;border:0;padding:12px 2px;font-size:13px;color:#36485c}.tabs button.active{color:#075ab8;font-weight:700;border-bottom:3px solid #0871e8}.panel{padding:14px 12px 24px}.scanbox{background:#f2f7ff;border:1px solid #cbdcf0;border-radius:12px;padding:14px}.scanbox h3{margin:0 0 9px;font-size:15px}.inputrow{display:flex;gap:8px}.inputrow input{min-width:0;flex:1;padding:12px;border:1px solid #aebed1;border-radius:8px;font-size:17px;letter-spacing:2px}.inputrow button{background:var(--blue);border:0;color:white;border-radius:8px;padding:0 15px;font-weight:700}.smallbuttons{display:flex;gap:8px;margin-top:10px}.smallbuttons button{flex:1;padding:10px 4px;border:1px solid #b9cbe1;background:white;border-radius:8px;color:#0d55a5}.smallbuttons button:disabled,.primary:disabled{opacity:.45;cursor:not-allowed}.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;background:white}.label{font-size:13px;color:#52667e}.order{font-size:25px;font-weight:800;letter-spacing:1px;margin:7px 0 15px}.notice{padding:12px;border-radius:9px;font-size:14px;line-height:1.6;margin:10px 0}.danger{background:#fff0f1;color:#ad1c30}.success{background:#e5f8ed;color:#08672d}.info{background:#eaf3ff;color:#0755a4}.numbers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.num{padding:13px;border-radius:9px;background:#edf4ff;text-align:center;border:1px solid #d0dff3}.num:nth-child(2){background:#e9faee;border-color:#c8ebd4}.num strong{display:block;font-size:34px;color:#075fca;margin-top:4px}.num:nth-child(2) strong{color:#078237}.progressrow{display:flex;justify-content:space-between;margin:15px 0 8px;font-size:14px}.track{height:13px;border-radius:10px;background:#dce4ed;overflow:hidden}.fill{height:100%;background:#086ce5;transition:width .2s}.primary{width:100%;background:linear-gradient(90deg,#0754b3,#0875eb);color:white;border:0;border-radius:9px;padding:13px;font-weight:700;margin-top:12px}.secondary{width:100%;background:white;color:#075ab5;border:1px solid #b6cce9;border-radius:9px;padding:12px;margin-top:8px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}.stat{text-align:center;border-right:1px solid #e0e8f3}.stat:last-child{border:0}.stat span{font-size:12px;color:#64748b}.stat strong{display:block;font-size:23px;margin-top:4px}.muted{color:#64748b;font-size:12px}.hidden{display:none!important}.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.keypad button{padding:12px 0;border:1px solid #b6c5d7;border-radius:8px;background:linear-gradient(#fff,#f0f4fa);font-size:20px;font-weight:650}.keypad button:active{background:#d5e8ff}.order-keypad{margin:12px 0 6px}.order-keypad button{padding:11px 0}.order-keypad button:last-child{color:#b82e3a}.modalshade{position:fixed;inset:0;background:#091e3c9c;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}.modal{background:white;width:min(100%,440px);max-height:95vh;overflow:auto;border-radius:16px;padding:18px;box-shadow:0 12px 40px #001c4150}.modal h2{margin:0 0 7px;font-size:19px}.modal input{width:100%;font-size:27px;text-align:center;border:2px solid #0869df;border-radius:9px;padding:10px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.record{border-bottom:1px solid #e1e8f2;padding:12px 2px;font-size:13px}.record:last-child{border:0}.pill{padding:4px 8px;background:#eaf3ff;border-radius:20px;font-size:12px}.setting input{width:100%;border:1px solid #b5c8de;border-radius:7px;padding:10px;margin-top:6px}.setting label{display:block;margin:13px 0;font-size:13px}.foot{padding:10px 12px;border-top:1px solid #e1e9f4;color:#6a7e92;font-size:11px;text-align:center}.camera{width:100%;margin-top:12px;overflow:hidden;border-radius:10px}.camera video{width:100%}#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#152d4b;color:white;border-radius:8px;padding:11px 17px;z-index:80;max-width:90vw;display:none;font-size:13px}.hint{font-size:12px;color:#6b7c8e;line-height:1.6}
+.brandrow{display:flex;align-items:center;gap:12px;min-height:56px}.brandrow img{display:block;width:88px;height:56px;object-fit:contain;background:transparent;border-radius:0;padding:0}.brandfallback{width:88px;height:56px;border-radius:0;background:transparent;color:#ffffff;font-weight:900;font-size:23px;align-items:center;justify-content:center;letter-spacing:1px}.brandrow h1{font-size:21px;line-height:1.3;flex:1;cursor:pointer}@media(max-width:370px){.brandrow h1{font-size:18px}.brandrow img,.brandfallback{width:72px}}
+
+/* DAFU mint theme — primary #37BEB0 */
+:root{--blue:#37BEB0;--dark:#238F84;--pale:#EAF9F6;--line:#CDE9E4}
+body{background:#EAF6F3}
+.hero{background:linear-gradient(125deg,#238F84,#37BEB0)}
+.tabs button.active{color:#167D73;border-bottom-color:#37BEB0}
+.scanbox{background:#F0FAF8;border-color:#C5EAE3}
+.inputrow button{background:#37BEB0;color:#073E39}
+.smallbuttons button{border-color:#B7E1D9;color:#167D73}
+.card{border-color:#CDE9E4}
+.info{background:#EAF9F6;color:#167D73}
+.num{background:#EAF9F6;border-color:#CDE9E4}
+.num strong{color:#167D73}
+.track{background:#D9EEE9}
+.fill{background:#37BEB0}
+.primary{background:linear-gradient(90deg,#238F84,#37BEB0);color:#fff}
+.secondary{color:#167D73;border-color:#B7E1D9}
+.keypad button:active{background:#D5F2EC}
+.modal input{border-color:#37BEB0}
+.pill{background:#EAF9F6;color:#167D73}
+.setting input:focus,.inputrow input:focus{outline:2px solid #37BEB0;outline-offset:1px}
+
+/* DAFU mini-app launch animation */
+#launchSplash{position:fixed;inset:0;z-index:9999;background:linear-gradient(155deg,#e8faf7 0%,#37BEB0 55%,#178e84 100%);display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .5s ease,visibility .5s ease}
+#launchSplash.splash-out{opacity:0;visibility:hidden;pointer-events:none}
+/* Independent CSS fallback: never block the app if a script fails. */
+#launchSplash{animation:launchAutoDismiss .35s ease 2.4s forwards}
+@keyframes launchAutoDismiss{to{opacity:0;visibility:hidden;pointer-events:none}}
+.splash-content{text-align:center;width:min(100%,360px);animation:splash-rise .75s cubic-bezier(.2,.8,.2,1) both}
+.splash-logo{display:block;max-width:min(65vw,220px);max-height:130px;width:auto;height:auto;object-fit:contain;margin:0 auto 25px;filter:drop-shadow(0 8px 15px #064e4540);animation:splash-breathe 1.6s ease-in-out infinite}
+.splash-logo-text{font-size:52px;font-weight:900;letter-spacing:6px;color:white;margin-bottom:24px;text-shadow:0 6px 15px #065f5640}
+.splash-title{color:#fff;font-weight:800;font-size:23px;letter-spacing:2px;margin:0 0 10px}
+.splash-subtitle{color:#f2fffc;font-size:13px;letter-spacing:2px;margin:0}
+.splash-loading{display:flex;gap:7px;justify-content:center;margin-top:34px}
+.splash-loading i{width:9px;height:9px;background:white;border-radius:50%;animation:splash-dot 1s infinite ease-in-out}
+.splash-loading i:nth-child(2){animation-delay:.15s}.splash-loading i:nth-child(3){animation-delay:.3s}
+.splash-skip{position:absolute;top:max(20px,env(safe-area-inset-top));right:18px;border:1px solid #ffffff88;color:white;background:#ffffff22;border-radius:20px;padding:7px 15px;font-size:12px}
+@keyframes splash-rise{from{transform:translateY(22px) scale(.94);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes splash-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes splash-dot{0%,70%,100%{opacity:.35;transform:scale(.7)}35%{opacity:1;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.splash-content,.splash-logo,.splash-loading i{animation:none}#launchSplash{transition:none}}
+
+.box-detail{margin-top:9px;border:1px solid #cce9e5;border-radius:10px;background:#f5fcfa;padding:10px}.box-detail summary{cursor:pointer;font-weight:700;color:#167b70;list-style:none}.box-detail summary::-webkit-details-marker{display:none}.box-detail summary:before{content:'▸ ';}.box-detail[open] summary:before{content:'▾ ';}.box-line{display:grid;grid-template-columns:64px 1fr;gap:8px;padding:9px 3px;border-bottom:1px solid #d8eae7;font-size:13px}.box-line:last-child{border-bottom:0}.box-time{font-variant-numeric:tabular-nums;color:#415b60}.box-extra{font-size:11px;color:#718483;margin-top:3px}.box-warning{color:#b72936;font-weight:700}.box-summary{margin-top:5px;font-size:12px;color:#647b78}
+
+.smallbuttons{flex-wrap:wrap}.smallbuttons button{min-width:90px}#taskDisplay{overflow-wrap:anywhere}button{touch-action:manipulation}
+</style><style>
+#overLimitShade .modal{border-top:6px solid #dc3545;text-align:center}
+#overLimitShade .error-symbol{font-size:52px;line-height:1.3}
+#overLimitShade .error-details{background:#fff1f2;border-radius:10px;padding:13px;margin:14px 0;color:#9f2030;line-height:1.8}
+#overLimitShade .primary{background:#dc3545}
+</style>
+</head><body><div id="launchSplash" role="status" aria-label="小程序启动中">
+<button id="skipSplash" class="splash-skip" type="button">跳过动画</button>
+<div class="splash-content">
+<img class="splash-logo" src="images/form-logoshop1.png" alt="DAFU Logo" onerror="this.style.display='none';document.getElementById('splashLogoFallback').hidden=false">
+<div id="splashLogoFallback" class="splash-logo-text" hidden>DAFU</div>
+<h2 class="splash-title">订单箱数核验系统</h2>
+<p class="splash-subtitle">仓库扫码 · 箱数核验 · 多人协作</p>
+<div class="splash-loading" aria-hidden="true"><i></i><i></i><i></i></div>
+</div></div>
+<script>
+(function(){
+ var splash=document.getElementById('launchSplash');
+ var done=false;
+ function closeSplash(){if(done)return;done=true;splash.classList.add('splash-out');splash.style.pointerEvents='none';setTimeout(function(){if(splash&&splash.parentNode)splash.remove()},550)}
+ document.getElementById('skipSplash').addEventListener('click',closeSplash);
+ setTimeout(closeSplash,1900);
+})();
+</script>
+<div id="syncBusy" class="hidden" role="status" style="position:fixed;inset:0;z-index:10000;background:#1239;display:grid;place-items:center;color:white;font-size:20px">正在同步，请稍候…</div><div class="app"><header class="hero"><div class="brandrow"><img id="brandLogo" src="images/form-logonova1.png" alt="DAFU Logo" onerror="this.style.display='none';document.getElementById('brandFallback').style.display='flex'"><div id="brandFallback" class="brandfallback" style="display:none" aria-label="DAFU Logo">DAFU</div><h1>订单箱数核验系统</h1></div><p>仓库扫码 · 箱数核验 · 多人协作</p><div class="sheet"><div class="sheetline"><strong>📗 Google Sheets · 多人协作</strong><span id="cloudStatus" class="offline">● 未配置</span></div><div class="sub" id="taskDisplay">任务：本地任务　成员：本机操作员</div></div></header><div class="sheet" id="manualSyncPanel"><div id="pullHint" class="hint">顶部下拉更新 · 或点击手动同步</div><button id="manualSync" class="primary">↓ 上传并合并云端数据</button><div id="syncSummary" class="hint"></div><div id="syncError" class="notice danger hidden" role="alert"></div><div id="resolveConflict" class="hidden"><p id="conflictText" class="hint"></p><button id="useCloudEstimate" class="secondary">使用云端预估，保留待同步扫码</button><button id="keepLocalEstimate" class="secondary">确认采用本机预估</button></div><button class="secondary" onclick="document.getElementById('taskManagerBtn').click()">创建 / 加入 / 切换共享任务</button></div>
+<nav class="tabs"><button class="active" data-tab="scan">扫码录入</button><button data-tab="stats">订单统计</button><button data-tab="history">操作记录</button><button data-tab="exceptions">异常订单</button><button data-tab="archives">历史任务</button></nav>
+<main><section class="panel" id="tab-scan"><div class="scanbox"><h3>▣ 扫描订单条码 / 箱码</h3><div class="inputrow"><input id="barcode" inputmode="numeric" autocomplete="off" placeholder="输入8位订单号" maxlength="8"><button id="scanBtn">确认扫码</button></div><div class="keypad order-keypad hidden" id="orderKeypad" aria-label="订单号虚拟数字键盘"></div><div class="smallbuttons"><button id="toggleOrderKeypad" type="button" aria-expanded="false" aria-controls="orderKeypad">⌨ 打开数字键盘</button><button id="cameraBtn">📷 手机摄像头</button><button id="nextBtn">↻ 重新识别</button><button id="soundBtn" type="button">🔊 声音开启</button><button id="locateBtn" type="button">📍 定位箱子</button></div><div id="camera" class="camera hidden"></div><p class="hint">扫码枪可直接输入并回车。同一订单的下一箱请点击「重新识别」，避免同一箱重复计数。</p></div><div id="orderArea"><div class="card"><p class="label">当前订单</p><p class="muted">请扫描8位订单号开始核验。</p></div></div><section class="panel" id="taskControl"><div class="card"><div class="row"><strong>任务管理</strong><span id="taskStateLabel" class="pill">进行中</span></div><p class="hint" id="taskStateDescription">核验完成后可以结束任务，停止所有扫码并保留统计和历史记录。</p><button id="taskManagerBtn" class="secondary" type="button">＋ 创建任务 / 添加任务 / 切换任务</button><button id="endTaskBtn" class="primary" type="button" style="background:#b52c37">■ 结束当前任务</button><button id="restoreTaskBtn" class="secondary hidden" type="button">↻ 重新开启上一个任务（恢复数据）</button><button id="reopenTaskBtn" class="secondary hidden" type="button">＋ 开始新任务（从零开始）</button></div></section><div class="card"><div class="row"><strong>任务统计</strong><span class="pill" id="taskName">本地任务</span></div><div class="stats" id="statsCompact"></div></div></section>
+<section class="panel hidden" id="tab-stats"><div class="card"><div class="row"><h3>订单统计</h3><button id="exportBtn">导出订单 CSV</button><button id="exportScansBtn">导出全任务扫码明细</button></div><div id="statsFull"></div></div></section>
+<section class="panel hidden" id="tab-history"><div class="card"><h3>操作记录</h3><div id="historyList"></div></div></section>
+<section class="panel hidden" id="tab-exceptions"><div class="card"><h3>异常订单</h3><div id="exceptionList"></div></div></section><section class="panel hidden" id="tab-archives"><div class="card"><h3>历史任务（已结束）</h3><p class="hint">已结束的共享任务记录保存在这里；待同步扫码须先上传再结束任务。</p><div id="archiveList"></div></div></section></main><footer class="foot">扫码自动保存在本机 · 仅下拉或点击更新时同步云端</footer></div>
+<div id="locateSuccessShade" class="modalshade hidden" role="alertdialog" aria-modal="true"><div class="modal" style="text-align:center;border:5px solid #37BEB0;padding:28px 18px"><div style="font-size:100px;line-height:1;color:#17a34a;font-weight:900">✓</div><h2 style="font-size:28px;color:#138447;margin:14px 0">定位成功！</h2><div id="locateSuccessOrder" style="font-size:30px;font-weight:900;letter-spacing:2px"></div><p style="color:#168451;font-size:18px;font-weight:700">已找到目标箱子</p><p class="hint">定位扫描不增加实际箱数</p><button id="locateSuccessClose" class="primary" type="button">确认 · 继续定位</button></div></div>
+<div id="locateShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>📍 定位箱子 · 扫码寻找目标</h2><p class="hint">输入要寻找的 8 位订单号，点击「开始定位」。然后使用扫码枪或手机摄像头扫描箱码；扫中目标时会显示大绿色 ✓ 并播放专属成功音。定位期间不累计箱数。</p><input id="locateInput" inputmode="numeric" maxlength="8" placeholder="要定位的8位订单号" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><button class="primary" id="locateSearch">开始定位</button><div id="locateResult" aria-live="polite" style="margin-top:12px;max-height:45vh;overflow:auto"></div><button class="secondary" id="locateClose">关闭</button></div></div>
+<div id="modalShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>🔒 强制填写预估总箱数</h2><div class="notice danger">订单 <b id="modalOrder"></b> 正在扫描第 2 箱。第 1 箱已自动记录；必须填写预估总箱数，才能确认第 2 箱。</div><label class="label">预估总箱数 <b style="color:#cf2636">*</b></label><input id="estimateInput" inputmode="none" placeholder="请输入总箱数" readonly><div class="keypad" id="keypad"></div><button class="primary" id="saveEstimate">确认预估箱数并记录第2箱</button><button class="secondary" id="cancelEstimate">取消第2箱扫码</button></div></div>
+<div id="correctionShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>🛠 扫码纠错 · 减少箱数</h2><p class="hint">误扫后可撤销指定订单最近的扫码记录。全任务扫码序号保留，已撤销的序号不重复使用。</p><label class="label">订单号</label><input id="correctionOrder" inputmode="numeric" maxlength="8" placeholder="8位订单号" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><div id="correctionInfo" class="notice info">请输入订单号</div><label class="label">本次减少箱数</label><div class="row" style="margin:8px 0"><button class="secondary" id="correctionMinus" style="width:55px;margin:0">−</button><strong id="correctionCount" style="font-size:24px">1</strong><button class="secondary" id="correctionPlus" style="width:55px;margin:0">＋</button></div><label class="label">纠错原因</label><input id="correctionReason" placeholder="例如：重复扫描同一箱" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><button class="primary" id="confirmCorrection">确认减少箱数</button><button class="secondary" id="cancelCorrection">取消</button></div></div><div id="settingsShade" class="modalshade hidden"><div class="modal setting"><div class="row"><h2>协作设置</h2><button id="closeSettings">✕</button></div><label>任务编号（日期 + 批次）<input id="taskInput" readonly placeholder="点击自动生成"></label><button type="button" class="secondary" id="generateTaskId">↻ 自动生成日期批次</button><label>操作人员 <b style="color:#cf2636">*</b><input id="memberInput" placeholder="必填：请输入操作人员姓名" autocomplete="off"></label><button type="button" class="secondary" id="openTaskManager">＋ 创建任务 / 添加任务 / 切换任务</button><label>Google Apps Script Web App URL<input id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec"></label><p class="hint">仅填写地址不会自动实现协作。接口必须实现文末说明的读取和写入协议，并在服务器端保证原子计数、幂等与权限校验。未配置时使用本地存储。</p><button class="primary" id="saveSettings">保存设置</button><button class="secondary" id="syncBtn">尝试从云端读取</button><button class="secondary" id="clearBtn" style="color:#b32634">清空本机订单（不可恢复）</button></div></div><div id="taskManagerShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal setting"><div class="row"><h2>任务管理 · 日期与批次</h2><button type="button" id="closeTaskManager">✕</button></div><p class="hint">任务编号自动生成：YYYYMMDD-01、YYYYMMDD-02……；操作人员必填。创建新任务会保存当前任务，方便以后切换继续。</p><label>任务日期<input type="date" id="newTaskDate"></label><label>批次<input id="newTaskBatch" type="number" min="1" max="999" step="1" placeholder="批次"></label><button class="secondary" type="button" id="autoBatchBtn">自动生成当天下一批次</button><label>生成的任务编号<input id="newTaskCode" readonly></label><label>操作人员 <b style="color:#cf2636">*</b><input id="newTaskMember" placeholder="请输入操作人员姓名" autocomplete="off"></label><button class="primary" type="button" id="createTaskBtn">＋ 创建并进入任务</button><label>其他成员分享的任务码<input id="joinCloudCode" autocomplete="off" placeholder="输入16位任务码"></label><button id="joinCloudTask" class="primary" type="button">加入共享任务</button><h3>本机已加入任务（点击进入）</h3><div id="availableTasks"></div></div></div><div id="overLimitShade" class="modalshade hidden" role="alertdialog" aria-modal="true" aria-labelledby="overLimitTitle"><div class="modal"><div class="error-symbol">🚫</div><h2 id="overLimitTitle">超量提醒：实际箱数超过预估</h2><div class="error-details"><div>订单号：<strong id="overLimitOrder"></strong></div><div>预估总箱数：<strong id="overLimitEstimate"></strong></div><div>实际已扫箱数：<strong id="overLimitActual"></strong></div><div><b>本次扫码已计入实际箱数</b></div></div><p class="hint">实际箱数已继续累计，订单已标记为异常。请核对是否重复扫码或存在额外箱子。</p><button class="primary" id="closeOverLimit" type="button">我知道了</button></div></div>
+<div id="toast"></div>
+<script src="./assets/cloud-client.js"></script><script src="./assets/manual-queue.js"></script><script>
+(()=>{'use strict';const KEY='box_verify_manual_v2';let state;try{state=JSON.parse(localStorage.getItem(KEY)||'null')}catch{}state=state&&Array.isArray(state.orders)&&Array.isArray(state.logs)?state:{orders:[],logs:[],task:'本地任务',member:'',endpoint:''};if(state.member==='本机操作员')state.member='';if(typeof state.taskEnded!=='boolean')state.taskEnded=false;if(!Array.isArray(state.archives))state.archives=[];let current='',pending='',camera=null,lastCamera='',busy=false;let locateTarget="",locateSuccessTimer=null;let audioCtx=null,soundOn=true,cameraArmed=true,cameraMisses=0,cameraLastHit=0,overTimer=null;const $=id=>document.getElementById(id);const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let savedLocal=localStorage.getItem(KEY)||JSON.stringify(state);function persist(){try{const next=JSON.stringify(state);localStorage.setItem(KEY,next);savedLocal=next;}catch(e){if(savedLocal)state=JSON.parse(savedLocal);toast('本机存储失败，本次操作未保存。请导出备份并检查空间');throw e;}}const find=id=>state.orders.find(x=>x.id===id);function toast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3000)}const SCAN_ACTIONS=['首箱扫码','第二箱扫码并填写预估','扫描箱子','超量扫码'];
+// 为旧版日志补充全任务扫码序号；旧日志若已被清理，无法恢复丢失的序号。
+if(!Number.isSafeInteger(state.globalScanCounter)||state.globalScanCounter<0)state.globalScanCounter=0;
+for(const entry of [...state.logs].reverse())if(SCAN_ACTIONS.includes(entry.action)){if(!Number.isSafeInteger(entry.globalSeq)||entry.globalSeq<1)entry.globalSeq=++state.globalScanCounter;else state.globalScanCounter=Math.max(state.globalScanCounter,entry.globalSeq)}
+function log(action,id,detail=''){const entry={time:now(),member:state.member,action,id,detail};if(SCAN_ACTIONS.includes(action))entry.globalSeq=++state.globalScanCounter;state.logs.unshift(entry);queueChange(action,id)}function boxScans(id){return state.logs.filter(x=>x.id===id&&SCAN_ACTIONS.includes(x.action)&&!x.voided).slice().reverse().map((x,i)=>({globalSeq:x.globalSeq??null,seq:(x.action==='首箱扫码'?1:x.action==='第二箱扫码并填写预估'?2:(Number((x.detail||'').match(/第\s*(\d+)\s*箱/)?.[1])||Number((x.detail||'').match(/实际\s*(\d+)\s*箱/)?.[1])||i+1)),time:x.time||'未知',member:x.member||'未知',over:x.action==='超量扫码',action:x.action,detail:x.detail||''}));}
+function boxDetails(o){const scans=boxScans(o.id);const missing=Math.max(0,o.actual-scans.length);const cancelled=state.logs.filter(x=>x.id===o.id&&x.voided&&SCAN_ACTIONS.includes(x.action)).sort((a,b)=>(a.globalSeq||0)-(b.globalSeq||0));return `<details class="box-detail"><summary>查看全任务扫码序号和时间（${scans.length} 条）</summary><div class="box-summary">已同步序号按云端接收顺序 · 时间保留本机扫码时间 · 当前已扫 ${o.actual} 箱${missing?` · 其中 ${missing} 箱无可追溯记录`:''}</div>${scans.length?scans.map(x=>`<div class="box-line"><b class="${x.over?'box-warning':''}">全任务第 ${x.globalSeq??'未知'} 码<br>本订单第 ${x.seq} 箱</b><div><div class="box-time">${escape(x.time)} ${x.over?'<span class="box-warning">⚠ 超量</span>':''}</div><div class="box-extra">操作人：${escape(x.member)}</div></div></div>`).join(''):'<p class="muted">暂无逐箱扫码记录</p>'}${cancelled.length?`<div class="box-summary">已撤销扫码：${cancelled.map(x=>`全任务第 ${x.globalSeq??'未知'} 码（${escape(x.voidReason||'误扫')}）`).join('、')}</div>`:''}</details>`}
+function stats(){return{total:state.orders.length,done:state.orders.filter(x=>x.done).length,active:state.orders.filter(x=>!x.done&&!x.exception).length,bad:state.orders.filter(x=>x.exception).length}}function statsHtml(){const s=stats();return[['订单总数',s.total,'#1d2e45'],['已完成',s.done,'#078237'],['进行中',s.active,'#238F84'],['异常',s.bad,'#d12b36']].map(([a,b,c])=>`<div class="stat"><span>${a}</span><strong style="color:${c}">${b}</strong></div>`).join('')}
+function render(){const ended=state.taskEnded;$('taskStateLabel').textContent=ended?'已结束':'进行中';$('taskStateDescription').textContent=ended?`任务已于 ${state.taskEndedAt||'未知时间'} 结束，当前统计已归零，历史记录请到「历史任务」查看；可重新开启原任务恢复数据，或开始全新任务。`:'核验完成后可结束任务，当前统计清零，原有数据移入历史任务。';$('endTaskBtn').classList.toggle('hidden',ended);$('reopenTaskBtn').classList.toggle('hidden',!ended);$('restoreTaskBtn').classList.toggle('hidden',!ended||!state.archives.length);$('barcode').disabled=ended;$('scanBtn').disabled=ended;$('nextBtn').disabled=ended;$('toggleOrderKeypad').disabled=ended;if(ended){$('orderKeypad').classList.add('hidden');$('toggleOrderKeypad').textContent='⌨ 打开数字键盘'}const s=stats();$('statsCompact').innerHTML=statsHtml();$('taskName').textContent=state.task;$('taskDisplay').textContent=`任务：${state.task}　成员：${state.member||'未填写（必填）'}`;$('cloudStatus').textContent=state.endpoint?'● 已配置接口（未验证）':'● 本地模式';$('cloudStatus').className=state.endpoint?'offline':'offline';const o=find(current);if(!o){$('orderArea').innerHTML='<div class="card"><p class="label">当前订单</p><p class="muted">请扫描8位订单号开始核验。</p></div>'}else{const hasEstimate=Number.isInteger(o.estimate)&&o.estimate>0;const pct=hasEstimate?Math.min(100,Math.round(o.actual/o.estimate*100)):0;$('orderArea').innerHTML=`<div class="card"><div class="notice ${o.exception?'danger':'success'}">${o.exception?'⚠ 该订单存在异常，请检查箱数':'✓ 订单已更新'}</div><div class="label">当前订单号</div><div class="order">${escape(o.id)}</div><div class="numbers"><div class="num"><span>预估总箱数</span><strong>${hasEstimate?o.estimate:"待填写"}</strong></div><div class="num"><span>实际已扫箱数</span><strong>${o.actual}</strong></div></div><div class="progressrow"><b>箱数进度</b><span>${hasEstimate?`${o.actual} / ${o.estimate} (${Math.round(o.actual/o.estimate*100)}%)`:`${o.actual} 箱 · 第2箱填写预估`}</span></div><div class="track"><div class="fill" style="width:${pct}%"></div></div><div class="notice ${o.exception?'danger':'success'}">${o.exception?'实际数量超过预估，已记录超出箱数，请核对':`第 ${o.actual} 箱已记录，${!hasEstimate?"第2箱扫码时强制填写预估总箱数":o.done?'订单已完成':'可继续扫描同一订单的下一箱'}`}</div><button class="primary" id="continueBtn">▣ 继续扫码（第 ${o.actual+1} 箱）</button><button class="secondary" id="correctBtn">🛠 扫码纠错 / 减少箱数</button><button class="secondary" id="finishBtn">✓ ${o.done?'取消完成标记':'完成该订单'}</button><div class="smallbuttons"><button id="editEstimateBtn">✎ 修改预估箱数</button><button id="exceptionBtn">⚠ ${o.exception?'取消异常':'标记异常'}</button></div></div>`;$('continueBtn').onclick=()=>{$('barcode').value=o.id;scan(o.id)};$('correctBtn').onclick=()=>openCorrection(o.id);$('finishBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}o.done=!o.done;log(o.done?'完成订单':'取消完成',o.id);persist();render()};$('editEstimateBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}const n=prompt('请输入新的预估总箱数（正整数）',o.estimate);if(n===null)return;if(!/^[1-9]\d*$/.test(n)||Number(n)>99999){toast('请输入有效的正整数');return}o.estimate=Number(n);o.exception=o.actual>o.estimate;log('修改预估',o.id,'新预估：'+n);persist();render()};$('exceptionBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}o.exception=!o.exception;log(o.exception?'标记异常':'取消异常',o.id);persist();render()}}$('statsFull').innerHTML=`<button class="secondary" id="statsCorrectBtn">🛠 扫码纠错 / 减少箱数</button><div class="stats">${statsHtml()}</div>${state.orders.length?state.orders.map(o=>`<div class="record"><div class="row"><b>${escape(o.id)}</b><span class="pill">${o.done?'已完成':o.exception?'异常':'进行中'}</span></div><div class="muted">预估 ${o.estimate??"待填写"} 箱 · 已扫 ${o.actual} 箱</div>${boxDetails(o)}</div>`).join(''):'<p class="muted">暂无订单</p>'}`;$('statsCorrectBtn').onclick=()=>openCorrection(current||'');$('historyList').innerHTML=state.logs.length?state.logs.map(x=>`<div class="record"><b>${escape(x.action)}</b>　${escape(x.id)}<div class="muted">${escape(x.time)} · ${escape(x.member)} ${escape(x.detail)}</div></div>`).join(''):'<p class="muted">暂无操作记录</p>';$('exceptionList').innerHTML=state.orders.filter(o=>o.exception).map(o=>`<div class="record"><b>${escape(o.id)}</b><div class="muted">预估 ${o.estimate??"待填写"} · 实际 ${o.actual}</div></div>`).join('')||'<p class="muted">暂无异常订单</p>';$('archiveList').innerHTML=state.archives.length?state.archives.map((a,i)=>{const orders=Array.isArray(a.orders)?a.orders:[];const logs=Array.isArray(a.logs)?a.logs:[];const count=orders.reduce((n,o)=>n+(Number(o.actual)||0),0);return `<details class="record"><summary><b>${escape(a.task||'未命名任务')}</b> · ${escape(a.endedAt||'')}<div class="muted">${orders.length} 个订单 · ${count} 箱</div></summary>${orders.map(o=>{const scans=logs.filter(l=>l.id===o.id&&Number.isInteger(l.globalSeq)).sort((x,y)=>x.globalSeq-y.globalSeq);return `<details class="record"><summary><b>${escape(o.id)}</b> · 预估 ${o.estimate??'待填写'} · 实际 ${o.actual}</summary>${scans.map(l=>`<div class="muted">全任务第 ${l.globalSeq} 码 · ${escape(l.time||'')} · ${escape(l.member||'')} ${l.voided?'（已撤销）':''}</div>`).join('')||'<div class="muted">无可用逐箱记录</div>'}</details>`}).join('')}<button class="secondary" type="button" data-archive-export="${i}">导出本任务 CSV</button></details>`}).join(''):'<p class="muted">暂无已结束任务</p>';document.querySelectorAll('[data-archive-export]').forEach(b=>b.onclick=()=>{const a=state.archives[Number(b.dataset.archiveExport)];if(!a)return;const rows=[['订单号','预估箱数','实际箱数','状态'],...a.orders.map(o=>[o.id,o.estimate??'',o.actual,o.exception?'异常':o.done?'完成':'进行中'])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='历史任务_'+(a.task||'任务')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});}
+function unlockAudio(){if(!soundOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}catch(e){}}
+function beep(kind='ok'){if(!soundOn)return;try{unlockAudio();if(!audioCtx)return;const t=audioCtx.currentTime;const patterns={ok:{type:'square',notes:[[950,0,.075],[1450,.105,.11]],gain:.38},prompt:{type:'sine',notes:[[510,0,.32],[510,.40,.32],[510,.80,.32]],gain:.55},located:{type:'triangle',notes:[[880,0,.16],[1175,.20,.17],[1568,.42,.42]],gain:.58},error:{type:'sawtooth',notes:[[340,0,.24],[240,.30,.32]],gain:.36},key:{type:'sine',notes:[[480,0,.055]],gain:.12}};const cfg=patterns[kind]||patterns.ok;for(const [freq,offset,dur] of cfg.notes){const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=cfg.type;osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,t+offset);gain.gain.linearRampToValueAtTime(cfg.gain,t+offset+.012);gain.gain.exponentialRampToValueAtTime(.0001,t+offset+dur);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(t+offset);osc.stop(t+offset+dur+.02)}}catch(e){}}
+function setLocateMode(target){locateTarget=target;$('locateBtn').textContent=target?'📍 定位中：'+target:'📍 定位箱子';$('locateBtn').style.background=target?'#d8f8e9':'';$('barcode').placeholder=target?'定位中：请扫描箱码':'输入8位订单号';$('locateShade').classList.add('hidden');if(target){$('barcode').value='';toast('定位模式已开启，扫描 '+target+'；不会增加箱数')}else toast('已退出定位模式')}
+$('locateBtn').onclick=()=>{$('locateInput').value=locateTarget;$('locateResult').innerHTML=locateTarget?'<div class="notice success">当前定位目标：'+escape(locateTarget)+'</div>':'<p class="muted">设置目标订单号后，直接扫码寻找。</p>';$('locateSearch').textContent=locateTarget?'更换定位目标':'开始定位';$('locateShade').classList.remove('hidden')};
+$('locateClose').onclick=()=>$('locateShade').classList.add('hidden');
+function locateScans(){const q=$('locateInput').value.trim();if(!/^\d{8}$/.test(q)){toast('请输入8位目标订单号');$('locateResult').innerHTML='<div class="notice danger">目标必须是8位订单号。</div>';return}setLocateMode(q)}
+$('locateSearch').onclick=locateScans;$('locateInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();locateScans()}});
+const exitLocate=document.createElement('button');exitLocate.type='button';exitLocate.className='secondary';exitLocate.textContent='退出定位模式';$('locateClose').before(exitLocate);exitLocate.onclick=()=>setLocateMode('');
+function locateScan(id){if(!/^\d{8}$/.test(id)){toast('请输入8位箱码');return}if(id===locateTarget){beep('located');$('locateSuccessOrder').textContent=id;$('locateSuccessShade').classList.remove('hidden');clearTimeout(locateSuccessTimer);locateSuccessTimer=setTimeout(()=>{$('locateSuccessShade').classList.add('hidden')},3200)}else{beep('error');toast('不是目标箱子：'+id+'；请继续寻找 '+locateTarget)}$('barcode').value=''}
+$('locateSuccessClose').onclick=()=>{$('locateSuccessShade').classList.add('hidden');clearTimeout(locateSuccessTimer)};
+$('soundBtn').onclick=()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'🔊 声音开启':'🔇 声音关闭';if(soundOn){unlockAudio();beep()}};
+document.addEventListener('pointerdown',unlockAudio,{passive:true});document.addEventListener('keydown',unlockAudio);
+function showOverLimit(o){$('overLimitOrder').textContent=o.id;$('overLimitEstimate').textContent=o.estimate;$('overLimitActual').textContent=o.actual;$('overLimitShade').classList.remove('hidden');$('barcode').value='';setOrderKeyboard(false);beep('error');clearTimeout(overTimer);overTimer=setTimeout(()=>{$('overLimitShade').classList.add('hidden')},1700);}
+$('closeOverLimit').onclick=()=>{clearTimeout(overTimer);$('overLimitShade').classList.add('hidden');};
+function showEstimate(id){beep('prompt');pending=id;$('modalOrder').textContent=id;$('estimateInput').value='';$('modalShade').classList.remove('hidden')}let correctionQty=1;
+function openCorrection(id=''){if(state.taskEnded){toast('任务已结束，不能纠错；请先重新开启任务');return}$('correctionOrder').value=id;$('correctionReason').value='';correctionQty=1;$('correctionCount').textContent='1';$('correctionShade').classList.remove('hidden');updateCorrectionInfo()}
+function updateCorrectionInfo(){const id=$('correctionOrder').value.trim(),o=find(id);$('correctionInfo').textContent=o?`订单 ${id} · 当前实际 ${o.actual} 箱 · 预估 ${o.estimate??'待填写'} 箱`:'请输入存在的8位订单号';$('correctionCount').textContent=correctionQty}
+$('correctionOrder').addEventListener('input',updateCorrectionInfo);
+$('correctionMinus').onclick=()=>{correctionQty=Math.max(1,correctionQty-1);updateCorrectionInfo()};
+$('correctionPlus').onclick=()=>{const o=find($('correctionOrder').value.trim());correctionQty=Math.min(o?.actual||1,correctionQty+1);updateCorrectionInfo()};
+$('cancelCorrection').onclick=()=>$('correctionShade').classList.add('hidden');
+$('confirmCorrection').onclick=()=>{const id=$('correctionOrder').value.trim(),o=find(id),reason=$('correctionReason').value.trim();if(!o){toast('找不到此订单');return}if(!reason){toast('请填写纠错原因');return}if(correctionQty>o.actual){toast('减少箱数不能超过实际箱数');return}const old=o.actual;const candidates=state.logs.filter(x=>x.id===id&&SCAN_ACTIONS.includes(x.action)&&!x.voided).sort((a,b)=>(b.globalSeq||0)-(a.globalSeq||0));const voided=[];for(const entry of candidates.slice(0,correctionQty)){entry.voided=true;entry.voidReason=reason;entry.voidBy=state.member;entry.voidTime=now();voided.push(entry.globalSeq)}o.actual-=correctionQty;o.exception=!!o.estimate&&o.actual>o.estimate;if(o.actual<2&&o.estimate&&old>=2){/* 保留已填写的预估，不要求重复输入 */}if(o.actual===0){o.done=false}log('扫码纠错',id,`实际 ${old} → ${o.actual}，减少 ${correctionQty} 箱；原因：${reason}；撤销全任务序号：${voided.join('、')||'旧记录缺失'}`);current=id;persist();$('correctionShade').classList.add('hidden');render();toast(`纠错成功：${id} 实际箱数 ${old} → ${o.actual}`)};
+function scan(raw){if(!state.member||!state.member.trim()){toast('请先填写操作人员（必填），再开始扫码');settings();$('memberInput').focus();return}if(locateTarget){locateScan(String(raw||'').trim());return}if(state.taskEnded){toast('任务已结束，禁止继续扫码；如需修改请先重新开启任务');return}if(busy)return;const id=String(raw||'').trim();if(!/^\d{8}$/.test(id)){toast('请输入8位数字订单号');return}if(pending){toast('请先填写当前订单的预估总箱数');return}const o=find(id);if(!o){state.orders.unshift({id,estimate:null,actual:1,done:false,exception:false,created:now()});current=id;log('首箱扫码',id,'第 1 箱自动计入，第二箱需填写预估');beep('ok');persist();render();toast('第1箱已记录；第2箱扫码时填写预估总箱数');$('barcode').value='';return}if(o.actual===0){o.actual=1;current=id;log('首箱扫码',id,'纠错后重新记录第1箱');beep('ok');persist();render();toast('第1箱已重新记录');$('barcode').value='';return}if(!Number.isInteger(o.estimate)||o.estimate<1){current=id;showEstimate(id);return}if(o.done){beep('error');toast('订单已标记完成，请先取消完成标记');current=id;render();return}o.actual++;current=id;if(o.actual>o.estimate){o.exception=true;log('超量扫码',id,`实际 ${o.actual} 箱，预估 ${o.estimate} 箱`);persist();render();showOverLimit(o)}else{log('扫描箱子',id,`第 ${o.actual} 箱`);beep('ok');persist();render();toast(`订单 ${id}：已记录第 ${o.actual} 箱`)}$('barcode').value=''}
+function saveEstimate(){if(state.taskEnded){toast('任务已结束，无法记录第2箱');return}const v=$('estimateInput').value;if(!/^[1-9]\d*$/.test(v)||Number(v)>99999){toast('必须填写有效的预估总箱数（1～99999）');return}const id=pending;if(!id)return;let o=find(id);if(!o){toast('订单不存在，请先扫描第1箱');return}else{if(Number(v)<2){toast('已扫描第2箱，预估总箱数不能小于2');return}o.estimate=Number(v);o.actual++;beep('ok');log('第二箱扫码并填写预估',id,`预估 ${v} 箱，实际第 ${o.actual} 箱`)}pending='';current=id;$('modalShade').classList.add('hidden');persist();render();toast('预估已保存，第2箱已计入，实际箱数已保存在本机')}
+for(const k of ['1','2','3','4','5','6','7','8','9','清空','0','⌫']){const b=document.createElement('button');b.type='button';b.textContent=k;b.setAttribute('aria-label',k==='⌫'?'删除最后一位':k);b.onclick=()=>{const i=$('barcode');i.value=k==='清空'?'':k==='⌫'?i.value.slice(0,-1):i.value.length<8?i.value+k:i.value;if(i.value.length===8)toast('已输入8位订单号，点击确认扫码');};$('orderKeypad').appendChild(b)}
+const orderKeyboard=$('orderKeypad'),orderKeyboardToggle=$('toggleOrderKeypad');
+function setOrderKeyboard(open){orderKeyboard.classList.toggle('hidden',!open);orderKeyboardToggle.textContent=open?'⌨ 收起数字键盘':'⌨ 打开数字键盘';orderKeyboardToggle.setAttribute('aria-expanded',String(open));}
+orderKeyboardToggle.onclick=()=>setOrderKeyboard(orderKeyboard.classList.contains('hidden'));
+$('barcode').addEventListener('click',()=>setOrderKeyboard(true));
+$('scanBtn').onclick=()=>{scan($('barcode').value);setOrderKeyboard(false)};$('barcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();scan($('barcode').value);setOrderKeyboard(false)}});$('saveEstimate').onclick=saveEstimate;$('cancelEstimate').onclick=()=>{pending='';$('modalShade').classList.add('hidden');toast('已取消第2箱扫码，第1箱仍保留')};for(const k of ['1','2','3','4','5','6','7','8','9','清空','0','⌫']){const b=document.createElement('button');b.textContent=k;b.onclick=()=>{beep('key');const i=$('estimateInput');i.value=k==='清空'?'':k==='⌫'?i.value.slice(0,-1):i.value.length<5?i.value+k:i.value};$('keypad').appendChild(b)}$('nextBtn').onclick=()=>{cameraArmed=true;cameraMisses=0;lastCamera='';$('barcode').focus();toast('已准备识别下一箱')};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!=='tab-'+b.dataset.tab));render()});
+$('cameraBtn').onclick=async()=>{if(state.taskEnded&&!camera){toast('任务已结束，摄像头扫码已停用');return}if(camera){cameraArmed=false;await camera.stop().catch(()=>{});camera.clear();camera=null;$('camera').classList.add('hidden');$('cameraBtn').textContent='📷 手机摄像头';return}if(!window.Html5Qrcode){toast('摄像头组件未加载，请联网后重试，或使用扫码枪');return}try{unlockAudio();cameraArmed=true;cameraMisses=0;$('camera').classList.remove('hidden');camera=new Html5Qrcode('camera');await camera.start({facingMode:'environment'},{fps:10,qrbox:{width:230,height:160}},code=>{const id=String(code).trim();if((pending&&!locateTarget)||!$('overLimitShade').classList.contains('hidden')||!$('locateSuccessShade').classList.contains('hidden'))return;if(!cameraArmed)return;cameraArmed=false;cameraMisses=0;cameraLastHit=Date.now();lastCamera=id;scan(id)},()=>{if(cameraArmed)return;cameraMisses++;/* Explicit next-box acknowledgement prevents repeated reads of one physical box. */});$('cameraBtn').textContent='关闭摄像头'}catch(e){camera=null;$('camera').classList.add('hidden');toast('摄像头无法启动：请检查权限及 HTTPS 环境')}};
+function csv(){const lines=[['订单号','预估总箱数','实际已扫箱数','是否完成','是否异常','创建时间'],...state.orders.map(o=>[o.id,o.estimate,o.actual,o.done?'是':'否',o.exception?'是':'否',o.created])];const data='\ufeff'+lines.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8'}));a.download='订单箱数核验_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}$('exportBtn').onclick=csv;
+function exportScans(){const rows=[['全任务第几码','订单号','本订单第几箱','扫码时间','操作成员','状态','备注']];for(const o of state.orders){for(const x of boxScans(o.id)){rows.push([x.globalSeq??'',o.id,x.seq,x.time,x.member,x.over?'超出预估':'正常',x.detail])}}rows.splice(1,rows.length-1,...rows.slice(1).sort((a,b)=>Number(a[0])-Number(b[0])));const content='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='逐箱扫码顺序与时间_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}$('exportScansBtn').onclick=exportScans;
+// Cloud configuration is deliberately not represented as connected until a verified adapter is supplied.
+const settings=()=>{$('taskInput').value=state.task;$('memberInput').value=state.member||'';$('endpointInput').value=state.endpoint;$('settingsShade').classList.remove('hidden')};document.querySelector('.hero h1').onclick=settings;document.querySelector('.sheet').onclick=settings;$('closeSettings').onclick=()=>$('settingsShade').classList.add('hidden');$('saveSettings').onclick=()=>{if(!$('memberInput').value.trim()){toast('操作人员为必填项');$('memberInput').focus();return}state.member=$('memberInput').value.trim();state.endpoint=$('endpointInput').value.trim();persist();$('settingsShade').classList.add('hidden');render();toast('设置已保存；云端同步需配套服务端接口')};$('syncBtn').onclick=()=>toast('尚未接入已验证的云端协议；不会用云端数据覆盖本地记录');$('clearBtn').onclick=()=>{if(confirm('确定永久清空本机全部订单和操作记录？')){state.orders=[];state.logs=[];state.globalScanCounter=0;current='';persist();render();toast('本地数据已清空')}};
+$('endTaskBtn').onclick=async()=>{if(pending){toast('请先确认或取消第2箱预估输入');return}if(!state.orders.length&&!state.logs.length){toast('当前任务没有扫码记录，无需结束');return}const total=state.orders.reduce((n,o)=>n+o.actual,0);if(!confirm(`确定结束当前任务「${state.task}」？\n订单 ${state.orders.length} 个，实际扫码 ${total} 箱。\n结束后当前统计立即归零，原始记录保存到「历史任务」。`))return;const endedAt=now();state.archives.unshift({task:state.task,member:state.member,endedAt,orders:JSON.parse(JSON.stringify(state.orders)),logs:JSON.parse(JSON.stringify(state.logs)),globalScanCounter:state.globalScanCounter||0});state.orders=[];state.logs=[];state.globalScanCounter=0;state.taskEnded=true;state.taskEndedAt=endedAt;current='';pending='';$('barcode').value='';persist();if(camera){try{await camera.stop()}catch(e){}try{camera.clear()}catch(e){}camera=null;$('camera').classList.add('hidden');$('cameraBtn').textContent='📷 手机摄像头'}render();toast('任务已结束，当前统计已归零；历史记录已保存')};$('restoreTaskBtn').onclick=()=>{if(!state.taskEnded){toast('当前任务正在进行中');return}const last=state.archives[0];if(!last){toast('没有可以恢复的历史任务');return}if(!confirm(`确定重新开启「${last.task}」？\n将恢复原有订单、扫码序号、扫码时间及纠错记录，并继续累计。\n此任务将从历史任务列表移回当前任务。`))return;state.orders=JSON.parse(JSON.stringify(last.orders||[]));state.logs=JSON.parse(JSON.stringify(last.logs||[]));state.globalScanCounter=last.globalScanCounter||0;state.task=last.task;state.member=last.member||state.member;state.archives.shift();state.taskEnded=false;state.taskEndedAt='';current='';pending='';persist();render();toast('原任务已重新开启，扫码记录及序号已恢复')};// 日期批次任务管理：每个任务独立保存订单、全局扫码序号与操作日志。
+const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const dateCode=d=>d.replace(/-/g,'');
+const knownTasks=()=>[state.task,...state.archives.map(a=>a.task)];
+function nextBatch(date){const prefix=dateCode(date)+'-';let max=0;for(const name of knownTasks()){if(String(name).startsWith(prefix)){const n=Number(String(name).slice(prefix.length));if(Number.isSafeInteger(n))max=Math.max(max,n)}}return max+1}
+function taskId(date,batch){return dateCode(date)+'-'+String(batch).padStart(2,'0')}
+function updateTaskCode(){const date=$('newTaskDate').value,batch=Number($('newTaskBatch').value);$('newTaskCode').value=date&&Number.isSafeInteger(batch)&&batch>=1&&batch<=999?taskId(date,batch):''}
+function snapshot(status='暂停'){return{task:state.task,member:state.member||'',endedAt:state.taskEndedAt||'',status,orders:JSON.parse(JSON.stringify(state.orders)),logs:JSON.parse(JSON.stringify(state.logs)),globalScanCounter:state.globalScanCounter||0}}
+function loadTask(t){state.task=t.task;state.member=t.member||'';state.orders=JSON.parse(JSON.stringify(t.orders||[]));state.logs=JSON.parse(JSON.stringify(t.logs||[]));state.globalScanCounter=t.globalScanCounter||0;state.taskEnded=false;state.taskEndedAt='';current='';pending='';$('barcode').value='';persist();render()}
+function saveCurrentBeforeSwitch(){if(state.taskEnded)return;if(state.orders.length||state.logs.length||/^\d{8}-\d+$/.test(state.task)){state.archives.unshift(snapshot('暂停'))}}
+function openTaskManager(){const date=localDate();$('newTaskDate').value=date;$('newTaskBatch').value=nextBatch(date);$('newTaskMember').value=state.member||'';updateTaskCode();renderAvailableTasks();$('taskManagerShade').classList.remove('hidden')}
+function renderAvailableTasks(){const items=state.archives.map((a,i)=>`<div class="record"><div class="row"><div><b>${escape(a.task)}</b><div class="muted">${escape(a.status||'已结束')} · ${escape(a.member||'未填写')} · ${(a.orders||[]).length} 个订单</div></div><button class="secondary" type="button" data-task-index="${i}" style="width:auto;margin:0">进入任务</button></div></div>`).join('');$('availableTasks').innerHTML=items||'<p class="muted">暂无其他任务</p>';document.querySelectorAll('[data-task-index]').forEach(btn=>btn.onclick=()=>{const idx=Number(btn.dataset.taskIndex),t=state.archives[idx];if(!t)return;if(!confirm(`切换到任务「${t.task}」？当前任务数据会先保存。`))return;state.archives.splice(idx,1);saveCurrentBeforeSwitch();loadTask(t);$('taskManagerShade').classList.add('hidden');toast('已进入任务：'+t.task)})}
+$('taskManagerBtn').onclick=openTaskManager;$('openTaskManager').onclick=()=>{$('settingsShade').classList.add('hidden');openTaskManager()};$('closeTaskManager').onclick=()=>$('taskManagerShade').classList.add('hidden');
+$('newTaskDate').onchange=()=>{$('newTaskBatch').value=nextBatch($('newTaskDate').value);updateTaskCode()};$('newTaskBatch').oninput=updateTaskCode;$('autoBatchBtn').onclick=()=>{$('newTaskBatch').value=nextBatch($('newTaskDate').value);updateTaskCode()};
+$('generateTaskId').onclick=()=>{$('taskInput').value=taskId(localDate(),nextBatch(localDate()));toast('已生成新任务编号，请点击创建任务以启用')};
+$('createTaskBtn').onclick=()=>{const name=$('newTaskCode').value,member=$('newTaskMember').value.trim();if(!name){toast('请选择有效日期与批次');return}if(!member){toast('操作人员不能为空');$('newTaskMember').focus();return}if(knownTasks().includes(name)){toast('该日期批次已存在，请选择其他批次');return}if(!confirm(`创建任务 ${name}，操作人员：${member}？\n当前任务如有数据会自动保存，扫码序号从第1码开始。`))return;saveCurrentBeforeSwitch();loadTask({task:name,member,orders:[],logs:[],globalScanCounter:0});$('taskManagerShade').classList.add('hidden');toast('新任务创建成功：'+name)};
+$('reopenTaskBtn').onclick=openTaskManager;
+
+/* Manual cloud adapter: no polling, visibility refresh, or automatic upload. */
+state.cloud=state.cloud||{token:'',outbox:[],base:[],revision:0,estimateVersions:{},lastSync:''};
+state.savedTasks=state.savedTasks||[];
+if(!state.cloud.token){try{const old=JSON.parse(localStorage.getItem('warehouse-cloud-session-v1')||'null');if(old?.token)state.cloud.token=old.token;}catch{}}
+const originalRender=render;
+render=function(){
+ originalRender();
+ const c=state.cloud,n=c.outbox.length,scans=c.outbox.filter(x=>x.kind==='scan').length;
+ $('cloudStatus').textContent=busy?'● 正在手动同步':n?'● 待同步 '+scans+' 箱 / '+n+' 项':c.token?'● 本机已保存':'● 请创建或加入任务';
+ $('cloudStatus').className=n?'offline':'ok';
+ $('taskDisplay').textContent='任务：'+state.task+'　成员：'+(state.member||'未填写')+(c.code?'　任务码：'+c.code:'');
+ $('syncSummary').textContent=(c.lastSync?'上次同步：'+new Date(c.lastSync).toLocaleString():'尚未同步')+' · 扫码先保存在本机，下拉或点击后才上传并下载。';
+ $('manualSync').disabled=busy||!c.token;
+ $('restoreTaskBtn').classList.add('hidden');
+ $('endTaskBtn').disabled=!c.token||c.role!=='admin'||busy;
+ $('taskStateDescription').textContent=state.taskEnded?'云端任务已结束，记录保留。可创建或切换其他任务。':'本机待同步操作 '+n+' 项。只有下拉更新后才会上传并合并其他成员数据。';
+};
+function queueChange(action,id){
+ const o=find(id),c=state.cloud;
+ if(!c?.token)return;
+ let entries=[];
+ if(SCAN_ACTIONS.includes(action)){
+   if(action==='第二箱扫码并填写预估')entries.push({kind:'estimate',barcode:id,value:o.estimate,expectedVersion:c.estimateVersions[id]||0});
+   entries.push({kind:'scan',barcode:id});
+ }else if(action==='修改预估')entries.push({kind:'estimate',barcode:id,value:o.estimate,expectedVersion:c.estimateVersions[id]||0});
+ else if(action==='扫码纠错')entries.push({kind:'adjust',barcode:id,value:-correctionQty,reason:$('correctionReason').value.trim()});
+ else if(action==='完成订单'||action==='取消完成')entries.push({kind:'done',barcode:id,value:o.done?1:0});
+ else if(action==='标记异常'||action==='取消异常')entries.push({kind:'abnormal',barcode:id,value:o.exception?1:0});
+ for(const b of entries)if(b.kind==='estimate')c.estimateVersions[id]=(c.estimateVersions[id]||0)+1;
+ state.cloud=ManualQueue.enqueue(c,entries);
+ if(state.logs[0]&&entries.length)state.logs[0].operationId=state.cloud.outbox.at(-1).id;
+}
+function cloudOrders(s){
+ return s.orders.map(o=>({id:o.barcode,estimate:o.hasFilledEstimate?o.estimate:null,actual:o.actual,done:!!o.done,exception:!!o.abnormal||(o.hasFilledEstimate&&o.actual>o.estimate),created:''}));
+}
+function applyCloud(s,history){
+ const c=state.cloud;c.base=s.orders;c.revision=s.task.revision;c.role=s.me.role;c.code=s.task.code;c.taskId=s.task.id;
+ c.estimateVersions=Object.fromEntries(s.orders.map(o=>[o.barcode,o.estimateVersion]));
+ for(const b of c.outbox)if(b.kind==='estimate')c.estimateVersions[b.barcode]=(c.estimateVersions[b.barcode]||0)+1;
+ state.task=s.task.title;state.member=s.me.name;state.taskEnded=s.task.status!=='active';
+ state.orders=cloudOrders({orders:ManualQueue.replay(s.orders,c.outbox)});
+ if(history){
+  let seq=0;
+  const labels={scan:'扫描箱子',estimate:'修改预估',adjust:'扫码纠错',done:'完成订单',abnormal:'标记异常',archive:'结束任务'};
+  const cloudLogs=history.map(l=>{
+   let b={},a={};try{b=JSON.parse(l.beforeValue||'{}');a=JSON.parse(l.afterValue||'{}')}catch{}
+   const entry={time:new Date(l.clientTime||l.time).toLocaleString('zh-CN',{hour12:false}),member:l.actor,action:labels[l.kind]||l.kind,id:l.barcode,detail:l.kind==='scan'?'第 '+a.actual+' 箱':l.kind==='estimate'?'新预估：'+a.estimate:'实际 '+(b.actual||0)+' → '+(a.actual||0),operationId:l.id};
+   if(l.kind==='scan')entry.globalSeq=++seq;
+   if(l.kind==='adjust'&&a.actual<b.actual){
+    let amount=b.actual-a.actual;
+    for(let i=cloudLogsBeingBuilt.length-1;i>=0&&amount;i--){const e=cloudLogsBeingBuilt[i];if(e.id===l.barcode&&e.globalSeq&&!e.voided){e.voided=true;e.voidReason='云端纠错';amount--;}}
+   }
+   cloudLogsBeingBuilt.push(entry);return entry;
+  });
+  const waiting=new Set(c.outbox.map(b=>b.id));
+  const localLogs=state.logs.filter(l=>waiting.has(l.operationId)).map(l=>({...l,globalSeq:undefined,detail:'待同步 · '+l.detail}));
+  state.logs=[...localLogs,...cloudLogs.reverse()];state.globalScanCounter=seq+localLogs.filter(l=>SCAN_ACTIONS.includes(l.action)).length;
+ }
+ if(state.taskEnded){const archived={task:state.task,member:state.member,endedAt:new Date().toLocaleString(),orders:structuredClone(state.orders),logs:structuredClone(state.logs),globalScanCounter:state.globalScanCounter,taskId:c.taskId};state.archives=state.archives.filter(a=>a.taskId!==c.taskId).concat([archived]);}
+ persist();render();
+}
+let cloudLogsBeingBuilt=[];
+async function syncCloud(){
+ if(busy||pending){toast(pending?'请先确认或取消预估输入':'正在同步，请稍候');return}
+ if(!state.cloud.token){openTaskManager();return}
+ busy=true;document.querySelector('.app').inert=true;$('syncBusy').classList.remove('hidden');render();
+ try{
+  let snapshot;
+  while(state.cloud.outbox.length){
+   const batch=state.cloud.outbox.slice(0,80);
+   const result=await CloudSheets.call('sync',{operations:batch},state.cloud.token);
+   const accepted=new Set(result.accepted);
+   state.cloud.outbox=state.cloud.outbox.filter(x=>!accepted.has(x.id));
+   // Save acknowledgements before any subsequent network request.
+   persist();snapshot=result.snapshot;
+   if(result.conflict){
+    state.cloud.conflict=result.conflict;state.cloud.remote=snapshot;persist();
+    throw new Error('有操作未合并：'+result.conflict.error+'。已接收的操作不会重复计数。请处理冲突后再次下拉。');
+   }
+  }
+  snapshot=snapshot||await CloudSheets.call('state',{},state.cloud.token);
+  const history=await CloudSheets.call('history',{},state.cloud.token);
+  cloudLogsBeingBuilt=[];applyCloud(snapshot,history.logs);
+  $('syncError').classList.add('hidden');state.cloud.lastSync=new Date().toISOString();state.cloud.conflict=null;persist();render();toast('同步完成：本机记录已上传，云端数量已合并');
+ }catch(e){toast(e.message);$('syncError').textContent=e.message; $('syncError').classList.remove('hidden');}
+ finally{busy=false;document.querySelector('.app').inert=false;$('syncBusy').classList.add('hidden');render();showConflict();}
+}
+function showConflict(){
+ const c=state.cloud,conf=c.conflict;$('resolveConflict').classList.toggle('hidden',!conf);
+ if(!conf)return;
+ $('conflictText').textContent=conf.error+'；本机记录仍保留，可先导出备份。';
+ const b=c.outbox.find(x=>x.id===conf.id);
+ $('keepLocalEstimate').classList.toggle('hidden',b?.kind!=='estimate'||conf.status!==409||c.remote?.task.status!=='active');
+ $('keepLocalEstimate').onclick=()=>{
+  if(!confirm('确认以本机预估覆盖当前云端预估？其他扫码箱数仍按增量合并。'))return;
+  const remote=c.remote.orders.find(o=>o.barcode===b.barcode);let version=remote?.estimateVersion||0;
+  for(const x of c.outbox)if(x.kind==='estimate'&&x.barcode===b.barcode){x.expectedVersion=version++;x.id=crypto.randomUUID();}
+  c.conflict=null;persist();showConflict();syncCloud();
+ };
+ $('useCloudEstimate').classList.toggle('hidden',b?.kind!=='estimate');
+ $('useCloudEstimate').onclick=()=>{
+  if(!confirm('使用云端预估，并撤销本机此订单尚未同步的预估修改？待同步扫码会保留。'))return;
+  c.outbox=c.outbox.filter(x=>!(x.kind==='estimate'&&x.barcode===b.barcode));c.conflict=null;
+  cloudLogsBeingBuilt=[];applyCloud(c.remote);persist();showConflict();syncCloud();
+ };
+}
+function stashTask(){
+ if(state.cloud.token)state.savedTasks=state.savedTasks.filter(t=>t.cloud.token!==state.cloud.token).concat([{task:state.task,member:state.member,orders:state.orders,logs:state.logs,taskEnded:state.taskEnded,cloud:structuredClone(state.cloud)}]);
+}
+async function enterCloud(create){
+ if(busy)return;
+ if(state.cloud.outbox.length){toast('请先下拉同步当前任务，再切换任务');return}
+ const name=$('newTaskMember').value.trim(),title=$('newTaskCode').value,code=$('joinCloudCode').value.trim();
+ if(!name){toast('请输入操作人员姓名');return}
+ const args=create?{name,title}:{name,code},action=create?'create':'join';
+ if(!create&&!code){toast('请输入共享任务码');return}
+ busy=true;
+ try{
+  const old=state.enterAttempt;
+  if(old&&(old.action!==action||JSON.stringify(old.args)!==JSON.stringify(args)))throw new Error('上次创建或加入结果待确认，请用相同信息重试');
+  if(!old){state.enterAttempt={action,args,token:CloudSheets.newToken()};persist();}
+  const attempt=state.enterAttempt,s=await CloudSheets.call(action,args,attempt.token);
+  stashTask();state.cloud={token:s.token,outbox:[],base:[],revision:0,estimateVersions:{},lastSync:new Date().toISOString()};
+  state.enterAttempt=null;state.logs=[];current='';pending='';applyCloud(s,[]);
+  $('taskManagerShade').classList.add('hidden');$('settingsShade').classList.add('hidden');toast('已进入任务；扫码先存本机，下拉时上传');
+ }catch(e){if(e.status&&e.status<500)state.enterAttempt=null;persist();toast(e.message);}
+ finally{busy=false;render();}
+}
+openTaskManager=function(){
+ $('newTaskDate').value=localDate();$('newTaskBatch').value=nextBatch(localDate());$('newTaskMember').value=state.enterAttempt?.args.name||state.member||'';updateTaskCode();
+ $('availableTasks').replaceChildren();
+ for(const t of state.savedTasks){
+  const b=document.createElement('button');b.className='secondary';b.textContent=t.task+' · '+t.member+(t.taskEnded?'（已归档）':'');
+  b.onclick=()=>{if(state.cloud.outbox.length){toast('请先同步当前任务');return}stashTask();const saved=state.savedTasks;state={...state,...structuredClone(t),savedTasks:saved};current='';persist();render();showConflict();$('taskManagerShade').classList.add('hidden');};
+  $('availableTasks').appendChild(b);
+ }
+ $('taskManagerShade').classList.remove('hidden');
+};
+$('createTaskBtn').onclick=()=>enterCloud(true);$('joinCloudTask').onclick=()=>enterCloud(false);
+$('taskManagerBtn').onclick=openTaskManager;$('reopenTaskBtn').onclick=openTaskManager;
+$('openTaskManager').onclick=()=>{$('settingsShade').classList.add('hidden');openTaskManager()};
+$('syncBtn').onclick=syncCloud;$('manualSync').onclick=syncCloud;
+$('clearBtn').classList.add('hidden');$('endpointInput').closest('label').classList.add('hidden');
+$('endpointInput').parentElement.querySelector('p.hint').textContent='已连接既有 Google Sheets。扫码仅保存在本机，下拉才会上传和下载。请勿清除浏览器站点数据，以免丢失待同步记录及管理员身份。';
+$('saveSettings').onclick=()=>{toast('协作成员姓名在创建或加入任务时确定');$('settingsShade').classList.add('hidden')};
+$('restoreTaskBtn').onclick=()=>toast('已归档任务保持只读，可创建新任务');
+$('endTaskBtn').onclick=async()=>{
+ if(busy||pending)return;
+ if(state.cloud.role!=='admin'){toast('仅管理员可以结束任务');return}
+ if(state.cloud.outbox.length){toast('请先下拉上传所有待同步记录，再结束任务');return}
+ if(!confirm('结束云端共享任务？请确认所有成员均已下拉上传。其他成员未上传的扫码不会自动合并。历史数据保留。'))return;
+ state.cloud=ManualQueue.enqueue(state.cloud,[{kind:'archive'}]);persist();await syncCloud();
+};
+const originalScan=scan;
+scan=function(raw){
+ if(locateTarget){locateScan(String(raw||'').trim());return}
+ if(!state.cloud.token){toast('请先创建或加入共享任务');openTaskManager();return}
+ if(state.cloud.conflict){toast('请先处理同步冲突，记录仍保留');return}
+ originalScan(raw);
+};
+const originalDetails=boxDetails;
+boxDetails=function(o){return originalDetails(o).replaceAll('全任务第 未知 码','本机待同步扫码').replaceAll('全任务第 undefined 码','本机待同步扫码')};
+let touchStart=null;
+document.addEventListener('touchstart',e=>{if(window.scrollY===0&&!e.target.closest('input,button,.modalshade,#camera'))touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+document.addEventListener('touchmove',e=>{if(!touchStart)return;const dy=e.touches[0].clientY-touchStart.y;if(dy>15&&Math.abs(e.touches[0].clientX-touchStart.x)<60){if(e.cancelable)e.preventDefault();$('pullHint').textContent=dy>85?'松手同步到云端':'继续下拉以同步';touchStart.distance=dy;}},{passive:false});
+document.addEventListener('touchend',()=>{const distance=touchStart?.distance||0;touchStart=null;$('pullHint').textContent='顶部下拉更新 · 或点击手动同步';if(distance>85)syncCloud();});
+window.addEventListener('beforeunload',e=>{if(state.cloud.outbox.length||busy){e.preventDefault();e.returnValue=''}});
+showConflict();render();
+
+render();})();
+</script><script src="./assets/html5-qrcode.min.js" defer></script></body></html>
