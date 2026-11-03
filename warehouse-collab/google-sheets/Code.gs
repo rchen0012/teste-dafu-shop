@@ -9,11 +9,20 @@ function reject_(message,status){throw Object.assign(new Error(message),{status:
 function sha_(s){return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s,Utilities.Charset.UTF_8).map(function(b){return('0'+((b+256)%256).toString(16)).slice(-2);}).join('');}
 function tableRows_(t){return t.rows.map(function(x){return x.value;});}
 function lookup_(t,predicate){return t.rows.find(function(x){return predicate(x.value);});}
+
+// Stable 8-digit aliases let older 16-character task codes continue to work.
+function taskCodes_(tables){
+ var rows=tableRows_(tables.tasks),used={},out={};
+ rows.forEach(function(t){if(/^\d{8}$/.test(String(t.code))){used[t.code]=true;out[t.id]=String(t.code);}});
+ rows.slice().sort(function(a,b){return String(a.id).localeCompare(String(b.id));}).forEach(function(t){if(out[t.id])return;for(var n=0;n<1000;n++){var code=String(parseInt(sha_(t.id+':short:'+n).slice(0,12),16)%100000000).padStart(8,'0');if(!used[code]){out[t.id]=code;used[code]=true;break;}}if(!out[t.id])reject_('任务码繁忙，请稍后重试',503);});
+ return out;
+}
+
 function publicSnapshot_(tables,m){
   var task=lookup_(tables.tasks,function(t){return t.id===m.task;});
   if(!task)reject_('任务不存在',404);
   var logs=tableRows_(tables.operations).filter(function(o){return o.task===m.task;}).slice(-100).reverse();
-  return {task:task.value,me:{name:m.name,role:m.role},
+  return {task:Object.assign({},task.value,{code:taskCodes_(tables)[m.task]}),me:{name:m.name,role:m.role},
     members:tableRows_(tables.members).filter(function(x){return x.task===m.task;}).map(function(x){return{name:x.name,role:x.role};}),
     orders:tableRows_(tables.orders).filter(function(o){return o.task===m.task;}).map(function(o){return{barcode:o.barcode,actual:o.actual,estimate:o.estimate,hasFilledEstimate:!!o.filled,abnormal:!!o.abnormal,scanCount:o.scans,version:o.version,estimateVersion:o.estimateVersion,actualVersion:o.actualVersion,lastScanTime:o.updated,done:(function(){var marks=tableRows_(tables.operations).filter(function(l){return l.task===m.task&&l.barcode===o.barcode&&l.kind==='done';});if(!marks.length)return false;try{return !!JSON.parse(marks[marks.length-1].afterValue).done;}catch(e){return false;}})()};}),
     logs:logs.map(function(o){return{id:o.id,actor:o.actor,kind:o.kind,barcode:o.barcode,beforeValue:o.beforeValue,afterValue:o.afterValue,time:o.time};})};
@@ -35,7 +44,7 @@ function plan_(tables,action,args,token){
       if(lookup_(tables.tasks,function(x){return x.id===args.taskId||x.code===args.code;}))reject_('任务标识冲突，请重试',409);
       t=add('tasks',{id:args.taskId,code:args.code,title:args.title.trim(),status:'active',revision:0}).value;
     }else{
-      var found=lookup_(tables.tasks,function(x){return x.code===String(args.code||'').trim().toUpperCase();});
+      var found=lookup_(tables.tasks,function(x){return x.code===String(args.code||'').trim().toUpperCase()||taskCodes_(tables)[x.id]===String(args.code||'').trim();});
       if(!found)reject_('任务码不存在',404);t=found.value;if(t.status!=='active')reject_('任务已归档',409);
     }
     var m=add('members',{token:sha_(token),task:t.id,name:args.name.trim(),role:action==='create'?'admin':'member'}).value;
@@ -182,9 +191,14 @@ function browserRequest(request){
     var args=Object.assign({},request.args||{});
     if(action==='create'){
       args.taskId=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,48);
-      args.code=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,16).toUpperCase();
+      args.code='';
     }
     var tables=readTables_(id,ids),result;
+    if(action==='create'){
+      var reserved=Object.values(taskCodes_(tables));
+      for(var attempt=0;attempt<100;attempt++){var candidate=String(parseInt(sha_(Utilities.getUuid()).slice(0,12),16)%100000000).padStart(8,'0');if(reserved.indexOf(candidate)<0){args.code=candidate;break;}}
+      if(!args.code)reject_('任务码繁忙，请重试',503);
+    }
     if(action==='sync'){
       if(!Array.isArray(args.operations)||args.operations.length>80)reject_('每批最多80项操作');
       // Authenticate even an empty batch. Failed plans never mutate the committed prefix.
