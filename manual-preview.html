@@ -288,7 +288,7 @@ $('taskManagerBtn').onclick=openTaskManager;$('reopenTaskBtn').onclick=openTaskM
 $('openTaskManager').onclick=()=>{$('settingsShade').classList.add('hidden');openTaskManager()};
 $('syncBtn').onclick=syncCloud;$('manualSync').onclick=syncCloud;
 $('clearBtn').classList.add('hidden');$('endpointInput').closest('label').classList.add('hidden');
-$('endpointInput').parentElement.querySelector('p.hint').textContent='已连接既有 Google Sheets。扫码仅保存在本机，下拉才会上传和下载。请勿清除浏览器站点数据，以免丢失待同步记录及管理员身份。';
+$('settingsShade').querySelector('p.hint').textContent='已连接既有 Google Sheets。扫码仅保存在本机，下拉才会上传和下载。请勿清除浏览器站点数据，以免丢失待同步记录及管理员身份。';
 $('saveSettings').onclick=()=>{toast('协作成员姓名在创建或加入任务时确定');$('settingsShade').classList.add('hidden')};
 $('restoreTaskBtn').onclick=()=>toast('已归档任务保持只读，可创建新任务');
 $('endTaskBtn').onclick=async()=>{
