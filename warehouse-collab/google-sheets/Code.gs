@@ -15,7 +15,7 @@ function publicSnapshot_(tables,m){
   var logs=tableRows_(tables.operations).filter(function(o){return o.task===m.task;}).slice(-100).reverse();
   return {task:task.value,me:{name:m.name,role:m.role},
     members:tableRows_(tables.members).filter(function(x){return x.task===m.task;}).map(function(x){return{name:x.name,role:x.role};}),
-    orders:tableRows_(tables.orders).filter(function(o){return o.task===m.task;}).map(function(o){return{barcode:o.barcode,actual:o.actual,estimate:o.estimate,hasFilledEstimate:!!o.filled,abnormal:!!o.abnormal,scanCount:o.scans,version:o.version,estimateVersion:o.estimateVersion,actualVersion:o.actualVersion,lastScanTime:o.updated};}),
+    orders:tableRows_(tables.orders).filter(function(o){return o.task===m.task;}).map(function(o){return{barcode:o.barcode,actual:o.actual,estimate:o.estimate,hasFilledEstimate:!!o.filled,abnormal:!!o.abnormal,scanCount:o.scans,version:o.version,estimateVersion:o.estimateVersion,actualVersion:o.actualVersion,lastScanTime:o.updated,done:(function(){var marks=tableRows_(tables.operations).filter(function(l){return l.task===m.task&&l.barcode===o.barcode&&l.kind==='done';});if(!marks.length)return false;try{return !!JSON.parse(marks[marks.length-1].afterValue).done;}catch(e){return false;}})()};}),
     logs:logs.map(function(o){return{id:o.id,actor:o.actor,kind:o.kind,barcode:o.barcode,beforeValue:o.beforeValue,afterValue:o.afterValue,time:o.time};})};
 }
 /** Pure planning: all table changes are committed together by one atomic batchUpdate. */
@@ -45,11 +45,12 @@ function plan_(tables,action,args,token){
   if(!member)reject_('会话无效，请重新加入任务',401);
   var m=member.value;
   if(action==='state')return{changes:[],data:publicSnapshot_(tables,m)};
-  if(action==='history')return{changes:[],data:{logs:tableRows_(tables.operations).filter(function(o){return o.task===m.task;}).map(function(o){return{actor:o.actor,kind:o.kind,barcode:o.barcode,payload:o.payload,beforeValue:o.beforeValue,afterValue:o.afterValue,time:o.time};})}};
+  if(action==='history')return{changes:[],data:{logs:tableRows_(tables.operations).filter(function(o){return o.task===m.task;}).map(function(o){return{id:o.id,clientTime:(function(){try{return JSON.parse(o.payload)[5]||'';}catch(e){return '';}})(),actor:o.actor,kind:o.kind,barcode:o.barcode,payload:o.payload,beforeValue:o.beforeValue,afterValue:o.afterValue,time:o.time};})}};
   if(action!=='op')reject_('未知接口',404);
   var b=args;
+  if(b.clientTime!==undefined&&(typeof b.clientTime!=='string'||!Number.isFinite(Date.parse(b.clientTime))))reject_('扫码时间格式无效');
   if(!/^[a-zA-Z0-9-]{16,100}$/.test(b.id||''))reject_('操作 ID 无效');
-  var payload=JSON.stringify([b.kind,b.barcode??null,b.value??null,b.expectedVersion??null,b.reason??null]);
+  var payload=JSON.stringify([b.kind,b.barcode??null,b.value??null,b.expectedVersion??null,b.reason??null].concat(b.clientTime?[b.clientTime]:[]));
   var prior=lookup_(tables.operations,function(o){return o.task===m.task&&o.id===b.id;});
   if(prior){if(prior.value.token!==m.token||prior.value.payload!==payload)reject_('操作 ID 已用于其他请求',409);return{changes:[],data:publicSnapshot_(tables,m)};}
   var task=lookup_(tables.tasks,function(t){return t.id===m.task;});
@@ -60,14 +61,14 @@ function plan_(tables,action,args,token){
     before='active';after='archived';task.value.status='archived';
   }else{
     if(!/^\d{8}$/.test(b.barcode||''))reject_('订单号必须为 8 位数字');
-    if(!['scan','adjust','estimate','actual','abnormal'].includes(b.kind))reject_('操作类型无效');
+    if(!['scan','adjust','estimate','actual','abnormal','done'].includes(b.kind))reject_('操作类型无效');
     var record=lookup_(tables.orders,function(o){return o.task===m.task&&o.barcode===b.barcode;});
     if(!record&&b.kind!=='scan')reject_('请先扫描该订单',404);
     if(!record)record=add('orders',{task:m.task,barcode:b.barcode,actual:0,estimate:0,filled:0,abnormal:0,scans:0,version:0,estimateVersion:0,actualVersion:0,updated:0});
     var o=record.value;before=JSON.stringify(o);
     if(b.kind==='scan'){o.actual++;o.scans++;o.actualVersion++;}
     else if(b.kind==='adjust'){
-      if(![1,-1].includes(b.value))reject_('调整量必须为 +1 或 -1');
+      if(!Number.isSafeInteger(b.value)||b.value===0||Math.abs(b.value)>99999)reject_('调整量必须为非零整数，绝对值不超过99999');
       if(typeof b.reason!=='string'||!b.reason.trim()||b.reason.length>200)reject_('请填写调整原因');
       o.actual+=b.value;o.actualVersion++;
     }else if(b.kind==='actual'||b.kind==='estimate'){
@@ -79,7 +80,7 @@ function plan_(tables,action,args,token){
         o.actual=b.value;
       }else{o.estimate=b.value;o.filled=1;}
       o[field]++;
-    }else o.abnormal=1;
+    }else if(b.kind==='done'){if(![0,1].includes(b.value))reject_('完成标记无效');o.done=b.value;}else {if(b.value!==undefined&&![0,1].includes(b.value))reject_('异常标记无效');o.abnormal=b.value===undefined?1:b.value;}
     if(o.actual<0||o.actual>999999999)reject_('实际数量超出允许范围');
     o.version++;o.updated=task.value.revision+1;after=JSON.stringify(o);update('orders',record);
   }
@@ -170,10 +171,10 @@ function json_(value){return ContentService.createTextOutput(JSON.stringify(valu
 function browserRequest(request){
   var lock;
   try{
-    if(!request||JSON.stringify(request).length>10000)reject_('请求格式错误');
+    if(!request||JSON.stringify(request).length>120000)reject_('请求格式错误');
     var action=request.action;
     if(action==='ping')return{ok:true,data:{online:true,backend:'Google Sheets',version:2}};
-    if(!['create','join','state','op','history'].includes(action))reject_('浏览器不允许调用此接口',403);
+    if(!['create','join','state','op','history','sync'].includes(action))reject_('浏览器不允许调用此接口',403);
     if(!/^[a-f0-9]{48}$/.test(request.token||''))reject_('会话无效，请重新加入任务',401);
     lock=LockService.getScriptLock();if(!lock.tryLock(20000))reject_('云端正在处理其他操作，请稍后用原编号重试',503);
     var props=PropertiesService.getScriptProperties(),id=props.getProperty('SPREADSHEET_ID'),ids=JSON.parse(props.getProperty('SHEET_IDS')||'null');
@@ -183,7 +184,24 @@ function browserRequest(request){
       args.taskId=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,48);
       args.code=sha_(Utilities.getUuid()+Utilities.getUuid()).slice(0,16).toUpperCase();
     }
-    var tables=readTables_(id,ids),result=plan_(tables,action,args,request.token);
+    var tables=readTables_(id,ids),result;
+    if(action==='sync'){
+      if(!Array.isArray(args.operations)||args.operations.length>80)reject_('每批最多80项操作');
+      // Authenticate even an empty batch. Failed plans never mutate the committed prefix.
+      plan_(tables,'state',{},request.token);
+      var accepted=[],changes=[],conflict=null;
+      for(var index=0;index<args.operations.length;index++){
+        var operation=args.operations[index],candidate=JSON.parse(JSON.stringify(tables));
+        try{
+          var planned=plan_(candidate,'op',operation,request.token);
+          tables=candidate;changes=changes.concat(planned.changes);accepted.push(operation.id);
+        }catch(err){conflict={id:operation.id,status:err.status||503,error:err.status?err.message:'此项结果待确认，请保留记录重试'};break;}
+      }
+      // Snapshot/history are read only on the user's manual refresh.
+      commit_(id,tables,changes);
+      return {ok:true,data:{accepted:accepted,conflict:conflict,snapshot:plan_(tables,'state',{},request.token).data}};
+    }
+    result=plan_(tables,action,args,request.token);
     commit_(id,tables,result.changes);
     return{ok:true,data:result.data};
   }catch(error){return{ok:false,status:error.status||503,error:error.status?error.message:'Google Sheets 暂时不可用，结果待确认，请使用原编号重试'};}
