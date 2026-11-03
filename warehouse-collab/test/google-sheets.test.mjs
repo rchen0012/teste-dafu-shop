@@ -177,11 +177,12 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  function browser(sharedStorage=new Map()){
   const elements=new Map();
   class Element{
-   constructor(id=''){this.id=id;this.value='';this.disabled=false;this.hidden=false;this.style={};this.dataset={};this.children=[];this.textContent='';this.parentElement={querySelector:()=>new Element()};const s=new Set();this.classList={add:x=>s.add(x),remove:x=>s.delete(x),contains:x=>s.has(x),toggle:(x,force)=>{if(force===undefined)force=!s.has(x);if(force)s.add(x);else s.delete(x);return force;}};}
+   constructor(id=''){this.id=id;this.value='';this.disabled=false;this.hidden=false;this.style={};this.dataset={};this.children=[];this.textContent='';this.parentElement={querySelector:()=>null};const s=new Set();this.classList={add:x=>s.add(x),remove:x=>s.delete(x),contains:x=>s.has(x),toggle:(x,force)=>{if(force===undefined)force=!s.has(x);if(force)s.add(x);else s.delete(x);return force;}};}
    set innerHTML(text){this._html=text;for(const match of text.matchAll(/id="([^"]+)"/g))get(match[1]);}
    get innerHTML(){return this._html||''}
    addEventListener(name,fn){(this.events||={})[name]=fn;}
    appendChild(x){this.children.push(x);return x;}append(x){this.children.push(x)}replaceChildren(){this.children=[];}before(){}setAttribute(){}focus(){}closest(){return new Element()}remove(){}
+   querySelector(){return new Element()}
    querySelectorAll(){return []}
   }
   const get=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id)};
