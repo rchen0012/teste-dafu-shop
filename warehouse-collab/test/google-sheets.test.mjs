@@ -13,19 +13,22 @@ const config={endpoint:'https://script.google.com/macros/s/TEST_DEPLOYMENT/exec'
 function fakeGoogle(){
   const grids={},ids={tasks:1,members:2,orders:3,operations:4};
   const props={WAREHOUSE_SECRET:secret,SPREADSHEET_ID:'test',SHEET_IDS:JSON.stringify(ids)};
-  let held=false,busy=false,failCommit=false;
+  let held=false,busy=false,failCommit=false,metadata=[];
   const ctx=vm.createContext({console,Utilities:{getUuid:randomUUID,DigestAlgorithm:{SHA_256:1},Charset:{UTF_8:1},computeDigest:(_,s)=>Array.from(createHash('sha256').update(s).digest()),computeHmacSha256Signature:(s,key)=>Array.from(createHmac('sha256',key).update(s).digest())},
-    PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k],setProperty:(k,v)=>props[k]=v})},
+    PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k],setProperty:(k,v)=>props[k]=v,deleteProperty:k=>delete props[k]})},
     ContentService:{MimeType:{JSON:1},createTextOutput:s=>({setMimeType:()=>s})},
     LockService:{getScriptLock:()=>({tryLock:()=>{if(busy||held)return false;held=true;return true;},hasLock:()=>held,releaseLock:()=>held=false})},
-    Sheets:{Spreadsheets:{Values:{batchGet:()=>({valueRanges:Object.keys(ids).map(k=>({values:grids[ids[k]].rows.slice(1)}))})},get:()=>({sheets:Object.keys(ids).map(k=>({properties:{sheetId:ids[k],gridProperties:{rowCount:grids[ids[k]].size}}}))}),batchUpdate:({requests})=>{
-      const next=structuredClone(grids);
+    Sheets:{Spreadsheets:{Values:{batchGet:()=>({valueRanges:Object.keys(ids).map(k=>({values:grids[ids[k]].rows.slice(1)}))})},get:()=>({developerMetadata:metadata,sheets:Object.keys(grids).map(k=>({properties:{sheetId:Number(k),title:grids[k].title||k,gridProperties:{rowCount:grids[k].size,columnCount:26}}}))}),batchUpdate:({requests})=>{
+      const next=structuredClone(grids),nextMetadata=structuredClone(metadata);
       for(const req of requests){if(req.appendDimension){next[req.appendDimension.sheetId].size+=req.appendDimension.length;continue;}
+        if(req.duplicateSheet){const d=req.duplicateSheet,id=Math.max(...Object.keys(next).map(Number))+1;next[id]=structuredClone(next[d.sourceSheetId]);next[id].title=d.newSheetName;continue;}
+        if(req.createDeveloperMetadata){nextMetadata.push(req.createDeveloperMetadata.developerMetadata);continue;}
+        if(req.updateCells.range){const r=req.updateCells.range,g=next[r.sheetId];g.rows=g.rows.slice(0,r.startRowIndex);continue;}
         const u=req.updateCells,g=next[u.start.sheetId];assert.ok(u.start.rowIndex<g.size);
         g.rows[u.start.rowIndex]=u.rows[0].values.map(c=>{const v=c.userEnteredValue;return v.numberValue??v.stringValue??v.boolValue??'';});
       }
       if(failCommit){failCommit=false;throw new Error('simulated atomic batch rejection');}
-      Object.assign(grids,next);
+      Object.assign(grids,next);metadata=nextMetadata;
     }}}});
   vm.runInContext(fs.readFileSync(new URL('../google-sheets/Code.gs',import.meta.url),'utf8'),ctx);
   for(const [k,id]of Object.entries(ids))grids[id]={size:20,rows:[Array.from(ctx.TABLES[k].headers)]};
@@ -188,16 +191,16 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
   const get=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id)};
   for(const m of html.matchAll(/id="([^"]+)"/g))get(m[1]);
   const store={getItem:k=>sharedStorage.get(k)||null,setItem:(k,v)=>sharedStorage.set(k,v),removeItem:k=>sharedStorage.delete(k)};
-  let calls=0;
+  let calls=0,failHistory=false;
   const ctx=vm.createContext({console,structuredClone,Date,JSON,Map,Set,Math,Number,String,Array,RegExp,Promise,Error,URL,Blob,crypto:{randomUUID},localStorage:store,navigator:{},setTimeout:()=>0,clearTimeout:()=>{},confirm:()=>true,prompt:()=>null,
    document:{getElementById:get,querySelector:s=>get(s),querySelectorAll:()=>[],createElement:()=>new Element(),addEventListener:()=>{}},
    window:{scrollY:0,addEventListener:()=>{}},
-   CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
+   CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;if(action==='history'&&failHistory){failHistory=false;throw Object.assign(new Error('history connection interrupted'),{status:503});}const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
   });
   vm.runInContext(fs.readFileSync(new URL('../../assets/manual-queue.js',import.meta.url),'utf8'),ctx);
   vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
-  return{get,store:sharedStorage,calls:()=>calls,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
+  return{get,store:sharedStorage,calls:()=>calls,failNextHistory:()=>failHistory=true,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
  }
  const a=browser();assert.equal(a.calls(),0,'opening UI must not contact cloud');
  a.get('newTaskCode').value='手动验收';a.get('newTaskMember').value='管理员';
@@ -216,6 +219,10 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  await b.get('manualSync').onclick();await restored.get('manualSync').onclick();
  assert.equal(restored.saved().orders[0].actual,4);assert.equal(restored.saved().cloud.outbox.length,0);
  assert.equal(restored.saved().logs.filter(l=>l.globalSeq).length,4);
+ restored.scan('00000002');g.grids[g.ids.tasks].rows=g.grids[g.ids.tasks].rows.slice(0,1);g.grids[g.ids.orders].rows=g.grids[g.ids.orders].rows.slice(0,1);
+ await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.syncErrorStatus,404);assert.equal(restored.saved().cloud.outbox.length,1);
+ await restored.get('recoverMissingTask').onclick();assert.equal(restored.saved().cloud.outbox.length,0);assert.equal(restored.saved().orders[0].actual,5);
+ restored.scan('00000002');restored.failNextHistory();await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.outbox.length,0);assert.equal(restored.saved().cloud.base[0].actual,6,'acknowledged base survives history download failure');
 });
 
 test('camera automatically rearms after box leaves, and pull cancellation never syncs',()=>{
@@ -236,4 +243,31 @@ test('new task codes are eight digits and legacy tasks keep eight-digit aliases 
  assert.equal(rpc('join',{name:'短码加入',code},c).data.task.id,'legacy-task-id');
  assert.equal(rpc('join',{name:'旧码兼容',code:'ABCDEF0123456789'},d).data.task.code,code);
  assert.equal(rpc('state',{},a).data.task.code,made.data.task.code);
+});
+
+test('admin reset requires password and role, backs up four tables atomically, and safely retries after lost response',()=>{
+ const g=fakeGoogle(),rpc=(action,args={},token='a'.repeat(48))=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+ const a='a'.repeat(48),b='b'.repeat(48);const s=rpc('create',{name:'管理员',title:'重置测试'},a).data;rpc('join',{name:'成员',code:s.task.code},b);rpc('op',{id:randomUUID(),kind:'scan',barcode:'00000001'},a);
+ assert.equal(rpc('resetStatus',{},a).data.configured,false);
+ g.props.RESET_PASSWORD_SETUP='test-reset-password-only';g.ctx.configureResetPassword();assert.equal(g.props.RESET_PASSWORD_SETUP,undefined);assert.ok(g.props.RESET_PASSWORD_HASH);assert.notEqual(g.props.RESET_PASSWORD_HASH,'test-reset-password-only');
+ assert.equal(rpc('resetStatus',{},a).data.configured,true);
+ const args={id:randomUUID(),password:'test-reset-password-only',confirm:'清除全部数据'};
+ assert.equal(rpc('reset',{...args,password:'wrong-password'},a).status,403);assert.equal(Object.keys(g.grids).length,4);
+ assert.equal(rpc('reset',args,b).status,403);assert.equal(rpc('reset',{...args,confirm:'错误'},a).status,400);
+ g.failNextCommit();assert.equal(rpc('reset',args,a).ok,false);assert.equal(g.grids[g.ids.tasks].rows.length,2);assert.equal(Object.keys(g.grids).length,4);
+ const reset=rpc('reset',args,a);assert.equal(reset.ok,true);assert.equal(reset.data.backups.length,4);assert.equal(Object.keys(g.grids).length,8);
+ for(const id of Object.values(g.ids))assert.equal(g.grids[id].rows.length,1,'headers retained, all data rows cleared');
+ assert.ok(Object.values(g.grids).some(x=>x.title?.includes('订单')&&x.rows.length===2),'backup contains original order');
+ assert.equal(rpc('state',{},a).status,401);assert.equal(rpc('reset',args,a).data.duplicate,true);assert.equal(Object.keys(g.grids).length,8,'retry cannot duplicate backup or reset');
+});
+test('only the original task admin can recover missing tasks, using its local base without losing pending operations',()=>{
+ const g=fakeGoogle(),rpc=(action,args={},token='a'.repeat(48))=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+ const a='a'.repeat(48),b='b'.repeat(48),s=rpc('create',{name:'管理员',title:'原任务'},a).data;rpc('join',{name:'成员',code:s.task.code},b);
+ const saved=rpc('op',{id:randomUUID(),kind:'scan',barcode:'00000002'},a).data;
+ g.grids[g.ids.tasks].rows=g.grids[g.ids.tasks].rows.slice(0,1);g.grids[g.ids.orders].rows=g.grids[g.ids.orders].rows.slice(0,1);
+ assert.equal(rpc('state',{},a).status,404);
+ const args={taskId:s.task.id,title:s.task.title,code:s.task.code,revision:saved.task.revision,base:saved.orders};
+ assert.equal(rpc('recover',args,b).status,403);assert.equal(rpc('recover',{...args,taskId:'other'},a).status,409);
+ assert.equal(rpc('recover',args,a).data.orders[0].actual,1);assert.equal(rpc('recover',args,a).data.orders[0].actual,1);
+ assert.equal(rpc('sync',{operations:[{id:randomUUID(),kind:'scan',barcode:'00000002'}]},a).data.snapshot.orders[0].actual,2);
 });
