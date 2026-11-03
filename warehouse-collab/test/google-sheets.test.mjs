@@ -195,6 +195,7 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
    CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
   });
   vm.runInContext(fs.readFileSync(new URL('../../assets/manual-queue.js',import.meta.url),'utf8'),ctx);
+  vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
   return{get,store:sharedStorage,calls:()=>calls,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
  }
@@ -215,4 +216,24 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  await b.get('manualSync').onclick();await restored.get('manualSync').onclick();
  assert.equal(restored.saved().orders[0].actual,4);assert.equal(restored.saved().cloud.outbox.length,0);
  assert.equal(restored.saved().logs.filter(l=>l.globalSeq).length,4);
+});
+
+test('camera automatically rearms after box leaves, and pull cancellation never syncs',()=>{
+ const ctx=vm.createContext({module:{exports:{}}});vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);
+ const {MobileScanGate,PullSyncGesture}=ctx.module.exports,g=new MobileScanGate();
+ assert.equal(g.hit('00000001',0),true);assert.equal(g.hit('00000001',100),false);
+ for(let t=200;t<1000;t+=100){g.hit('00000001',t);g.miss(t+20);}assert.equal(g.hit('00000001',1000),false,'one visible box cannot repeat');
+ for(let t=1100;t<=2000;t+=100)g.miss(t);assert.equal(g.hit('00000001',2100),true,'same order next box automatically scans after removal');
+ assert.equal(g.hit('00000002',2200),true,'different order scans continuously');
+ const pull=new PullSyncGesture();pull.start(10,10);pull.move(10,60);assert.equal(pull.finish(),false);pull.start(10,10);pull.move(10,110);assert.equal(pull.finish(),true);assert.equal(pull.finish(),false);pull.start(10,10);pull.move(100,150);assert.equal(pull.finish(),false);pull.start(10,10);pull.move(10,110);pull.cancel();assert.equal(pull.finish(),false);
+});
+test('new task codes are eight digits and legacy tasks keep eight-digit aliases plus original access',()=>{
+ const g=fakeGoogle(),rpc=(action,args,token)=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+ const a='1'.repeat(48),b='2'.repeat(48),c='3'.repeat(48),d='4'.repeat(48);
+ const made=rpc('create',{name:'管理员',title:'8位码'},a);assert.match(made.data.task.code,/^\d{8}$/);
+ const tables=g.ctx.readTables_('test',g.ids),legacy=g.ctx.plan_(tables,'create',{name:'旧成员',title:'旧任务',taskId:'legacy-task-id',code:'ABCDEF0123456789'},b);g.ctx.commit_('test',tables,legacy.changes);
+ const code=rpc('state',{},b).data.task.code;assert.match(code,/^\d{8}$/);assert.notEqual(code,made.data.task.code);
+ assert.equal(rpc('join',{name:'短码加入',code},c).data.task.id,'legacy-task-id');
+ assert.equal(rpc('join',{name:'旧码兼容',code:'ABCDEF0123456789'},d).data.task.code,code);
+ assert.equal(rpc('state',{},a).data.task.code,made.data.task.code);
 });
