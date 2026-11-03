@@ -1,2057 +1,318 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>订单箱数核验 · Google Sheets 多人协作</title>
-    <!-- 手机摄像头扫码库 -->
-    <script src="./assets/html5-qrcode.min.js"></script>
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
-        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: #f1f5f9; min-height: 100vh; min-height: 100dvh;
-            padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-            display: flex; justify-content: center; align-items: flex-start; font-size: 14px;
-        }
-        .card { max-width: 1200px; width: 100%; background: white; border-radius: 24px; box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15); overflow: hidden; }
-        .inner { padding: 16px 18px 22px; }
-        .logo-area { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-        .logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .logo-img { width: 40px; height: 40px; flex-shrink: 0; background: linear-gradient(135deg, #0f62fe 0%, #1e3a5f 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
-        .logo-text { font-size: 1rem; font-weight: 700; color: #1e3a5f; line-height: 1.2; }
-        .logo-text small { font-size: 0.6rem; font-weight: 400; color: #6c86a3; display: block; }
-        .company-info { text-align: right; font-size: 0.72rem; line-height: 1.4; }
-        .company-name { color: #8ba0bc; }
-        .company-name strong { color: #1e3a5f; }
-        h1 { font-size: 1.25rem; margin: 0 0 6px 0; color: #0a2540; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; line-height: 1.3; }
-        .badge { background: #e6f7e6; color: #2e7d32; font-size: 0.65rem; padding: 3px 10px; border-radius: 40px; font-weight: 500; white-space: nowrap; }
-        .sub { color: #4a5b6e; border-left: 3px solid #0f62fe; padding-left: 10px; margin: 6px 0 14px 0; font-size: 0.78rem; line-height: 1.5; }
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>DAFU 订单箱数核验 · 下拉同步</title>
+<style>
+:root{--blue:#0862c8;--dark:#084b9e;--pale:#eaf3ff;--line:#d6e2f2;--green:#087b38;--red:#cf2636}*{box-sizing:border-box}body{overscroll-behavior-y:contain;margin:0;background:#edf3fb;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#18283e}button,input{font:inherit}button{cursor:pointer}.app{max-width:540px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 25px #143a6412}.hero{background:linear-gradient(125deg,#064998,#0873db);color:white;padding:24px 17px 18px}.hero h1{margin:0;font-size:23px}.hero p{margin:7px 0 0;font-size:13px;opacity:.92}.sheet{margin:14px 12px 0;border-radius:13px;background:white;padding:13px;box-shadow:0 2px 10px #123b6420;color:#172b43}.sheetline{display:flex;justify-content:space-between;gap:8px;align-items:center}.sheetline strong{font-size:15px}.sub{font-size:12px;color:#54667b;margin-top:8px}.ok{color:var(--green);font-size:12px}.offline{color:#bd5b09;font-size:12px}.tabs{display:grid;grid-template-columns:repeat(5,1fr);margin:14px 10px 0;border-bottom:1px solid var(--line)}.tabs button{background:none;border:0;padding:12px 2px;font-size:13px;color:#36485c}.tabs button.active{color:#075ab8;font-weight:700;border-bottom:3px solid #0871e8}.panel{padding:14px 12px 24px}.scanbox{background:#f2f7ff;border:1px solid #cbdcf0;border-radius:12px;padding:14px}.scanbox h3{margin:0 0 9px;font-size:15px}.inputrow{display:flex;gap:8px}.inputrow input{min-width:0;flex:1;padding:12px;border:1px solid #aebed1;border-radius:8px;font-size:17px;letter-spacing:2px}.inputrow button{background:var(--blue);border:0;color:white;border-radius:8px;padding:0 15px;font-weight:700}.smallbuttons{display:flex;gap:8px;margin-top:10px}.smallbuttons button{flex:1;padding:10px 4px;border:1px solid #b9cbe1;background:white;border-radius:8px;color:#0d55a5}.smallbuttons button:disabled,.primary:disabled{opacity:.45;cursor:not-allowed}.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;background:white}.label{font-size:13px;color:#52667e}.order{font-size:25px;font-weight:800;letter-spacing:1px;margin:7px 0 15px}.notice{padding:12px;border-radius:9px;font-size:14px;line-height:1.6;margin:10px 0}.danger{background:#fff0f1;color:#ad1c30}.success{background:#e5f8ed;color:#08672d}.info{background:#eaf3ff;color:#0755a4}.numbers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.num{padding:13px;border-radius:9px;background:#edf4ff;text-align:center;border:1px solid #d0dff3}.num:nth-child(2){background:#e9faee;border-color:#c8ebd4}.num strong{display:block;font-size:34px;color:#075fca;margin-top:4px}.num:nth-child(2) strong{color:#078237}.progressrow{display:flex;justify-content:space-between;margin:15px 0 8px;font-size:14px}.track{height:13px;border-radius:10px;background:#dce4ed;overflow:hidden}.fill{height:100%;background:#086ce5;transition:width .2s}.primary{width:100%;background:linear-gradient(90deg,#0754b3,#0875eb);color:white;border:0;border-radius:9px;padding:13px;font-weight:700;margin-top:12px}.secondary{width:100%;background:white;color:#075ab5;border:1px solid #b6cce9;border-radius:9px;padding:12px;margin-top:8px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}.stat{text-align:center;border-right:1px solid #e0e8f3}.stat:last-child{border:0}.stat span{font-size:12px;color:#64748b}.stat strong{display:block;font-size:23px;margin-top:4px}.muted{color:#64748b;font-size:12px}.hidden{display:none!important}.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.keypad button{padding:12px 0;border:1px solid #b6c5d7;border-radius:8px;background:linear-gradient(#fff,#f0f4fa);font-size:20px;font-weight:650}.keypad button:active{background:#d5e8ff}.order-keypad{margin:12px 0 6px}.order-keypad button{padding:11px 0}.order-keypad button:last-child{color:#b82e3a}.modalshade{position:fixed;inset:0;background:#091e3c9c;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}.modal{background:white;width:min(100%,440px);max-height:95vh;overflow:auto;border-radius:16px;padding:18px;box-shadow:0 12px 40px #001c4150}.modal h2{margin:0 0 7px;font-size:19px}.modal input{width:100%;font-size:27px;text-align:center;border:2px solid #0869df;border-radius:9px;padding:10px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.record{border-bottom:1px solid #e1e8f2;padding:12px 2px;font-size:13px}.record:last-child{border:0}.pill{padding:4px 8px;background:#eaf3ff;border-radius:20px;font-size:12px}.setting input{width:100%;border:1px solid #b5c8de;border-radius:7px;padding:10px;margin-top:6px}.setting label{display:block;margin:13px 0;font-size:13px}.foot{padding:10px 12px;border-top:1px solid #e1e9f4;color:#6a7e92;font-size:11px;text-align:center}.camera{width:100%;margin-top:12px;overflow:hidden;border-radius:10px}.camera video{width:100%}#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#152d4b;color:white;border-radius:8px;padding:11px 17px;z-index:80;max-width:90vw;display:none;font-size:13px}.hint{font-size:12px;color:#6b7c8e;line-height:1.6}
+.brandrow{display:flex;align-items:center;gap:12px;min-height:56px}.brandrow img{display:block;width:88px;height:56px;object-fit:contain;background:transparent;border-radius:0;padding:0}.brandfallback{width:88px;height:56px;border-radius:0;background:transparent;color:#ffffff;font-weight:900;font-size:23px;align-items:center;justify-content:center;letter-spacing:1px}.brandrow h1{font-size:21px;line-height:1.3;flex:1;cursor:pointer}@media(max-width:370px){.brandrow h1{font-size:18px}.brandrow img,.brandfallback{width:72px}}
 
-        .scan-panel { background: #f8fafd; border-radius: 18px; padding: 14px; margin-bottom: 14px; border: 1px solid #e2edf7; transition: all 0.3s; position: relative; }
-        .scan-panel.locked { background: #f1f5f9; border-color: #cbd5e1; opacity: 0.6; pointer-events: none; }
-        .scan-panel.locked::after {
-            content: '🔒 弹窗打开中，扫码已锁定';
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(248, 250, 252, 0.85); border-radius: 18px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.9rem; font-weight: 700; color: #b91c1c;
-            letter-spacing: 1px; z-index: 10;
-        }
-        .scan-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; color: #1e3a5f; }
-        .scan-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .barcode-input {
-            flex: 1 1 220px; min-width: 0; background: white; border: 2px solid #cbdde9;
-            border-radius: 60px; padding: 11px 16px; font-size: 1rem;
-            font-family: 'Courier New', monospace; outline: none; letter-spacing: 1px;
-        }
-        .barcode-input:focus { border-color: #0f62fe; box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.1); }
-        .barcode-input.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; background: #fff5f5; }
-        .barcode-input.success { border-color: #16a34a; background: #f0fdf4; }
-        .btn-primary { background: #0f62fe; border: none; color: white; font-weight: 600; padding: 0 20px; height: 44px; border-radius: 60px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-        .btn-primary:hover { background: #0353e9; }
-        .btn-secondary { background: #eef2f6; border: 1px solid #ccdae5; color: #2c3e50; font-weight: 500; padding: 0 16px; height: 40px; border-radius: 60px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; }
-        .btn-success { background: #16a34a; border: none; color: white; font-weight: 700; padding: 0 22px; height: 46px; border-radius: 60px; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.4); white-space: nowrap; }
-        .btn-success:hover { background: #15803d; }
-        .btn-camera { background: #7c3aed; border: none; color: white; font-weight: 600; padding: 0 18px; height: 44px; border-radius: 60px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.4); }
-        .btn-camera:hover { background: #6d28d9; }
-        .status { margin-top: 10px; background: #e9f3fe; padding: 8px 14px; border-radius: 40px; font-size: 0.78rem; color: #0050b3; line-height: 1.4; word-break: break-all; transition: all 0.2s; }
-        .diff-summary { background: linear-gradient(135deg, #1e3a5f 0%, #0f62fe 100%); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 8px; color: white; }
-        .diff-summary-item { text-align: center; flex: 1; min-width: 70px; }
-        .diff-summary-item .label { font-size: 0.65rem; opacity: 0.85; margin-bottom: 3px; }
-        .diff-summary-item .value { font-size: 1.25rem; font-weight: 700; }
-        .stats-card { background: white; border-radius: 16px; border: 1px solid #e9edf2; overflow: hidden; }
-        .stats-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #e8f0fe; border-bottom: 1px solid #bdd4ff; flex-wrap: wrap; gap: 8px; }
-        .stats-header h3 { margin: 0; font-size: 0.9rem; }
-        .clear-btn { background: none; border: none; color: #c2410c; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 30px; font-size: 0.72rem; }
-        .table-wrapper { overflow-x: auto; overflow-y: auto; max-height: 55vh; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 0.75rem; }
-        th { text-align: left; padding: 9px 8px; background: #f9fbfd; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; white-space: nowrap; font-size: 0.72rem; z-index: 2; }
-        td { padding: 9px 8px; border-bottom: 1px solid #edf2f7; white-space: nowrap; vertical-align: middle; }
-        .barcode-cell { font-family: 'Courier New', monospace; word-break: break-all; font-size: 0.72rem; max-width: 180px; white-space: normal; }
-        .count-badge { background: #0f62fe10; color: #0f62fe; font-weight: 800; padding: 2px 10px; border-radius: 40px; display: inline-block; }
-        .estimate-value { font-weight: 600; color: #b45309; }
-        .diff-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
-        .diff-match { background: #dcfce7; color: #166534; }
-        .diff-mismatch { background: #fee2e2; color: #b91c1c; }
-        .abnormal-badge { display: inline-block; margin-left: 4px; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
-        .target-badge { display: inline-block; margin-left: 4px; background: #dbeafe; color: #0f62fe; border: 1px solid #93c5fd; font-size: 0.62rem; padding: 1px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
-        .row-error { background: #fff1f0 !important; animation: errorPulse 1.5s ease-in-out infinite; }
-        .row-error td { border-bottom: 1px solid #fecaca; }
-        .row-error .barcode-cell { color: #b91c1c; font-weight: 700; }
-        .row-error .count-badge { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-        .row-abnormal { background: #fffbeb !important; }
-        .row-abnormal td { border-bottom: 1px solid #fde68a; }
-        .row-target { background: #eff6ff !important; box-shadow: inset 3px 0 0 #0f62fe; }
-        .row-target td { border-bottom: 1px solid #bfdbfe; }
-        @keyframes errorPulse { 0%, 100% { background-color: #fff1f0; } 50% { background-color: #ffe4e2; } }
-        .error-icon { display: inline-block; margin-left: 3px; font-size: 0.8rem; animation: shake 0.5s ease-in-out; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
-        .adjust-btn { width: 26px; height: 26px; border-radius: 50%; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.1s; user-select: none; }
-        .adjust-plus { background: #dcfce7; color: #166534; }
-        .adjust-minus { background: #fee2e2; color: #b91c1c; }
-        .adjust-btn:active { transform: scale(0.9); }
-        .action-group { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
-        .edit-btn { background: none; border: 1px solid #0f62fe; color: #0f62fe; font-size: 0.66rem; padding: 3px 8px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
-        .edit-est-btn { border-color: #b45309; color: #b45309; }
-        .total-row { background: #f1f5f9; font-weight: 700; }
-        .empty-row td { text-align: center; padding: 36px 16px; color: #8ba0bc; white-space: normal; }
-        .footer-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-        .shortcut-hint { font-size: 0.62rem; color: #5f7d9c; margin-top: 6px; padding: 4px 10px; background: #f0f4f9; border-radius: 20px; display: inline-block; line-height: 1.5; }
-        .sound-toggle { background: #f0f4f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.68rem; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
-        .sound-toggle.muted { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+/* DAFU mint theme — primary #37BEB0 */
+:root{--blue:#37BEB0;--dark:#238F84;--pale:#EAF9F6;--line:#CDE9E4}
+body{background:#EAF6F3}
+.hero{background:linear-gradient(125deg,#238F84,#37BEB0)}
+.tabs button.active{color:#167D73;border-bottom-color:#37BEB0}
+.scanbox{background:#F0FAF8;border-color:#C5EAE3}
+.inputrow button{background:#37BEB0;color:#073E39}
+.smallbuttons button{border-color:#B7E1D9;color:#167D73}
+.card{border-color:#CDE9E4}
+.info{background:#EAF9F6;color:#167D73}
+.num{background:#EAF9F6;border-color:#CDE9E4}
+.num strong{color:#167D73}
+.track{background:#D9EEE9}
+.fill{background:#37BEB0}
+.primary{background:linear-gradient(90deg,#238F84,#37BEB0);color:#fff}
+.secondary{color:#167D73;border-color:#B7E1D9}
+.keypad button:active{background:#D5F2EC}
+.modal input{border-color:#37BEB0}
+.pill{background:#EAF9F6;color:#167D73}
+.setting input:focus,.inputrow input:focus{outline:2px solid #37BEB0;outline-offset:1px}
 
-        .locate-panel { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
-        .locate-title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-        .locate-title span { font-weight: 700; font-size: 0.85rem; color: #9a3412; }
-        .locate-status { font-size: 0.68rem; font-weight: 600; color: #c2410c; background: #ffedd5; border: 1px solid #fed7aa; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
-        .locate-status.on { background: #dcfce7; color: #166534; border-color: #86efac; }
-        .locate-input-area { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .locate-input {
-            flex: 1 1 180px; min-width: 0; background: white; border: 2px solid #fed7aa;
-            border-radius: 60px; padding: 10px 16px; font-size: 0.95rem;
-            font-family: 'Courier New', monospace; outline: none; letter-spacing: 1px;
-            cursor: pointer;
-        }
-        .locate-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15); }
-        .locate-input.hit { border-color: #16a34a; background: #f0fdf4; }
-        .locate-input[readonly] { background: #fffbf5; }
-        .btn-locate-on { background: #ea580c; border: none; color: white; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-        .btn-locate-on:hover { background: #c2410c; }
-        .btn-locate-off { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 600; padding: 0 16px; height: 40px; border-radius: 60px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+/* DAFU mini-app launch animation */
+#launchSplash{position:fixed;inset:0;z-index:9999;background:linear-gradient(155deg,#e8faf7 0%,#37BEB0 55%,#178e84 100%);display:flex;align-items:center;justify-content:center;padding:24px;transition:opacity .5s ease,visibility .5s ease}
+#launchSplash.splash-out{opacity:0;visibility:hidden;pointer-events:none}
+/* Independent CSS fallback: never block the app if a script fails. */
+#launchSplash{animation:launchAutoDismiss .35s ease 2.4s forwards}
+@keyframes launchAutoDismiss{to{opacity:0;visibility:hidden;pointer-events:none}}
+.splash-content{text-align:center;width:min(100%,360px);animation:splash-rise .75s cubic-bezier(.2,.8,.2,1) both}
+.splash-logo{display:block;max-width:min(65vw,220px);max-height:130px;width:auto;height:auto;object-fit:contain;margin:0 auto 25px;filter:drop-shadow(0 8px 15px #064e4540);animation:splash-breathe 1.6s ease-in-out infinite}
+.splash-logo-text{font-size:52px;font-weight:900;letter-spacing:6px;color:white;margin-bottom:24px;text-shadow:0 6px 15px #065f5640}
+.splash-title{color:#fff;font-weight:800;font-size:23px;letter-spacing:2px;margin:0 0 10px}
+.splash-subtitle{color:#f2fffc;font-size:13px;letter-spacing:2px;margin:0}
+.splash-loading{display:flex;gap:7px;justify-content:center;margin-top:34px}
+.splash-loading i{width:9px;height:9px;background:white;border-radius:50%;animation:splash-dot 1s infinite ease-in-out}
+.splash-loading i:nth-child(2){animation-delay:.15s}.splash-loading i:nth-child(3){animation-delay:.3s}
+.splash-skip{position:absolute;top:max(20px,env(safe-area-inset-top));right:18px;border:1px solid #ffffff88;color:white;background:#ffffff22;border-radius:20px;padding:7px 15px;font-size:12px}
+@keyframes splash-rise{from{transform:translateY(22px) scale(.94);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes splash-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes splash-dot{0%,70%,100%{opacity:.35;transform:scale(.7)}35%{opacity:1;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.splash-content,.splash-logo,.splash-loading i{animation:none}#launchSplash{transition:none}}
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
-        .modal-overlay.show { display: flex; }
-        .modal-box { background: white; border-radius: 22px; padding: 20px 18px 18px; max-width: 380px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); animation: modalPop 0.25s ease-out; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
-        @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .modal-icon { width: 46px; height: 46px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; }
-        .modal-title { font-size: 1.05rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
-        .modal-barcode { font-family: 'Courier New', monospace; font-size: 0.82rem; color: #0f62fe; background: #eff6ff; padding: 7px 14px; border-radius: 10px; text-align: center; margin-bottom: 10px; word-break: break-all; font-weight: 700; letter-spacing: 1px; }
-        .modal-desc { font-size: 0.78rem; color: #64748b; text-align: center; margin-bottom: 12px; line-height: 1.5; }
-        .modal-desc strong { color: #0f62fe; }
-        .modal-display { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; padding: 10px 16px; text-align: center; font-size: 2rem; font-weight: 800; color: #0f62fe; letter-spacing: 2px; min-height: 62px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: 0.2s; cursor: pointer; font-family: 'Courier New', monospace; user-select: none; }
-        .modal-display.empty { color: #cbd5e1; font-size: 1rem; font-weight: 400; }
-        .modal-display.error { border-color: #ef4444; animation: shake 0.4s ease-in-out; }
-        .modal-display.success { border-color: #16a34a; background: #f0fdf4; }
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 10px; }
-        .key { background: #f1f5f9; border: none; border-radius: 12px; padding: 14px 0; font-size: 1.3rem; font-weight: 700; color: #1e293b; cursor: pointer; transition: 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .key:active { background: #cbd5e1; transform: scale(0.95); }
-        .key-func { background: #e0e7ff; color: #3730a3; font-size: 0.95rem; }
-        .key-delete { background: #fee2e2; color: #b91c1c; font-size: 1.15rem; }
-        .modal-buttons { display: flex; gap: 8px; margin-top: 4px; }
-        .modal-btn { flex: 1; padding: 13px; border-radius: 14px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .modal-btn-confirm { background: #0f62fe; color: white; flex: 2; }
-        .modal-btn-confirm:disabled { background: #cbd5e1; cursor: not-allowed; }
-        .modal-btn-confirm.ready { background: #16a34a; }
-        .modal-btn-confirm:active { transform: scale(0.98); }
-        .modal-btn-cancel { background: #f1f5f9; color: #475569; }
+.box-detail{margin-top:9px;border:1px solid #cce9e5;border-radius:10px;background:#f5fcfa;padding:10px}.box-detail summary{cursor:pointer;font-weight:700;color:#167b70;list-style:none}.box-detail summary::-webkit-details-marker{display:none}.box-detail summary:before{content:'▸ ';}.box-detail[open] summary:before{content:'▾ ';}.box-line{display:grid;grid-template-columns:64px 1fr;gap:8px;padding:9px 3px;border-bottom:1px solid #d8eae7;font-size:13px}.box-line:last-child{border-bottom:0}.box-time{font-variant-numeric:tabular-nums;color:#415b60}.box-extra{font-size:11px;color:#718483;margin-top:3px}.box-warning{color:#b72936;font-weight:700}.box-summary{margin-top:5px;font-size:12px;color:#647b78}
 
-        .warn-modal { max-width: 380px !important; padding: 24px 20px 20px !important; }
-        .warn-icon { width: 60px; height: 60px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 12px; animation: shake 0.6s; }
-        .warn-title { font-size: 1.25rem; font-weight: 800; color: #dc2626; text-align: center; margin-bottom: 8px; }
-        .warn-code { font-family: 'Courier New', monospace; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 12px; font-weight: 700; letter-spacing: 1px; }
-        .warn-desc { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 16px; line-height: 1.5; }
-        .warn-desc strong { color: #dc2626; font-size: 1.1rem; }
-        .warn-buttons { display: flex; flex-direction: column; gap: 8px; }
-        .btn-warn-fix { background: #0f62fe; color: white; }
-        .btn-warn-abnormal { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-        .warn-tip { font-size: 0.68rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.4; }
-
-        .locate-modal { max-width: 340px !important; padding: 28px 20px 22px !important; text-align: center; }
-        .locate-success-icon { width: 84px; height: 84px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; margin: 0 auto 16px; box-shadow: 0 10px 28px -6px rgba(34, 197, 94, 0.6); animation: locatePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes locatePop { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
-        .locate-success-title { font-size: 1.3rem; font-weight: 800; color: #15803d; margin-bottom: 8px; }
-        .locate-success-code { font-family: 'Courier New', monospace; font-size: 1rem; color: #0a2540; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 9px 14px; border-radius: 12px; margin-bottom: 16px; font-weight: 700; letter-spacing: 1px; word-break: break-all; }
-        .locate-success-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: #16a34a; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; }
-        .locate-success-btn:active { transform: scale(0.98); }
-
-        /* 手机摄像头扫码弹窗（正方形自定义取景框） */
-        .camera-modal { max-width: 640px !important; padding: 16px !important; }
-        .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .camera-title { font-size: 1rem; font-weight: 700; color: #0a2540; display: flex; align-items: center; gap: 6px; }
-        .camera-close { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; font-weight: 700; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; cursor: pointer; }
-        
-        .camera-stage {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            max-height: 60vh;
-            border-radius: 16px;
-            overflow: hidden;
-            background: #0a2540;
-            margin: 0 auto;
-        }
-        #reader { width: 100%; height: 100%; }
-        #reader video { border-radius: 16px; object-fit: cover; }
-        
-        /* 隐藏 html5-qrcode 默认的扫描框（虚线/方框） */
-        #reader__scan_region { background: transparent !important; }
-        #reader__scan_region img { display: none !important; } /* 隐藏默认中间的图标/线 */
-        #reader__dashboard { display: none !important; }
-        #qr-shaded-region { display: none !important; }
-
-        /* 自定义正方形取景框（白角） */
-        .custom-scan-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            /* 宽高由 JS 在启动时根据画布尺寸计算并设置，确保绝对正方形 */
-            width: 240px;
-            height: 240px;
-            border-radius: 8px;
-            box-shadow: 0 0 0 4000px rgba(15, 23, 42, 0.55); /* 遮罩外部 */
-            z-index: 2;
-            pointer-events: none;
-        }
-        .custom-scan-box::before,
-        .custom-scan-box::after,
-        .custom-scan-box .corner-br,
-        .custom-scan-box .corner-bl {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border: 4px solid #fff;
-            border-radius: 4px;
-        }
-        .custom-scan-box::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 8px; }
-        .custom-scan-box::after { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 8px; }
-        .custom-scan-box .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 8px; }
-        .custom-scan-box .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 8px; }
-
-        .camera-flash {
-            position: absolute; inset: 0; pointer-events: none;
-            border-radius: 16px;
-            box-shadow: inset 0 0 0 0 rgba(34, 197, 94, 0);
-            transition: box-shadow 0.15s ease;
-            z-index: 5;
-        }
-        .camera-flash.flash {
-            animation: cameraFlash 0.45s ease-out;
-        }
-        @keyframes cameraFlash {
-            0% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0.95), 0 0 24px 6px rgba(34,197,94,0.55); background: rgba(34,197,94,0.12); }
-            100% { box-shadow: inset 0 0 0 6px rgba(34,197,94,0), 0 0 0 0 rgba(34,197,94,0); background: rgba(34,197,94,0); }
-        }
-        .camera-last {
-            margin-top: 10px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-            border-radius: 12px;
-            padding: 8px 12px;
-            font-size: 0.78rem;
-            text-align: center;
-            font-weight: 600;
-            min-height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            word-break: break-all;
-        }
-        .camera-last.empty { background: #f8fafc; border-color: #e2e8f0; color: #94a3b8; font-weight: 400; }
-        .camera-tip { text-align: center; font-size: 0.72rem; color: #64748b; margin-top: 8px; line-height: 1.5; }
-        .camera-error { background: #fff1f0; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 12px; border-radius: 10px; font-size: 0.78rem; text-align: center; margin-top: 8px; display: none; }
-
-        .summary-modal { max-width: 520px !important; padding: 22px 18px 18px !important; }
-        .summary-header-icon { width: 54px; height: 54px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 10px; color: white; box-shadow: 0 8px 20px -4px rgba(22, 163, 74, 0.5); }
-        .summary-title { font-size: 1.2rem; font-weight: 800; color: #0a2540; text-align: center; margin-bottom: 4px; }
-        .summary-subtitle { font-size: 0.76rem; color: #64748b; text-align: center; margin-bottom: 14px; }
-        .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
-        .summary-stat { background: #f8fafc; border-radius: 12px; padding: 8px 6px; text-align: center; border: 1px solid #e2e8f0; }
-        .summary-stat .lbl { font-size: 0.62rem; color: #64748b; margin-bottom: 2px; }
-        .summary-stat .val { font-size: 1.15rem; font-weight: 800; color: #0f62fe; }
-        .summary-stat.diff-ok .val { color: #16a34a; }
-        .summary-stat.diff-bad .val { color: #dc2626; }
-        .summary-list-title { font-size: 0.78rem; font-weight: 700; color: #0a2540; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .summary-list-title .count-tag { background: #fee2e2; color: #b91c1c; font-size: 0.66rem; padding: 1px 8px; border-radius: 20px; font-weight: 700; }
-        .summary-list { max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 14px; background: #fafbfc; -webkit-overflow-scrolling: touch; }
-        .summary-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; border-bottom: 1px solid #edf2f7; gap: 8px; }
-        .summary-item:last-child { border-bottom: none; }
-        .summary-item-code { font-family: 'Courier New', monospace; font-size: 0.72rem; color: #0a2540; word-break: break-all; flex: 1; font-weight: 600; }
-        .summary-item-nums { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-        .summary-num-chip { font-size: 0.66rem; padding: 2px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
-        .chip-est { background: #fef3c7; color: #b45309; }
-        .chip-act { background: #dbeafe; color: #0f62fe; }
-        .chip-diff-bad { background: #fee2e2; color: #b91c1c; }
-        .chip-abn { background: #fef3c7; color: #92400e; }
-        .summary-all-good { text-align: center; padding: 26px 14px; color: #16a34a; font-size: 0.85rem; font-weight: 600; }
-        .summary-all-good .big { font-size: 1.8rem; display: block; margin-bottom: 4px; }
-        .summary-actions { display: flex; gap: 7px; flex-wrap: wrap; }
-        .summary-actions .modal-btn { padding: 11px 12px; font-size: 0.85rem; flex: 1 1 0; min-width: 70px; }
-        .btn-continue { background: #0f62fe; color: white; }
-        .btn-finish { background: #dc2626; color: white; }
-        .btn-export-in-summary { background: #f0f4f9; color: #334155; border: 1px solid #cbd5e1; }
-
-        @media (max-width: 700px) {
-            body { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); align-items: flex-start; font-size: 13px; }
-            .card { border-radius: 18px; }
-            .inner { padding: 12px 12px 16px; }
-            .logo-area { flex-direction: column; align-items: flex-start; gap: 6px; }
-            .company-info { text-align: left; }
-            h1 { font-size: 1.05rem; }
-            .badge { font-size: 0.6rem; padding: 2px 8px; }
-            .sub { font-size: 0.72rem; margin: 4px 0 10px 0; }
-            .scan-panel { padding: 10px; border-radius: 14px; margin-bottom: 10px; }
-            .scan-input-area { gap: 6px; }
-            .barcode-input { flex: 1 1 100%; font-size: 0.95rem; padding: 10px 14px; }
-            .btn-primary, .btn-secondary, .btn-camera { height: 40px; font-size: 0.8rem; padding: 0 14px; flex: 1; min-width: 0; }
-            .btn-success { width: 100%; }
-            .diff-summary { padding: 10px; margin-bottom: 10px; }
-            .diff-summary-item .value { font-size: 1.05rem; }
-            .stats-header { padding: 8px 10px; }
-            .stats-header h3 { font-size: 0.82rem; }
-            .clear-btn { font-size: 0.68rem; }
-            .table-wrapper { max-height: 50vh; }
-            table { font-size: 0.72rem; min-width: 580px; }
-            th, td { padding: 7px 6px; }
-            .footer-buttons { flex-direction: column; gap: 6px; }
-            .footer-buttons button { width: 100%; }
-            .shortcut-hint { font-size: 0.58rem; padding: 4px 8px; }
-            .modal-box { padding: 16px 14px 14px; border-radius: 18px; max-width: 100%; }
-            .modal-title { font-size: 0.98rem; }
-            .modal-barcode { font-size: 0.78rem; padding: 6px 10px; }
-            .modal-desc { font-size: 0.73rem; }
-            .modal-display { font-size: 1.8rem; min-height: 58px; }
-            .keypad { gap: 6px; }
-            .key { padding: 13px 0; font-size: 1.2rem; }
-            .modal-btn { padding: 12px; font-size: 0.9rem; }
-            .summary-modal { padding: 18px 14px 14px !important; }
-            .summary-title { font-size: 1.1rem; }
-            .summary-stats { grid-template-columns: repeat(3, 1fr); }
-            .summary-stat .val { font-size: 1rem; }
-            .summary-list { max-height: 200px; }
-            .summary-item { padding: 8px 9px; }
-            .summary-item-code { font-size: 0.68rem; }
-            .locate-panel { padding: 10px; }
-            .locate-input { flex: 1 1 100%; font-size: 0.9rem; padding: 9px 14px; }
-            .btn-locate-on, .btn-locate-off { flex: 1; min-width: 0; }
-            .camera-modal { padding: 12px !important; }
-            .camera-stage { max-height: 70vh; }
-        }
-        @media (max-height: 500px) and (orientation: landscape) {
-            body { padding: 6px 12px; align-items: flex-start; }
-            .inner { padding: 10px 14px 14px; }
-            h1 { font-size: 1rem; }
-            .scan-panel { padding: 8px 10px; margin-bottom: 8px; }
-            .diff-summary { padding: 8px 12px; margin-bottom: 8px; }
-            .table-wrapper { max-height: 38vh; }
-            .modal-box { max-width: 480px; padding: 14px 16px; }
-            .modal-display { min-height: 50px; font-size: 1.6rem; }
-            .key { padding: 10px 0; font-size: 1.05rem; }
-            .keypad { gap: 5px; margin-bottom: 6px; }
-            .modal-buttons { margin-top: 2px; }
-            .modal-btn { padding: 10px; font-size: 0.85rem; }
-        }
-        @media (max-width: 360px) {
-            h1 { font-size: 0.95rem; }
-            .logo-text { font-size: 0.88rem; }
-            .scan-panel { padding: 8px; }
-            .diff-summary-item .value { font-size: 0.95rem; }
-            table { min-width: 540px; font-size: 0.68rem; }
-            .key { padding: 11px 0; font-size: 1.1rem; }
-            .summary-actions .modal-btn { font-size: 0.78rem; padding: 10px 8px; }
-        }
-        @media (min-width: 1200px) {
-            .inner { padding: 24px 28px 32px; }
-            h1 { font-size: 1.6rem; }
-            .card { border-radius: 32px; }
-            .barcode-input { font-size: 1.05rem; padding: 13px 20px; }
-            .btn-primary { height: 50px; font-size: 0.95rem; }
-            table { font-size: 0.82rem; }
-        }
-    </style>
-<link rel="stylesheet" href="./assets/collaboration.css">
-</head>
-<body>
-<div class="card">
-    <div class="inner">
-        <section class="collab-panel" aria-label="多人协作">
-          <strong>Google Sheets 多人协作 · 每扫一次 +1 箱</strong>
-          <span id="connectionState" role="status" aria-live="polite">未加入任务</span>
-          <div id="collabLobby">
-            <div class="collab-row"><input id="operatorName" placeholder="你的姓名" maxlength="40" aria-label="操作人姓名"></div>
-            <div class="collab-row"><input id="newTaskTitle" placeholder="新任务名称" maxlength="80" aria-label="新任务名称"><button id="createTask">创建任务</button></div>
-            <div class="collab-row"><input id="joinCode" placeholder="输入管理员提供的任务码" maxlength="16" aria-label="任务码"><button id="joinTask">加入任务</button></div>
-          </div>
-          <div id="collabTask" hidden>
-            <div class="collab-row"><strong id="taskTitle"></strong><span id="memberLabel"></span></div>
-            <div class="collab-row">任务码：<code id="taskCode"></code><button id="copyTask" class="quiet">复制任务码</button></div>
-            <div class="collab-row"><button id="downloadHistory" class="quiet">导出操作记录</button><button id="archiveTask" class="danger">结束并归档任务</button><button id="leaveTask" class="quiet">退出任务</button></div>
-            <details><summary>最近 100 条操作记录（成员数是已加入人数）</summary><div id="collabLogs"></div></details>
-          </div>
-          <div id="pendingBox" hidden><div id="pendingText"></div><button id="retryPending">核对并重试（不会重复计数）</button></div>
-          <div id="collabError" role="alert"></div>
-          <p id="httpsHint" class="collab-notice" hidden>手机摄像头需要 HTTPS，请从正式网站打开此页面。</p>
-          <p class="collab-notice">直接连接 Google Sheets，无需本地服务器或证书。其他设备约15秒同步一次。断线或结果不明时请先核对，不要重复扫描同一箱。</p>
-        </section>
-        <div class="logo-area">
-            <div class="logo">
-                <div class="logo-img">📦</div>
-                <div class="logo-text">
-                    订单箱数验证程序
-                    <small>Box Counter System</small>
-                </div>
-            </div>
-            <div class="company-info">
-                <div class="company-name">
-                    <strong>预估 vs 实际</strong><br>
-                    8位订单 · 多人共享累计
-                </div>
-            </div>
-        </div>
-
-        <h1>
-            📦 · 箱子计数
-            <span class="badge">🔁 新码置顶 · 🔒 订单 · 🔍 查找定位 · 📷 连续扫码</span>
-        </h1>
-        <div class="sub">
-            🧾 扫码枪 / 📷 手机扫码（二维码 / 条形码） / 手动累加
-        </div>
-
-        <div class="scan-panel" id="scanPanel">
-            <div class="scan-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-                <span>🎯 扫码区 <span style="font-size:0.7rem;color:#8ba0bc;font-weight:400;">（扫码枪输入 / 手机扫码 / 手动累加）</span></span>
-                <button id="soundToggle" class="sound-toggle" title="开/关提示音">🔊 提示音：开</button>
-            </div>
-            <div class="scan-input-area">
-                <input type="text" id="barcodeInput" class="barcode-input" placeholder="扫码枪输入订单号..." inputmode="none" autocomplete="off">
-                <button id="cameraBtn" class="btn-camera">📷 手机扫码</button>
-                <button id="addBtn" class="btn-primary">➕ 手动累加</button>
-                <button id="clearInputBtn" class="btn-secondary">🗑️ 清空</button>
-            </div>
-            <div id="statusMsg" class="status">
-                ✅ 就绪 | 订单号必须为 8 位数字
-            </div>
-            <div class="shortcut-hint">
-                💡 扫码枪直接扫 | 📷 手机扫码打开摄像头（可连续扫） | ➕ 手动累加弹虚拟键盘
-            </div>
-        </div>
-
-        <div class="locate-panel">
-            <div class="locate-title">
-                <span>🔍 查找定位</span>
-                <span class="locate-status" id="locateStatus">未开启</span>
-            </div>
-            <div class="locate-input-area">
-                <input type="text" id="locateInput" class="locate-input" placeholder="点击输入目标单号（8位）" inputmode="none" autocomplete="off" readonly>
-                <button id="locateOnBtn" class="btn-locate-on">🎯 开启定位</button>
-                <button id="locateOffBtn" class="btn-locate-off" style="display:none;">✖ 关闭定位</button>
-            </div>
-            <div class="shortcut-hint" style="margin-top:8px;">
-                💡 点击输入框弹虚拟键盘输入 8 位目标单号；扫到目标单号会响提示音并弹勾，表格高亮
-            </div>
-        </div>
-
-        <div class="diff-summary">
-            <div class="diff-summary-item">
-                <div class="label">📊 预估总计</div>
-                <div class="value" id="estimateTotal">0</div>
-            </div>
-            <div class="diff-summary-item">
-                <div class="label">📦 实际总计</div>
-                <div class="value" id="actualTotal">0</div>
-            </div>
-            <div class="diff-summary-item">
-                <div class="label">⚠️ 差异</div>
-                <div class="value" id="diffTotal">0</div>
-            </div>
-        </div>
-
-        <div class="stats-card">
-            <div class="stats-header">
-                <h3>📦 箱子清单 <span style="font-size:0.68rem;">(新码置顶 · 8位订单)</span></h3>
-                <button id="clearAllBtn" class="clear-btn">🧹 清空全部</button>
-            </div>
-            <div class="table-wrapper">
-                <table id="boxTable">
-                    <thead>
-                        <tr>
-                            <th>订单号</th>
-                            <th>预估</th>
-                            <th>实际</th>
-                            <th>对比</th>
-                            <th>调整</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr class="empty-row"><td colspan="5">暂无订单记录，加入任务后请扫码添加</td></tr>
-                    </tbody>
-                    <tfoot id="tableFoot" style="display: none;">
-                        <tr class="total-row"><td><strong>总计</strong></td><th id="estimateFooter">0</th><th id="actualFooter">0</th><th id="diffFooter">0</th><th></th></tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-
-        <div class="footer-buttons">
-            <button id="exportBtn" class="btn-secondary">📎 导出 CSV</button>
-            <button id="finishBtn" class="btn-success">✅ 完成 (汇总差异)</button>
-        </div>
-    </div>
-</div>
-
-<!-- 弹窗 1：订单号虚拟键盘 -->
-<div class="modal-overlay" id="orderModalOverlay">
-    <div class="modal-box">
-        <div class="modal-icon" style="background:#dbeafe;">⌨️</div>
-        <div class="modal-title">输入订单号</div>
-        <div class="modal-desc" style="margin-bottom:8px;">
-            订单号必须为 <strong>8 位数字</strong>
-        </div>
-        <div class="modal-display" id="orderDisplay">0</div>
-        <div class="keypad">
-            <button class="key" data-order-key="1">1</button>
-            <button class="key" data-order-key="2">2</button>
-            <button class="key" data-order-key="3">3</button>
-            <button class="key" data-order-key="4">4</button>
-            <button class="key" data-order-key="5">5</button>
-            <button class="key" data-order-key="6">6</button>
-            <button class="key" data-order-key="7">7</button>
-            <button class="key" data-order-key="8">8</button>
-            <button class="key" data-order-key="9">9</button>
-            <button class="key key-func" data-order-action="clear">清空</button>
-            <button class="key" data-order-key="0">0</button>
-            <button class="key key-delete" data-order-action="delete">⌫</button>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" id="orderCancelBtn">取消</button>
-            <button class="modal-btn modal-btn-confirm" id="orderConfirmBtn" disabled>确认</button>
-        </div>
-    </div>
-</div>
-
-<!-- 弹窗 2：预估/实际数量键盘 -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-box">
-        <div class="modal-icon" id="modalIcon">🔁</div>
-        <div class="modal-title" id="modalTitle">输入预估总数</div>
-        <div class="modal-barcode" id="modalBarcode">-</div>
-        <div class="modal-desc" id="modalDesc">
-            填写该订单的共享预估<br>
-            请输入该订单的<strong>预估总数</strong>
-        </div>
-        <div class="modal-display" id="modalDisplay">0</div>
-        <div class="keypad">
-            <button class="key" data-key="1">1</button>
-            <button class="key" data-key="2">2</button>
-            <button class="key" data-key="3">3</button>
-            <button class="key" data-key="4">4</button>
-            <button class="key" data-key="5">5</button>
-            <button class="key" data-key="6">6</button>
-            <button class="key" data-key="7">7</button>
-            <button class="key" data-key="8">8</button>
-            <button class="key" data-key="9">9</button>
-            <button class="key key-func" data-action="clear">清空</button>
-            <button class="key" data-key="0">0</button>
-            <button class="key key-delete" data-action="delete">⌫</button>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">取消</button>
-            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">确认</button>
-        </div>
-    </div>
-</div>
-
-<!-- 弹窗 3：实际数量超出预估警告（必须二选一处理） -->
-<div class="modal-overlay" id="warnModalOverlay">
-    <div class="modal-box warn-modal">
-        <div class="warn-icon">🚨</div>
-        <div class="warn-title">实际数量超出预估</div>
-        <div class="warn-code" id="warnBarcode">-</div>
-        <div class="warn-desc">
-            当前预估：<strong id="warnEstimate">0</strong> 箱<br>
-            当前实际：<strong id="warnActual" style="color:#dc2626;">0</strong> 箱<br>
-            超出预估 <strong id="warnDiff" style="color:#dc2626;">0</strong> 箱
-        </div>
-        <div class="warn-buttons">
-            <button class="modal-btn btn-warn-fix" id="warnFixBtn">✏️ 重新填预估值</button>
-            <button class="modal-btn btn-warn-abnormal" id="warnAbnormalBtn">⚠️ 标记为异常订单</button>
-        </div>
-        <div class="warn-tip">必须选择一种处理方式才能继续扫码</div>
-    </div>
-</div>
-
-<!-- 弹窗 4：查找定位成功 ✅ -->
-<div class="modal-overlay" id="locateModalOverlay">
-    <div class="modal-box locate-modal">
-        <div class="locate-success-icon">✓</div>
-        <div class="locate-success-title">找到目标单号</div>
-        <div class="locate-success-code" id="locateModalCode">-</div>
-        <button class="locate-success-btn" id="locateModalOkBtn">知道了</button>
-    </div>
-</div>
-
-<!-- 弹窗 5：手机摄像头连续扫码 -->
-<div class="modal-overlay" id="cameraModalOverlay">
-    <div class="modal-box camera-modal">
-        <div class="camera-header">
-            <div class="camera-title">📷 连续扫码（二维码 / 条形码）</div>
-            <button class="camera-close" id="cameraCloseBtn">✖ 关闭</button>
-        </div>
-        <div class="camera-stage">
-            <div id="reader"></div>
-            <!-- 自定义正方形取景框 -->
-            <div class="custom-scan-box" id="customScanBox">
-                <div class="corner-br"></div>
-                <div class="corner-bl"></div>
-            </div>
-            <div class="camera-flash" id="cameraFlash"></div>
-        </div>
-        <div class="camera-last empty" id="cameraLast">等待扫码…</div>
-            <button type="button" class="btn-secondary" id="cameraNextBox">同一订单：扫描下一箱</button>
-            <p class="collab-notice">同一码停在镜头中只计一次。下一箱也是同一订单时，先移开上一箱，再点击此按钮重新扫描。</p>
-        <div class="camera-error" id="cameraError"></div>
-        <div class="camera-tip">将二维码放入正方形取景框，命中后绿框闪烁并响铃，可连续扫下一张</div>
-    </div>
-</div>
-
-<!-- 弹窗 6：查找定位输入（虚拟键盘） -->
-<div class="modal-overlay" id="locateInputModalOverlay">
-    <div class="modal-box">
-        <div class="modal-icon" style="background:#ffedd5;">🔍</div>
-        <div class="modal-title">输入查找目标单号</div>
-        <div class="modal-desc" style="margin-bottom:8px;">
-            目标单号必须为 <strong>8 位数字</strong>（仅虚拟键盘可输入）
-        </div>
-        <div class="modal-display" id="locateDisplay">0</div>
-        <div class="keypad">
-            <button class="key" data-locate-key="1">1</button>
-            <button class="key" data-locate-key="2">2</button>
-            <button class="key" data-locate-key="3">3</button>
-            <button class="key" data-locate-key="4">4</button>
-            <button class="key" data-locate-key="5">5</button>
-            <button class="key" data-locate-key="6">6</button>
-            <button class="key" data-locate-key="7">7</button>
-            <button class="key" data-locate-key="8">8</button>
-            <button class="key" data-locate-key="9">9</button>
-            <button class="key key-func" data-locate-action="clear">清空</button>
-            <button class="key" data-locate-key="0">0</button>
-            <button class="key key-delete" data-locate-action="delete">⌫</button>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" id="locateInputCancelBtn">取消</button>
-            <button class="modal-btn modal-btn-confirm" id="locateInputConfirmBtn" disabled>确认</button>
-        </div>
-    </div>
-</div>
-
-<!-- 完成汇总弹窗 -->
-<div class="modal-overlay" id="summaryOverlay">
-    <div class="modal-box summary-modal">
-        <div class="summary-header-icon">✅</div>
-        <div class="summary-title">任务完成汇总</div>
-        <div class="summary-subtitle" id="summarySubtitle">以下为有差异的订单清单</div>
-        <div class="summary-stats">
-            <div class="summary-stat">
-                <div class="lbl">总预估</div>
-                <div class="val" id="summaryEstTotal">0</div>
-            </div>
-            <div class="summary-stat">
-                <div class="lbl">总实际</div>
-                <div class="val" id="summaryActTotal">0</div>
-            </div>
-            <div class="summary-stat" id="summaryDiffStat">
-                <div class="lbl">总差异</div>
-                <div class="val" id="summaryDiffTotal">0</div>
-            </div>
-        </div>
-        <div class="summary-list-title">
-            📋 差异订单清单
-            <span class="count-tag" id="summaryDiffCount">0 条</span>
-        </div>
-        <div class="summary-list" id="summaryList">
-            <div class="summary-all-good">
-                <span class="big">🎉</span>
-                所有订单都一致，没有差异！
-            </div>
-        </div>
-        <div class="summary-actions">
-            <button class="modal-btn btn-export-in-summary" id="summaryExportBtn">📎 导出</button>
-            <button class="modal-btn btn-continue" id="continueBtn">🔄 继续</button>
-            <button class="modal-btn btn-finish" id="finishTaskBtn">🏁 结束</button>
-        </div>
-    </div>
-</div>
-
-<script src="./assets/cloud-client.js"></script>
-<script src="./assets/collaboration.js"></script>
+.smallbuttons{flex-wrap:wrap}.smallbuttons button{min-width:90px}#taskDisplay{overflow-wrap:anywhere}button{touch-action:manipulation}
+</style><style>
+#overLimitShade .modal{border-top:6px solid #dc3545;text-align:center}
+#overLimitShade .error-symbol{font-size:52px;line-height:1.3}
+#overLimitShade .error-details{background:#fff1f2;border-radius:10px;padding:13px;margin:14px 0;color:#9f2030;line-height:1.8}
+#overLimitShade .primary{background:#dc3545}
+</style>
+</head><body><div id="launchSplash" role="status" aria-label="小程序启动中">
+<button id="skipSplash" class="splash-skip" type="button">跳过动画</button>
+<div class="splash-content">
+<img class="splash-logo" src="images/form-logoshop1.png" alt="DAFU Logo" onerror="this.style.display='none';document.getElementById('splashLogoFallback').hidden=false">
+<div id="splashLogoFallback" class="splash-logo-text" hidden>DAFU</div>
+<h2 class="splash-title">订单箱数核验系统</h2>
+<p class="splash-subtitle">仓库扫码 · 箱数核验 · 多人协作</p>
+<div class="splash-loading" aria-hidden="true"><i></i><i></i><i></i></div>
+</div></div>
 <script>
-    // ========== 数据存储 ==========
-    var boxData = new Map();
-    var currentBarcode = null;
-    var modalInputValue = '';
-    var modalMode = 'estimate';
-    var lastAddTime = 0;
-    var scanSeq = 0;
-    var ORDER_LENGTH = 8;
-    var orderInputValue = '';
-
-    var locateInputValue = '';
-
-    var isWarnModalOpen = false;
-    var currentWarnBarcode = null;
-
-    var locateTarget = '';
-    var locateActive = false;
-    var locateHitSeq = 0;
-
-    // 手机扫码状态（连续扫码）
-    var html5QrCode = null;
-    var cameraRunning = false;
-    var cameraCooldownUntil = 0;
-    var cameraFlashTimer = null;
-    var lastCameraCode = '';
-    var lastCameraCodeTime = 0;
-    var lastCameraResult = null;
-
-    // ========== 提示音控制 ==========
-    var soundEnabled = true;
-    var audioCtx = null;
-
-    // ========== DOM ==========
-    var barcodeInput = document.getElementById('barcodeInput');
-    var addBtn = document.getElementById('addBtn');
-    var cameraBtn = document.getElementById('cameraBtn');
-    var clearInputBtn = document.getElementById('clearInputBtn');
-    var clearAllBtn = document.getElementById('clearAllBtn');
-    var exportBtn = document.getElementById('exportBtn');
-    var finishBtn = document.getElementById('finishBtn');
-    var soundToggle = document.getElementById('soundToggle');
-    var statusMsgDiv = document.getElementById('statusMsg');
-    var tableBody = document.getElementById('tableBody');
-    var tableFoot = document.getElementById('tableFoot');
-    var scanPanel = document.getElementById('scanPanel');
-
-    var estimateTotalSpan = document.getElementById('estimateTotal');
-    var actualTotalSpan = document.getElementById('actualTotal');
-    var diffTotalSpan = document.getElementById('diffTotal');
-    var estimateFooter = document.getElementById('estimateFooter');
-    var actualFooter = document.getElementById('actualFooter');
-    var diffFooter = document.getElementById('diffFooter');
-
-    var modalOverlay = document.getElementById('modalOverlay');
-    var modalIcon = document.getElementById('modalIcon');
-    var modalBarcode = document.getElementById('modalBarcode');
-    var modalDesc = document.getElementById('modalDesc');
-    var modalTitle = document.getElementById('modalTitle');
-    var modalDisplay = document.getElementById('modalDisplay');
-    var modalConfirmBtn = document.getElementById('modalConfirmBtn');
-    var modalCancelBtn = document.getElementById('modalCancelBtn');
-
-    var orderModalOverlay = document.getElementById('orderModalOverlay');
-    var orderDisplay = document.getElementById('orderDisplay');
-    var orderConfirmBtn = document.getElementById('orderConfirmBtn');
-    var orderCancelBtn = document.getElementById('orderCancelBtn');
-
-    var warnModalOverlay = document.getElementById('warnModalOverlay');
-    var warnBarcode = document.getElementById('warnBarcode');
-    var warnEstimate = document.getElementById('warnEstimate');
-    var warnActual = document.getElementById('warnActual');
-    var warnDiff = document.getElementById('warnDiff');
-    var warnAbnormalBtn = document.getElementById('warnAbnormalBtn');
-    var warnFixBtn = document.getElementById('warnFixBtn');
-
-    var summaryOverlay = document.getElementById('summaryOverlay');
-    var summarySubtitle = document.getElementById('summarySubtitle');
-    var summaryEstTotal = document.getElementById('summaryEstTotal');
-    var summaryActTotal = document.getElementById('summaryActTotal');
-    var summaryDiffTotal = document.getElementById('summaryDiffTotal');
-    var summaryDiffStat = document.getElementById('summaryDiffStat');
-    var summaryDiffCount = document.getElementById('summaryDiffCount');
-    var summaryList = document.getElementById('summaryList');
-    var summaryExportBtn = document.getElementById('summaryExportBtn');
-    var continueBtn = document.getElementById('continueBtn');
-    var finishTaskBtn = document.getElementById('finishTaskBtn');
-
-    var locateInput = document.getElementById('locateInput');
-    var locateOnBtn = document.getElementById('locateOnBtn');
-    var locateOffBtn = document.getElementById('locateOffBtn');
-    var locateStatus = document.getElementById('locateStatus');
-    var locateModalOverlay = document.getElementById('locateModalOverlay');
-    var locateModalCode = document.getElementById('locateModalCode');
-    var locateModalOkBtn = document.getElementById('locateModalOkBtn');
-
-    var locateInputModalOverlay = document.getElementById('locateInputModalOverlay');
-    var locateDisplay = document.getElementById('locateDisplay');
-    var locateInputCancelBtn = document.getElementById('locateInputCancelBtn');
-    var locateInputConfirmBtn = document.getElementById('locateInputConfirmBtn');
-
-    var cameraModalOverlay = document.getElementById('cameraModalOverlay');
-    var cameraCloseBtn = document.getElementById('cameraCloseBtn');
-    var cameraError = document.getElementById('cameraError');
-    var readerEl = document.getElementById('reader');
-    var cameraFlash = document.getElementById('cameraFlash');
-    var cameraLast = document.getElementById('cameraLast');
-    var customScanBox = document.getElementById('customScanBox');
-
-    var statusTimer = null;
-
-    // ========== 校验 & 工具 ==========
-    function isValidOrderNo(code) {
-        return /^\d{8}$/.test(code);
-    }
-
-    function getAudioContext() {
-        if (!audioCtx) {
-            try {
-                var Ctx = window.AudioContext || window.webkitAudioContext;
-                if (Ctx) audioCtx = new Ctx();
-            } catch (e) {}
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(function(){});
-        }
-        return audioCtx;
-    }
-
-    function playTone(freq, startTime, duration, volume) {
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + duration + 0.05);
-    }
-
-    function playEstimatePromptSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(1046.5, now, 0.18, 0.35);
-        playTone(880, now + 0.2, 0.28, 0.35);
-        if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
-    }
-
-    function playConfirmSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(1318.5, now, 0.09, 0.3);
-        playTone(1760, now + 0.1, 0.12, 0.28);
-    }
-
-    function playErrorSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(280, now, 0.15, 0.3);
-        playTone(220, now + 0.16, 0.2, 0.3);
-    }
-
-    function playOverWarningSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(880, now, 0.15, 0.4);
-        playTone(880, now + 0.2, 0.15, 0.4);
-        playTone(880, now + 0.4, 0.25, 0.4);
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
-    }
-
-    function playLocateHitSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(784, now, 0.12, 0.35);
-        playTone(1046.5, now + 0.14, 0.12, 0.4);
-        playTone(1318.5, now + 0.28, 0.3, 0.45);
-        if (navigator.vibrate) navigator.vibrate([50, 40, 50, 40, 120]);
-    }
-
-    function playScanHitSound() {
-        if (!soundEnabled) return;
-        var ctx = getAudioContext();
-        if (!ctx) return;
-        var now = ctx.currentTime;
-        playTone(1568, now, 0.07, 0.3);
-        playTone(2093, now + 0.09, 0.12, 0.32);
-        if (navigator.vibrate) navigator.vibrate(60);
-    }
-
-    function toggleSound() {
-        soundEnabled = !soundEnabled;
-        if (soundEnabled) {
-            soundToggle.textContent = '🔊 提示音：开';
-            soundToggle.classList.remove('muted');
-            playConfirmSound();
-            setStatusMessage('提示音已开启', false);
-        } else {
-            soundToggle.textContent = '🔇 提示音：关';
-            soundToggle.classList.add('muted');
-            setStatusMessage('提示音已关闭', true);
-        }
-    }
-
-    function setStatusMessage(msg, isError) {
-        if (statusTimer) clearTimeout(statusTimer);
-        statusMsgDiv.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
-        statusMsgDiv.style.background = isError ? '#ffe6e5' : '#e3f2fd';
-        statusMsgDiv.style.color = isError ? '#b91c1c' : '#0050b3';
-        statusTimer = setTimeout(function() {
-            statusMsgDiv.innerHTML = '📌 就绪 | 订单号必须为 8 位数字';
-            statusMsgDiv.style.background = '#e9f3fe';
-            statusMsgDiv.style.color = '#0050b3';
-        }, 3000);
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    function setScanLocked(locked) {
-        if (locked) {
-            scanPanel.classList.add('locked');
-            barcodeInput.setAttribute('readonly', 'readonly');
-            barcodeInput.setAttribute('tabindex', '-1');
-            barcodeInput.blur();
-        } else {
-            scanPanel.classList.remove('locked');
-            barcodeInput.removeAttribute('readonly');
-            barcodeInput.removeAttribute('tabindex');
-        }
-    }
-
-    // ========== 查找定位逻辑 ==========
-    function updateLocateStatusUI() {
-        if (locateActive && locateTarget) {
-            locateStatus.textContent = '🎯 定位中：' + locateTarget;
-            locateStatus.classList.add('on');
-            locateInput.classList.add('hit');
-            locateOnBtn.style.display = 'none';
-            locateOffBtn.style.display = '';
-        } else {
-            locateStatus.textContent = '未开启';
-            locateStatus.classList.remove('on');
-            locateInput.classList.remove('hit');
-            locateOnBtn.style.display = '';
-            locateOffBtn.style.display = 'none';
-        }
-    }
-
-    function updateLocateDisplay() {
-        if (locateInputValue === '') {
-            locateDisplay.textContent = '0';
-            locateDisplay.classList.add('empty');
-            locateDisplay.classList.remove('success');
-        } else {
-            locateDisplay.textContent = locateInputValue;
-            locateDisplay.classList.remove('empty');
-            if (locateInputValue.length === ORDER_LENGTH) locateDisplay.classList.add('success');
-            else locateDisplay.classList.remove('success');
-        }
-        if (locateInputValue.length === ORDER_LENGTH) {
-            locateInputConfirmBtn.disabled = false;
-            locateInputConfirmBtn.classList.add('ready');
-        } else {
-            locateInputConfirmBtn.disabled = true;
-            locateInputConfirmBtn.classList.remove('ready');
-        }
-    }
-
-    function openLocateInputModal() {
-        locateInputValue = (locateTarget || '').slice(0, ORDER_LENGTH);
-        updateLocateDisplay();
-        locateInputModalOverlay.classList.add('show');
-        setScanLocked(true);
-        setTimeout(function() {
-            if (!locateInputModalOverlay.classList.contains('show')) return;
-            document.addEventListener('keydown', onLocateInputModalKeyDown);
-            locateDisplay.focus();
-        }, 0);
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function closeLocateInputModal() {
-        locateInputModalOverlay.classList.remove('show');
-        document.removeEventListener('keydown', onLocateInputModalKeyDown);
-        locateDisplay.blur();
-        if (!modalOverlay.classList.contains('show') &&
-            !orderModalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !warnModalOverlay.classList.contains('show') &&
-            !locateModalOverlay.classList.contains('show') &&
-            !cameraModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    function handleLocateKey(key) {
-        if (locateInputValue.length >= ORDER_LENGTH) {
-            if (navigator.vibrate) navigator.vibrate(30);
-            setStatusMessage('目标单号最多 8 位，已忽略', true);
-            return;
-        }
-        if (locateInputValue === '0') locateInputValue = key;
-        else locateInputValue += key;
-        updateLocateDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleLocateDelete() {
-        if (locateInputValue.length > 0) locateInputValue = locateInputValue.slice(0, -1);
-        updateLocateDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleLocateClear() {
-        locateInputValue = '';
-        updateLocateDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function confirmLocateInput() {
-        if (locateInputValue.length !== ORDER_LENGTH) {
-            locateDisplay.classList.add('error');
-            setTimeout(function() { locateDisplay.classList.remove('error'); }, 500);
-            playErrorSound();
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            setStatusMessage('目标单号必须为 8 位数字（当前 ' + locateInputValue.length + ' 位）', true);
-            return;
-        }
-        locateInput.value = locateInputValue;
-        closeLocateInputModal();
-        locateTarget = locateInputValue;
-        locateActive = true;
-        updateLocateStatusUI();
-        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
-        playConfirmSound();
-        renderTable();
-    }
-
-    function onLocateInputModalKeyDown(e) {
-        if (!locateInputModalOverlay.classList.contains('show')) return;
-        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
-        else if (e.key === 'Backspace') { e.preventDefault(); return; }
-        else if (e.key === 'Delete') { e.preventDefault(); return; }
-        else if (e.key === 'Escape') { e.preventDefault(); closeLocateInputModal(); }
-        else if (e.key === 'Enter') { e.preventDefault(); if (!locateInputConfirmBtn.disabled) confirmLocateInput(); }
-    }
-
-    function bindLocateKeypadEvents() {
-        var keys = document.querySelectorAll('.key[data-locate-key], .key[data-locate-action]');
-        for (var i = 0; i < keys.length; i++) {
-            keys[i].addEventListener('click', function(e) {
-                e.preventDefault();
-                var key = this.getAttribute('data-locate-key');
-                var action = this.getAttribute('data-locate-action');
-                if (action === 'delete') handleLocateDelete();
-                else if (action === 'clear') handleLocateClear();
-                else if (key !== null) handleLocateKey(key);
-            });
-        }
-    }
-
-    function onLocateOn() {
-        var v = (locateInput.value || '').replace(/\D/g, '').slice(0, ORDER_LENGTH);
-        if (v.length !== ORDER_LENGTH) {
-            openLocateInputModal();
-            return;
-        }
-        locateTarget = v;
-        locateActive = true;
-        updateLocateStatusUI();
-        setStatusMessage('已开启查找定位：' + locateTarget + '（扫到将响铃并弹勾）', false);
-        playConfirmSound();
-        renderTable();
-    }
-
-    function onLocateOff() {
-        locateActive = false;
-        locateTarget = '';
-        locateInput.value = '';
-        updateLocateStatusUI();
-        renderTable();
-        setStatusMessage('已关闭查找定位', false);
-    }
-
-    function checkLocateHit(barcode) {
-        if (!locateActive || !locateTarget) return false;
-        if (barcode !== locateTarget) return false;
-        locateHitSeq++;
-        playLocateHitSound();
-        locateModalCode.textContent = barcode;
-        locateModalOverlay.classList.add('show');
-        return true;
-    }
-
-    function closeLocateModal() {
-        locateModalOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show') &&
-            !orderModalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !warnModalOverlay.classList.contains('show') &&
-            !cameraModalOverlay.classList.contains('show') &&
-            !locateInputModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    // ========== 手机摄像头连续扫码（正方形自定义框） ==========
-    function updateCameraLast(result) {
-        if (!result) {
-            cameraLast.classList.add('empty');
-            cameraLast.textContent = '等待扫码…';
-            return;
-        }
-        cameraLast.classList.remove('empty');
-        if (result.ok) {
-            cameraLast.innerHTML = '✅ 已识别：<strong>' + escapeHtml(result.code) + '</strong>（同一订单下一箱请点击下方按钮）';
-            cameraLast.style.background = '#f0fdf4';
-            cameraLast.style.borderColor = '#bbf7d0';
-            cameraLast.style.color = '#166534';
-        } else {
-            cameraLast.innerHTML = '⚠️ 识别到：' + escapeHtml(result.raw) + '（不是 8 位数字，已忽略，可继续扫）';
-            cameraLast.style.background = '#fff7ed';
-            cameraLast.style.borderColor = '#fed7aa';
-            cameraLast.style.color = '#9a3412';
-        }
-    }
-
-    function openCameraModal() {
-        if (!Coop.ready()) return;
-        if (!window.isSecureContext) { alert('手机摄像头需要 HTTPS，请从正式网站打开此页面。'); return; }
-        if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show') || locateModalOverlay.classList.contains('show')) {
-            setStatusMessage('请先关闭当前弹窗再打开摄像头', true);
-            return;
-        }
-        if (typeof Html5Qrcode === 'undefined') {
-            alert('摄像头扫码库未加载成功，请检查服务器文件是否完整后刷新页面。\n如果无法使用摄像头，可继续使用扫码枪或手动累加。');
-            return;
-        }
-        cameraError.style.display = 'none';
-        cameraError.textContent = '';
-        lastCameraCode = '';
-        lastCameraCodeTime = 0;
-        lastCameraResult = null;
-        cameraCooldownUntil = 0;
-        updateCameraLast(null);
-        cameraModalOverlay.classList.add('show');
-        setScanLocked(true);
-        startCameraScanner();
-    }
-
-    function startCameraScanner() {
-        if (cameraRunning) return;
-        cameraRunning = true;
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
-                .then(function(stream) {
-                    stream.getTracks().forEach(function(t) { t.stop(); });
-                    setTimeout(startHtml5QrCode, 80);
-                })
-                .catch(function() {
-                    setTimeout(startHtml5QrCode, 80);
-                });
-        } else {
-            setTimeout(startHtml5QrCode, 80);
-        }
-    }
-
-    function startHtml5QrCode() {
-        if (!cameraModalOverlay.classList.contains('show')) { cameraRunning = false; return; }
-        try {
-            html5QrCode = new Html5Qrcode("reader", {
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.ITF, Html5QrcodeSupportedFormats.EAN_8 ],
-                verbose: false
-            });
-            html5QrCode.start(
-                { facingMode: "environment" },
-                {
-                    fps: 12,
-                    // 这里设置正方型区域，配合 CSS 自定义框，确保识别区域是正方形
-                    qrbox: function(viewfinderWidth, viewfinderHeight) {
-                        var minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                        var size = Math.floor(minEdge * 0.7);
-                        return { width: size, height: size };
-                    },
-                    aspectRatio: 1.0,
-                    disableFlip: true
-                },
-                onCameraScanSuccess,
-                function(errorMessage) { /* 每帧失败忽略 */ }
-            ).catch(function(err) {
-                cameraRunning = false;
-                showCameraError('无法启动摄像头：' + (err && err.message ? err.message : err));
-            });
-        } catch (e) {
-            cameraRunning = false;
-            showCameraError('初始化摄像头失败：' + e.message);
-        }
-    }
-
-    function showCameraError(msg) {
-        cameraError.style.display = 'block';
-        cameraError.textContent = msg;
-        setStatusMessage(msg, true);
-        playErrorSound();
-    }
-
-    function flashCameraFrame() {
-        if (cameraFlashTimer) clearTimeout(cameraFlashTimer);
-        cameraFlash.classList.remove('flash');
-        void cameraFlash.offsetWidth;
-        cameraFlash.classList.add('flash');
-        cameraFlashTimer = setTimeout(function() {
-            cameraFlash.classList.remove('flash');
-            cameraFlashTimer = null;
-        }, 500);
-    }
-
-    function onCameraScanSuccess(decodedText) {
-        if (!cameraModalOverlay.classList.contains('show')) return;
-        var code = String(decodedText || '').trim();
-        if (code === lastCameraCode) return;
-        if (Date.now() < cameraCooldownUntil) return;
-        if (!/^\d{8}$/.test(code)) {
-            lastCameraCode = code;
-            updateCameraLast({ok:false,raw:code});
-            playErrorSound();
-            return;
-        }
-        if (!Coop.ready()) return;
-        lastCameraCode = code;
-        cameraCooldownUntil = Date.now() + 700;
-        cameraLast.textContent = '识别到 ' + code + '，提交中…';
-        flashCameraFrame();
-        addBox(code, 'camera');
-    }
-
-    function stopCameraScanner(callback) {
-        if (!html5QrCode) {
-            cameraRunning = false;
-            if (callback) callback();
-            return;
-        }
-        try {
-            html5QrCode.stop().then(function() {
-                try { html5QrCode.clear(); } catch (e) {}
-                html5QrCode = null;
-                cameraRunning = false;
-                if (callback) callback();
-            }).catch(function() {
-                try { html5QrCode.clear(); } catch (e) {}
-                html5QrCode = null;
-                cameraRunning = false;
-                if (callback) callback();
-            });
-        } catch (e) {
-            html5QrCode = null;
-            cameraRunning = false;
-            if (callback) callback();
-        }
-    }
-
-    function closeCameraModal(keepLockCheck) {
-        cameraModalOverlay.classList.remove('show');
-        if (cameraFlashTimer) { clearTimeout(cameraFlashTimer); cameraFlashTimer = null; }
-        cameraFlash.classList.remove('flash');
-        stopCameraScanner(function() {
-            if (!keepLockCheck) {
-                if (!modalOverlay.classList.contains('show') &&
-                    !orderModalOverlay.classList.contains('show') &&
-                    !summaryOverlay.classList.contains('show') &&
-                    !warnModalOverlay.classList.contains('show') &&
-                    !locateModalOverlay.classList.contains('show') &&
-                    !locateInputModalOverlay.classList.contains('show')) {
-                    setScanLocked(false);
-                    barcodeInput.focus();
-                }
-            }
-        });
-        cameraError.style.display = 'none';
-        cameraError.textContent = '';
-        cameraCooldownUntil = 0;
-        lastCameraCode = '';
-        lastCameraCodeTime = 0;
-        lastCameraResult = null;
-        updateCameraLast(null);
-    }
-
-    // ========== 弹窗控制 ==========
-    function updateOrderDisplay() {
-        if (orderInputValue === '') {
-            orderDisplay.textContent = '0';
-            orderDisplay.classList.add('empty');
-            orderDisplay.classList.remove('success');
-        } else {
-            orderDisplay.textContent = orderInputValue;
-            orderDisplay.classList.remove('empty');
-            if (orderInputValue.length === ORDER_LENGTH) orderDisplay.classList.add('success');
-            else orderDisplay.classList.remove('success');
-        }
-        if (orderInputValue.length === ORDER_LENGTH) {
-            orderConfirmBtn.disabled = false;
-            orderConfirmBtn.classList.add('ready');
-        } else {
-            orderConfirmBtn.disabled = true;
-            orderConfirmBtn.classList.remove('ready');
-        }
-    }
-
-    function openOrderModal() {
-        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
-        if (cameraRunning) closeCameraModal(true);
-        
-        orderInputValue = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
-        updateOrderDisplay();
-        orderModalOverlay.classList.add('show');
-        setScanLocked(true);
-        setTimeout(function() {
-            if (!orderModalOverlay.classList.contains('show')) return;
-            document.addEventListener('keydown', onOrderModalKeyDown);
-            orderDisplay.focus();
-        }, 0);
-    }
-
-    function closeOrderModal() {
-        orderModalOverlay.classList.remove('show');
-        document.removeEventListener('keydown', onOrderModalKeyDown);
-        orderDisplay.blur();
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    function handleOrderKey(key) {
-        if (orderInputValue.length >= ORDER_LENGTH) {
-            if (navigator.vibrate) navigator.vibrate(30);
-            setStatusMessage('订单号最多 8 位，已忽略', true);
-            return;
-        }
-        if (orderInputValue === '0') orderInputValue = key;
-        else orderInputValue += key;
-        updateOrderDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleOrderDelete() {
-        if (orderInputValue.length > 0) orderInputValue = orderInputValue.slice(0, -1);
-        updateOrderDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleOrderClear() {
-        orderInputValue = '';
-        updateOrderDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function confirmOrder() {
-        if (orderInputValue.length !== ORDER_LENGTH) {
-            orderDisplay.classList.add('error');
-            setTimeout(function() { orderDisplay.classList.remove('error'); }, 500);
-            playErrorSound();
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            setStatusMessage('订单号必须为 8 位数字（当前 ' + orderInputValue.length + ' 位）', true);
-            return;
-        }
-        barcodeInput.value = orderInputValue;
-        barcodeInput.classList.add('success');
-        closeOrderModal();
-        addBox(orderInputValue, 'manual');
-        barcodeInput.value = '';
-        barcodeInput.classList.remove('success');
-    }
-
-    function onOrderModalKeyDown(e) {
-        if (!orderModalOverlay.classList.contains('show')) return;
-        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleOrderKey(e.key); }
-        else if (e.key === 'Backspace') { e.preventDefault(); handleOrderDelete(); }
-        else if (e.key === 'Escape') { e.preventDefault(); closeOrderModal(); }
-        else if (e.key === 'Enter') { e.preventDefault(); if (!orderConfirmBtn.disabled) confirmOrder(); }
-        else if (e.key === 'Delete') { e.preventDefault(); handleOrderClear(); }
-    }
-
-    function updateModalDisplay() {
-        if (modalInputValue === '') {
-            modalDisplay.textContent = '0';
-            modalDisplay.classList.add('empty');
-        } else {
-            modalDisplay.textContent = modalInputValue;
-            modalDisplay.classList.remove('empty');
-        }
-    }
-
-    function handleKeypadInput(key) {
-        if (modalInputValue === '0') modalInputValue = key;
-        else if (modalInputValue === '' && key === '0') modalInputValue = '0';
-        else if (modalInputValue.length >= 9) return;
-        else modalInputValue += key;
-        updateModalDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleKeypadDelete() {
-        if (modalInputValue.length > 0) modalInputValue = modalInputValue.slice(0, -1);
-        updateModalDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function handleKeypadClear() {
-        modalInputValue = '';
-        updateModalDisplay();
-        if (navigator.vibrate) navigator.vibrate(20);
-    }
-
-    function bindKeypadEvents() {
-        var keys = document.querySelectorAll('.key[data-key], .key[data-action]');
-        for (var i = 0; i < keys.length; i++) {
-            keys[i].addEventListener('click', function(e) {
-                e.preventDefault();
-                var key = this.getAttribute('data-key');
-                var action = this.getAttribute('data-action');
-                if (action === 'delete') handleKeypadDelete();
-                else if (action === 'clear') handleKeypadClear();
-                else if (key !== null) handleKeypadInput(key);
-            });
-        }
-    }
-
-    function bindOrderKeypadEvents() {
-        var keys = document.querySelectorAll('.key[data-order-key], .key[data-order-action]');
-        for (var i = 0; i < keys.length; i++) {
-            keys[i].addEventListener('click', function(e) {
-                e.preventDefault();
-                var key = this.getAttribute('data-order-key');
-                var action = this.getAttribute('data-order-action');
-                if (action === 'delete') handleOrderDelete();
-                else if (action === 'clear') handleOrderClear();
-                else if (key !== null) handleOrderKey(key);
-            });
-        }
-    }
-
-    function registerModalKeys() {
-        setTimeout(function () {
-            if (!modalOverlay.classList.contains('show')) return;
-            document.addEventListener('keydown', onModalKeyDown);
-            modalDisplay.focus();
-        }, 0);
-    }
-
-    function openEstimateModal(barcode) {
-        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
-        if (cameraRunning) closeCameraModal(true);
-
-        modalMode = 'estimate';
-        currentBarcode = barcode;
-        var existing = boxData.get(barcode);
-        Coop.capture(existing);
-        var currentActual = existing ? existing.actual : 0;
-
-        modalIcon.textContent = '🔁';
-        modalTitle.textContent = '输入预估总数';
-        modalBarcode.textContent = barcode;
-        modalDesc.innerHTML = '填写该订单的共享预估<br>' +
-            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>预估总数</strong>（用于对比）';
-
-        modalInputValue = '';
-        updateModalDisplay();
-        modalOverlay.classList.add('show');
-        setScanLocked(true);
-        registerModalKeys();
-        playEstimatePromptSound();
-    }
-
-    function openEditActualModal(barcode) {
-        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
-        if (cameraRunning) closeCameraModal(true);
-
-        modalMode = 'actual';
-        currentBarcode = barcode;
-        var existing = boxData.get(barcode);
-        Coop.capture(existing);
-        var currentActual = existing ? existing.actual : 0;
-        var currentEstimate = existing ? existing.estimate : 0;
-
-        modalIcon.textContent = '📦';
-        modalTitle.textContent = '修改实际数量';
-        modalBarcode.textContent = barcode;
-        modalDesc.innerHTML = '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
-            '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '请输入该订单的<strong>实际总件数</strong>';
-
-        modalInputValue = currentActual > 0 ? String(currentActual) : '';
-        updateModalDisplay();
-        modalOverlay.classList.add('show');
-        setScanLocked(true);
-        registerModalKeys();
-        if (navigator.vibrate) navigator.vibrate(40);
-    }
-
-    function openEditEstimateModal(barcode) {
-        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
-        if (cameraRunning) closeCameraModal(true);
-
-        modalMode = 'edit-estimate';
-        currentBarcode = barcode;
-        var existing = boxData.get(barcode);
-        Coop.capture(existing);
-        var currentEstimate = existing ? existing.estimate : 0;
-        var currentActual = existing ? existing.actual : 0;
-
-        modalIcon.textContent = '📊';
-        modalTitle.textContent = '修改预估数量';
-        modalBarcode.textContent = barcode;
-        modalDesc.innerHTML = '当前实际数量：<strong>' + currentActual + '</strong> 箱<br>' +
-            '当前预估数量：<strong>' + currentEstimate + '</strong> 箱<br>' +
-            '请输入新的<strong>预估总数</strong>';
-
-        modalInputValue = currentEstimate > 0 ? String(currentEstimate) : '';
-        updateModalDisplay();
-        modalOverlay.classList.add('show');
-        setScanLocked(true);
-        registerModalKeys();
-        if (navigator.vibrate) navigator.vibrate(40);
-    }
-
-    function closeModal() {
-        modalOverlay.classList.remove('show');
-        currentBarcode = null;
-        modalInputValue = '';
-        document.removeEventListener('keydown', onModalKeyDown);
-        modalDisplay.blur();
-        if (!summaryOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    function confirmModalInput() { return Coop.confirmInput(); }
-
-    function onModalKeyDown(e) {
-        if (!modalOverlay.classList.contains('show')) return;
-        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); return; }
-        else if (e.key === 'Backspace') { e.preventDefault(); return; }
-        else if (e.key === 'Delete') { e.preventDefault(); return; }
-        else if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
-        else if (e.key === 'Enter') { e.preventDefault(); confirmModalInput(); }
-    }
-
-    // ========== 超量警告（必须二选一） ==========
-    function triggerOverWarn(barcode, actual, estimate) {
-        // 优先级修复：如果是摄像头触发，立刻关掉摄像头
-        if (cameraRunning) closeCameraModal(true);
-
-        var alreadyOpen = warnModalOverlay.classList.contains('show');
-
-        if (alreadyOpen && currentWarnBarcode === barcode) {
-            warnEstimate.textContent = estimate;
-            warnActual.textContent = actual;
-            warnDiff.textContent = actual - estimate;
-            playOverWarningSound();
-            setScanLocked(true);
-            return;
-        }
-
-        isWarnModalOpen = true;
-        currentWarnBarcode = barcode;
-        warnBarcode.textContent = barcode;
-        warnEstimate.textContent = estimate;
-        warnActual.textContent = actual;
-        warnDiff.textContent = actual - estimate;
-
-        playOverWarningSound();
-
-        warnModalOverlay.classList.add('show');
-        setScanLocked(true);
-        barcodeInput.blur();
-        document.removeEventListener('keydown', onWarnKeyDown);
-        document.addEventListener('keydown', onWarnKeyDown);
-    }
-
-    function closeWarnModal() {
-        warnModalOverlay.classList.remove('show');
-        document.removeEventListener('keydown', onWarnKeyDown);
-        isWarnModalOpen = false;
-        currentWarnBarcode = null;
-        if (!modalOverlay.classList.contains('show') &&
-            !summaryOverlay.classList.contains('show') &&
-            !orderModalOverlay.classList.contains('show') &&
-            !locateModalOverlay.classList.contains('show') &&
-            !cameraModalOverlay.classList.contains('show') &&
-            !locateInputModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    function onWarnKeyDown(e) {
-        if (!warnModalOverlay.classList.contains('show')) return;
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            handleWarnFix();
-        }
-    }
-
-    function handleWarnFix() {
-        var bc = currentWarnBarcode;
-        if (!bc) { closeWarnModal(); return; }
-        closeWarnModal();
-        if (boxData.has(bc)) {
-            openEditEstimateModal(bc);
-        }
-    }
-
-    function handleWarnAbnormal() { return Coop.mark(); }
-
-    function updateTotals() {
-        var totalEstimate = 0, totalActual = 0;
-        for (var entry of boxData.entries()) {
-            var data = entry[1];
-            totalEstimate += data.estimate || 0;
-            totalActual += data.actual || 0;
-        }
-        var totalDiff = totalActual - totalEstimate;
-        estimateTotalSpan.innerText = totalEstimate;
-        actualTotalSpan.innerText = totalActual;
-        diffTotalSpan.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
-        diffTotalSpan.style.color = totalDiff === 0 ? '#a5f3c3' : '#fecaca';
-        estimateFooter.innerText = totalEstimate;
-        actualFooter.innerText = totalActual;
-        diffFooter.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
-        diffFooter.style.color = totalDiff === 0 ? '#166534' : '#b91c1c';
-    }
-
-    function renderTable() {
-        tableBody.innerHTML = '';
-        if (boxData.size === 0) {
-            tableBody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无订单记录，请扫码添加</td></tr>';
-            tableFoot.style.display = 'none';
-            updateTotals();
-            return;
-        }
-
-        var sorted = Array.from(boxData.entries()).sort(function(a, b) {
-            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
-        });
-
-        for (var i = 0; i < sorted.length; i++) {
-            var barcode = sorted[i][0];
-            var data = sorted[i][1];
-            var estimate = data.estimate || 0;
-            var actual = data.actual || 0;
-            var diff = actual - estimate;
-            var isMismatch = data.hasFilledEstimate && diff !== 0;
-            var isAbnormal = !!data.abnormal;
-            var isTarget = locateActive && locateTarget && barcode === locateTarget;
-            var diffClass = !data.hasFilledEstimate || diff === 0 ? 'diff-match' : 'diff-mismatch';
-            var diffText;
-            if (!data.hasFilledEstimate) diffText = '待填预估';
-            else if (diff === 0) diffText = '✓ 一致';
-            else if (diff > 0) diffText = '⚠️ +' + diff;
-            else diffText = '⚠️ ' + diff;
-
-            var rowClass = isTarget ? 'row-target' : (isAbnormal ? 'row-abnormal' : (isMismatch ? 'row-error' : ''));
-            var errorIcon = isMismatch ? '<span class="error-icon">⚠️</span>' : '';
-            var abnormalBadge = isAbnormal ? '<span class="abnormal-badge">异常</span>' : '';
-            var targetBadge = isTarget ? '<span class="target-badge">🎯 目标</span>' : '';
-
-            var safeBarcode = barcode.replace(/"/g, '&quot;');
-            var row = document.createElement('tr');
-            if (rowClass) row.className = rowClass;
-            row.innerHTML =
-                '<td class="barcode-cell" title="' + safeBarcode + '">📦 ' + escapeHtml(barcode) + errorIcon + abnormalBadge + targetBadge + '</td>' +
-                '<td><span class="estimate-value">' + (data.hasFilledEstimate ? estimate : '待填写') + '</span></td>' +
-                '<td><span class="count-badge">' + actual + '</span></td>' +
-                '<td><span class="diff-badge ' + diffClass + '">' + diffText + '</span></td>' +
-                '<td>' +
-                    '<div class="action-group">' +
-                        '<button class="adjust-btn adjust-minus" data-barcode="' + safeBarcode + '" data-action="minus" title="实际-1">−</button>' +
-                        '<button class="adjust-btn adjust-plus" data-barcode="' + safeBarcode + '" data-action="plus" title="实际+1">+</button>' +
-                        '<button class="edit-btn edit-est-btn" data-barcode="' + safeBarcode + '" data-action="edit-estimate">✏️预估</button>' +
-                        '<button class="edit-btn" data-barcode="' + safeBarcode + '" data-action="edit-actual">✏️实际</button>' +
-                    '</div>' +
-                '</td>';
-            tableBody.appendChild(row);
-        }
-        tableFoot.style.display = 'table-footer-group';
-        updateTotals();
-
-        var adjustBtns = document.querySelectorAll('.adjust-btn');
-        for (var j = 0; j < adjustBtns.length; j++) adjustBtns[j].onclick = handleAdjustActual;
-
-        var editEstBtns = document.querySelectorAll('[data-action="edit-estimate"]');
-        for (var k = 0; k < editEstBtns.length; k++) {
-            editEstBtns[k].onclick = function(e) {
-                openEditEstimateModal(e.currentTarget.getAttribute('data-barcode'));
-            };
-        }
-
-        var editActBtns = document.querySelectorAll('[data-action="edit-actual"]');
-        for (var m = 0; m < editActBtns.length; m++) {
-            editActBtns[m].onclick = function(e) {
-                openEditActualModal(e.currentTarget.getAttribute('data-barcode'));
-            };
-        }
-    }
-
-    // ========== 调整实际数量（+/-） ==========
-    function handleAdjustActual(e) { return Coop.adjust(e); }
-
-    function addBox(barcode, source) { return Coop.add(barcode, source); }
-
-    function getDiffEntries() {
-        var list = [];
-        for (var entry of boxData.entries()) {
-            var barcode = entry[0];
-            var data = entry[1];
-            var estimate = data.estimate || 0;
-            var actual = data.actual || 0;
-            if (actual - estimate !== 0 || data.abnormal) {
-                list.push({
-                    barcode: barcode,
-                    estimate: estimate,
-                    actual: actual,
-                    diff: actual - estimate,
-                    abnormal: !!data.abnormal,
-                    scanCount: data.scanCount || 0,
-                    lastScanTime: data.lastScanTime || 0
-                });
-            }
-        }
-        list.sort(function(a, b) {
-            if (a.abnormal !== b.abnormal) return a.abnormal ? -1 : 1;
-            var absA = Math.abs(a.diff);
-            var absB = Math.abs(b.diff);
-            if (absA !== absB) return absB - absA;
-            return b.lastScanTime - a.lastScanTime;
-        });
-        return list;
-    }
-
-    function onFinish() {
-        if (boxData.size === 0) {
-            setStatusMessage('暂无数据，无需完成', true);
-            return;
-        }
-        var totalEst = 0, totalAct = 0;
-        for (var entry of boxData.entries()) {
-            totalEst += entry[1].estimate || 0;
-            totalAct += entry[1].actual || 0;
-        }
-        var totalDiff = totalAct - totalEst;
-        var diffList = getDiffEntries();
-
-        summaryEstTotal.innerText = totalEst;
-        summaryActTotal.innerText = totalAct;
-        summaryDiffTotal.innerText = (totalDiff >= 0 ? '+' : '') + totalDiff;
-        summaryDiffStat.className = 'summary-stat ' + (totalDiff === 0 ? 'diff-ok' : 'diff-bad');
-        summaryDiffCount.innerText = diffList.length + ' 条';
-
-        if (diffList.length === 0) {
-            summarySubtitle.textContent = '所有订单预估与实际完全一致 🎉';
-            summaryList.innerHTML = '<div class="summary-all-good"><span class="big">🎉</span>所有 ' + boxData.size + ' 个订单都一致，没有差异！</div>';
-        } else {
-            summarySubtitle.textContent = '共 ' + boxData.size + ' 个订单，其中 ' + diffList.length + ' 个有差异/异常';
-            var html = '';
-            for (var i = 0; i < diffList.length; i++) {
-                var item = diffList[i];
-                var diffSign = item.diff > 0 ? '+' + item.diff : '' + item.diff;
-                var abnChip = item.abnormal ? '<span class="summary-num-chip chip-abn">异常</span>' : '';
-                html += '<div class="summary-item">' +
-                    '<div class="summary-item-code">📦 ' + escapeHtml(item.barcode) + '</div>' +
-                    '<div class="summary-item-nums">' +
-                        abnChip +
-                        '<span class="summary-num-chip chip-est">预 ' + item.estimate + '</span>' +
-                        '<span class="summary-num-chip chip-act">实 ' + item.actual + '</span>' +
-                        '<span class="summary-num-chip chip-diff-bad">差 ' + diffSign + '</span>' +
-                    '</div>' +
-                    '</div>';
-            }
-            summaryList.innerHTML = html;
-        }
-        summaryOverlay.classList.add('show');
-        setScanLocked(true);
-        if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]);
-    }
-
-    function closeSummary() {
-        summaryOverlay.classList.remove('show');
-        if (!modalOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !locateModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
-            setScanLocked(false);
-            barcodeInput.focus();
-        }
-    }
-
-    function onContinueTask() {
-        closeSummary();
-        setStatusMessage('已继续任务，可继续扫码', false);
-    }
-
-    // ========== 结束任务：彻底还原 ==========
-    function resetToInitialState() { return Coop.archive(); }
-
-    function onFinishTask() { return Coop.archive(); }
-
-    function onSummaryExport() {
-        var diffList = getDiffEntries();
-        if (diffList.length === 0) {
-            alert('没有差异/异常订单可导出');
-            return;
-        }
-        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '异常标记', '扫码次数']];
-        var totalEst = 0, totalAct = 0;
-        for (var i = 0; i < diffList.length; i++) {
-            var it = diffList[i];
-            csvRows.push([it.barcode, it.estimate, it.actual, it.diff, it.abnormal ? '异常' : '', it.scanCount]);
-            totalEst += it.estimate;
-            totalAct += it.actual;
-        }
-        csvRows.push(['', '', '', '', '', '']);
-        csvRows.push(['差异总计', totalEst, totalAct, totalAct - totalEst, '', '']);
-        var csvLines = [];
-        for (var x = 0; x < csvRows.length; x++) {
-            var row = csvRows[x];
-            var esc = [];
-            for (var y = 0; y < row.length; y++) {
-                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
-            }
-            csvLines.push(esc.join(','));
-        }
-        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = '差异订单_' + new Date().toISOString().slice(0,10) + '.csv';
-        link.click();
-        URL.revokeObjectURL(link.href);
-        setStatusMessage('差异订单已导出', false);
-    }
-
-    function onExport() {
-        if (boxData.size === 0) { alert('暂无数据可导出'); return; }
-        var csvRows = [['订单号', '预估数量', '实际数量', '差异', '状态', '异常标记', '扫码次数']];
-        var entries = Array.from(boxData.entries()).sort(function(a, b) {
-            return (b[1].lastScanTime || 0) - (a[1].lastScanTime || 0);
-        });
-        var totalEst = 0, totalAct = 0;
-        for (var i = 0; i < entries.length; i++) {
-            var barcode = entries[i][0];
-            var data = entries[i][1];
-            var est = data.estimate || 0;
-            var act = data.actual || 0;
-            var diff = act - est;
-            var status = diff === 0 ? '一致' : (diff > 0 ? '实际多于预估' : '实际少于预估');
-            csvRows.push([barcode, est, act, diff, status, data.abnormal ? '异常' : '', data.scanCount || 0]);
-            totalEst += est;
-            totalAct += act;
-        }
-        csvRows.push(['', '', '', '', '', '', '']);
-        csvRows.push(['总计', totalEst, totalAct, totalAct - totalEst, '', '', '']);
-        var csvLines = [];
-        for (var x = 0; x < csvRows.length; x++) {
-            var row = csvRows[x];
-            var esc = [];
-            for (var y = 0; y < row.length; y++) {
-                esc.push('"' + String(row[y] !== undefined ? row[y] : '').replace(/"/g, '""') + '"');
-            }
-            csvLines.push(esc.join(','));
-        }
-        var blob = new Blob(["\uFEFF" + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = '订单统计_' + new Date().toISOString().slice(0,10) + '.csv';
-        link.click();
-        URL.revokeObjectURL(link.href);
-        setStatusMessage('导出成功', false);
-    }
-
-    // ========== 事件绑定 ==========
-    function onKeyDown(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) {
-                setStatusMessage('弹窗打开中，扫码已锁定', true);
-                return;
-            }
-
-            var now = Date.now();
-
-            lastAddTime = now;
-
-            var val = barcodeInput.value.trim();
-            if (val !== '') {
-                barcodeInput.value = '';
-                barcodeInput.classList.remove('success', 'error');
-                addBox(val, 'scan');
-            } else {
-                setStatusMessage('请先扫描或输入订单号', true);
-                playErrorSound();
-            }
-
-            if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
-                barcodeInput.focus();
-            }
-        }
-    }
-
-    function onAddManual() {
-        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
-        var val = barcodeInput.value.trim();
-        if (val === '') {
-            setStatusMessage('请输入订单号', true);
-            playErrorSound();
-            openOrderModal();
-            return;
-        }
-        var ok = addBox(val, 'manual');
-        if (ok) {
-            barcodeInput.value = '';
-            barcodeInput.classList.remove('success', 'error');
-        }
-        if (!modalOverlay.classList.contains('show') && !summaryOverlay.classList.contains('show') && !orderModalOverlay.classList.contains('show') && !warnModalOverlay.classList.contains('show') && !cameraModalOverlay.classList.contains('show') && !locateInputModalOverlay.classList.contains('show')) {
-            barcodeInput.focus();
-        }
-    }
-
-    function onClearAll() { return Coop.archive(); }
-
-    function onBodyClick(e) {
-        if (modalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
-    }
-
-    function preventFormSubmit(e) {
-        if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'number' && !e.target.closest('.modal-box')) {
-            e.preventDefault();
-        }
-    }
-
-    // ========== 初始化 ==========
-    function init() {
-        barcodeInput.addEventListener('keydown', onKeyDown);
-
-        barcodeInput.addEventListener('input', function() {
-            var clean = barcodeInput.value.replace(/\D/g, '').slice(0, ORDER_LENGTH);
-            if (clean !== barcodeInput.value) barcodeInput.value = clean;
-            if (clean.length === ORDER_LENGTH) barcodeInput.classList.add('success');
-            else barcodeInput.classList.remove('success');
-        });
-
-        locateInput.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
-            openLocateInputModal();
-        });
-        locateInput.addEventListener('focus', function(e) {
-            e.target.blur();
-            if (modalOverlay.classList.contains('show') || orderModalOverlay.classList.contains('show') || warnModalOverlay.classList.contains('show') || summaryOverlay.classList.contains('show') || cameraModalOverlay.classList.contains('show') || locateInputModalOverlay.classList.contains('show')) return;
-            openLocateInputModal();
-        });
-
-        addBtn.addEventListener('click', onAddManual);
-        cameraBtn.addEventListener('click', openCameraModal);
-        clearInputBtn.addEventListener('click', function() {
-            barcodeInput.value = '';
-            barcodeInput.classList.remove('success', 'error');
-            barcodeInput.focus();
-        });
-        clearAllBtn.addEventListener('click', onClearAll);
-        exportBtn.addEventListener('click', onExport);
-        finishBtn.addEventListener('click', onFinish);
-        soundToggle.addEventListener('click', toggleSound);
-        document.body.addEventListener('click', onBodyClick);
-        document.addEventListener('keydown', preventFormSubmit);
-
-        locateOnBtn.addEventListener('click', onLocateOn);
-        locateOffBtn.addEventListener('click', onLocateOff);
-        locateModalOkBtn.addEventListener('click', closeLocateModal);
-        locateModalOverlay.addEventListener('click', function(e) {
-            if (e.target === locateModalOverlay) closeLocateModal();
-        });
-
-        locateInputCancelBtn.addEventListener('click', closeLocateInputModal);
-        locateInputConfirmBtn.addEventListener('click', confirmLocateInput);
-        locateInputModalOverlay.addEventListener('click', function(e) {
-            if (e.target === locateInputModalOverlay) closeLocateInputModal();
-        });
-        bindLocateKeypadEvents();
-
-        cameraCloseBtn.addEventListener('click', function() { closeCameraModal(); });
-        cameraModalOverlay.addEventListener('click', function(e) {
-            if (e.target === cameraModalOverlay) closeCameraModal();
-        });
-
-        modalConfirmBtn.addEventListener('click', confirmModalInput);
-        modalCancelBtn.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', function(e) {
-            if (e.target === modalOverlay) closeModal();
-        });
-
-        orderConfirmBtn.addEventListener('click', confirmOrder);
-        orderCancelBtn.addEventListener('click', closeOrderModal);
-        orderModalOverlay.addEventListener('click', function(e) {
-            if (e.target === orderModalOverlay) closeOrderModal();
-        });
-
-        warnFixBtn.addEventListener('click', handleWarnFix);
-        warnAbnormalBtn.addEventListener('click', handleWarnAbnormal);
-        warnModalOverlay.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-
-        continueBtn.addEventListener('click', onContinueTask);
-        finishTaskBtn.addEventListener('click', onFinishTask);
-        summaryExportBtn.addEventListener('click', onSummaryExport);
-        summaryOverlay.addEventListener('click', function(e) {
-            if (e.target === summaryOverlay) closeSummary();
-        });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && summaryOverlay.classList.contains('show')) closeSummary();
-        });
-
-        var initAudioOnce = function() {
-            getAudioContext();
-            document.removeEventListener('click', initAudioOnce);
-            document.removeEventListener('keydown', initAudioOnce);
-            document.removeEventListener('touchstart', initAudioOnce);
-        };
-        document.addEventListener('click', initAudioOnce);
-        document.addEventListener('keydown', initAudioOnce);
-        document.addEventListener('touchstart', initAudioOnce);
-
-        bindKeypadEvents();
-        bindOrderKeypadEvents();
-        updateLocateStatusUI();
-        updateLocateDisplay();
-        renderTable();
-        console.log('初始化完成 - 弹窗优先连续扫码正方形版');
-    }
-
-    init();
-    Coop.boot();
-    document.getElementById('cameraNextBox').onclick = function() {
-        if (!Coop.ready()) return;
-        lastCameraCode = ''; cameraCooldownUntil = Date.now() + 400;
-        cameraLast.textContent = '已准备扫描下一箱，请将新箱条码放入镜头';
-    };
+(function(){
+ var splash=document.getElementById('launchSplash');
+ var done=false;
+ function closeSplash(){if(done)return;done=true;splash.classList.add('splash-out');splash.style.pointerEvents='none';setTimeout(function(){if(splash&&splash.parentNode)splash.remove()},550)}
+ document.getElementById('skipSplash').addEventListener('click',closeSplash);
+ setTimeout(closeSplash,1900);
+})();
 </script>
-</body>
-</html>
+<div id="syncBusy" class="hidden" role="status" style="position:fixed;inset:0;z-index:10000;background:#1239;display:grid;place-items:center;color:white;font-size:20px">正在同步，请稍候…</div><div class="app"><header class="hero"><div class="brandrow"><img id="brandLogo" src="images/form-logonova1.png" alt="DAFU Logo" onerror="this.style.display='none';document.getElementById('brandFallback').style.display='flex'"><div id="brandFallback" class="brandfallback" style="display:none" aria-label="DAFU Logo">DAFU</div><h1>订单箱数核验系统</h1></div><p>仓库扫码 · 箱数核验 · 多人协作</p><div class="sheet"><div class="sheetline"><strong>📗 Google Sheets · 多人协作</strong><span id="cloudStatus" class="offline">● 未配置</span></div><div class="sub" id="taskDisplay">任务：本地任务　成员：本机操作员</div></div></header><div class="sheet" id="manualSyncPanel"><div id="pullHint" class="hint">顶部下拉更新 · 或点击手动同步</div><button id="manualSync" class="primary">↓ 上传并合并云端数据</button><div id="syncSummary" class="hint"></div><div id="syncError" class="notice danger hidden" role="alert"></div><div id="resolveConflict" class="hidden"><p id="conflictText" class="hint"></p><button id="useCloudEstimate" class="secondary">使用云端预估，保留待同步扫码</button><button id="keepLocalEstimate" class="secondary">确认采用本机预估</button></div><button class="secondary" onclick="document.getElementById('taskManagerBtn').click()">创建 / 加入 / 切换共享任务</button></div>
+<nav class="tabs"><button class="active" data-tab="scan">扫码录入</button><button data-tab="stats">订单统计</button><button data-tab="history">操作记录</button><button data-tab="exceptions">异常订单</button><button data-tab="archives">历史任务</button></nav>
+<main><section class="panel" id="tab-scan"><div class="scanbox"><h3>▣ 扫描订单条码 / 箱码</h3><div class="inputrow"><input id="barcode" inputmode="numeric" autocomplete="off" placeholder="输入8位订单号" maxlength="8"><button id="scanBtn">确认扫码</button></div><div class="keypad order-keypad hidden" id="orderKeypad" aria-label="订单号虚拟数字键盘"></div><div class="smallbuttons"><button id="toggleOrderKeypad" type="button" aria-expanded="false" aria-controls="orderKeypad">⌨ 打开数字键盘</button><button id="cameraBtn">📷 手机摄像头</button><button id="nextBtn">↻ 重新识别</button><button id="soundBtn" type="button">🔊 声音开启</button><button id="locateBtn" type="button">📍 定位箱子</button></div><div id="camera" class="camera hidden"></div><p class="hint">扫码枪可直接输入并回车。同一订单的下一箱请点击「重新识别」，避免同一箱重复计数。</p></div><div id="orderArea"><div class="card"><p class="label">当前订单</p><p class="muted">请扫描8位订单号开始核验。</p></div></div><section class="panel" id="taskControl"><div class="card"><div class="row"><strong>任务管理</strong><span id="taskStateLabel" class="pill">进行中</span></div><p class="hint" id="taskStateDescription">核验完成后可以结束任务，停止所有扫码并保留统计和历史记录。</p><button id="taskManagerBtn" class="secondary" type="button">＋ 创建任务 / 添加任务 / 切换任务</button><button id="endTaskBtn" class="primary" type="button" style="background:#b52c37">■ 结束当前任务</button><button id="restoreTaskBtn" class="secondary hidden" type="button">↻ 重新开启上一个任务（恢复数据）</button><button id="reopenTaskBtn" class="secondary hidden" type="button">＋ 开始新任务（从零开始）</button></div></section><div class="card"><div class="row"><strong>任务统计</strong><span class="pill" id="taskName">本地任务</span></div><div class="stats" id="statsCompact"></div></div></section>
+<section class="panel hidden" id="tab-stats"><div class="card"><div class="row"><h3>订单统计</h3><button id="exportBtn">导出订单 CSV</button><button id="exportScansBtn">导出全任务扫码明细</button></div><div id="statsFull"></div></div></section>
+<section class="panel hidden" id="tab-history"><div class="card"><h3>操作记录</h3><div id="historyList"></div></div></section>
+<section class="panel hidden" id="tab-exceptions"><div class="card"><h3>异常订单</h3><div id="exceptionList"></div></div></section><section class="panel hidden" id="tab-archives"><div class="card"><h3>历史任务（已结束）</h3><p class="hint">已结束的共享任务记录保存在这里；待同步扫码须先上传再结束任务。</p><div id="archiveList"></div></div></section></main><footer class="foot">扫码自动保存在本机 · 仅下拉或点击更新时同步云端</footer></div>
+<div id="locateSuccessShade" class="modalshade hidden" role="alertdialog" aria-modal="true"><div class="modal" style="text-align:center;border:5px solid #37BEB0;padding:28px 18px"><div style="font-size:100px;line-height:1;color:#17a34a;font-weight:900">✓</div><h2 style="font-size:28px;color:#138447;margin:14px 0">定位成功！</h2><div id="locateSuccessOrder" style="font-size:30px;font-weight:900;letter-spacing:2px"></div><p style="color:#168451;font-size:18px;font-weight:700">已找到目标箱子</p><p class="hint">定位扫描不增加实际箱数</p><button id="locateSuccessClose" class="primary" type="button">确认 · 继续定位</button></div></div>
+<div id="locateShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>📍 定位箱子 · 扫码寻找目标</h2><p class="hint">输入要寻找的 8 位订单号，点击「开始定位」。然后使用扫码枪或手机摄像头扫描箱码；扫中目标时会显示大绿色 ✓ 并播放专属成功音。定位期间不累计箱数。</p><input id="locateInput" inputmode="numeric" maxlength="8" placeholder="要定位的8位订单号" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><button class="primary" id="locateSearch">开始定位</button><div id="locateResult" aria-live="polite" style="margin-top:12px;max-height:45vh;overflow:auto"></div><button class="secondary" id="locateClose">关闭</button></div></div>
+<div id="modalShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>🔒 强制填写预估总箱数</h2><div class="notice danger">订单 <b id="modalOrder"></b> 正在扫描第 2 箱。第 1 箱已自动记录；必须填写预估总箱数，才能确认第 2 箱。</div><label class="label">预估总箱数 <b style="color:#cf2636">*</b></label><input id="estimateInput" inputmode="none" placeholder="请输入总箱数" readonly><div class="keypad" id="keypad"></div><button class="primary" id="saveEstimate">确认预估箱数并记录第2箱</button><button class="secondary" id="cancelEstimate">取消第2箱扫码</button></div></div>
+<div id="correctionShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal"><h2>🛠 扫码纠错 · 减少箱数</h2><p class="hint">误扫后可撤销指定订单最近的扫码记录。全任务扫码序号保留，已撤销的序号不重复使用。</p><label class="label">订单号</label><input id="correctionOrder" inputmode="numeric" maxlength="8" placeholder="8位订单号" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><div id="correctionInfo" class="notice info">请输入订单号</div><label class="label">本次减少箱数</label><div class="row" style="margin:8px 0"><button class="secondary" id="correctionMinus" style="width:55px;margin:0">−</button><strong id="correctionCount" style="font-size:24px">1</strong><button class="secondary" id="correctionPlus" style="width:55px;margin:0">＋</button></div><label class="label">纠错原因</label><input id="correctionReason" placeholder="例如：重复扫描同一箱" style="width:100%;padding:12px;border:1px solid #b5c8de;border-radius:8px;margin:8px 0"><button class="primary" id="confirmCorrection">确认减少箱数</button><button class="secondary" id="cancelCorrection">取消</button></div></div><div id="settingsShade" class="modalshade hidden"><div class="modal setting"><div class="row"><h2>协作设置</h2><button id="closeSettings">✕</button></div><label>任务编号（日期 + 批次）<input id="taskInput" readonly placeholder="点击自动生成"></label><button type="button" class="secondary" id="generateTaskId">↻ 自动生成日期批次</button><label>操作人员 <b style="color:#cf2636">*</b><input id="memberInput" placeholder="必填：请输入操作人员姓名" autocomplete="off"></label><button type="button" class="secondary" id="openTaskManager">＋ 创建任务 / 添加任务 / 切换任务</button><label>Google Apps Script Web App URL<input id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec"></label><p class="hint">仅填写地址不会自动实现协作。接口必须实现文末说明的读取和写入协议，并在服务器端保证原子计数、幂等与权限校验。未配置时使用本地存储。</p><button class="primary" id="saveSettings">保存设置</button><button class="secondary" id="syncBtn">尝试从云端读取</button><button class="secondary" id="clearBtn" style="color:#b32634">清空本机订单（不可恢复）</button></div></div><div id="taskManagerShade" class="modalshade hidden" role="dialog" aria-modal="true"><div class="modal setting"><div class="row"><h2>任务管理 · 日期与批次</h2><button type="button" id="closeTaskManager">✕</button></div><p class="hint">任务编号自动生成：YYYYMMDD-01、YYYYMMDD-02……；操作人员必填。创建新任务会保存当前任务，方便以后切换继续。</p><label>任务日期<input type="date" id="newTaskDate"></label><label>批次<input id="newTaskBatch" type="number" min="1" max="999" step="1" placeholder="批次"></label><button class="secondary" type="button" id="autoBatchBtn">自动生成当天下一批次</button><label>生成的任务编号<input id="newTaskCode" readonly></label><label>操作人员 <b style="color:#cf2636">*</b><input id="newTaskMember" placeholder="请输入操作人员姓名" autocomplete="off"></label><button class="primary" type="button" id="createTaskBtn">＋ 创建并进入任务</button><label>其他成员分享的任务码<input id="joinCloudCode" autocomplete="off" placeholder="输入16位任务码"></label><button id="joinCloudTask" class="primary" type="button">加入共享任务</button><h3>本机已加入任务（点击进入）</h3><div id="availableTasks"></div></div></div><div id="overLimitShade" class="modalshade hidden" role="alertdialog" aria-modal="true" aria-labelledby="overLimitTitle"><div class="modal"><div class="error-symbol">🚫</div><h2 id="overLimitTitle">超量提醒：实际箱数超过预估</h2><div class="error-details"><div>订单号：<strong id="overLimitOrder"></strong></div><div>预估总箱数：<strong id="overLimitEstimate"></strong></div><div>实际已扫箱数：<strong id="overLimitActual"></strong></div><div><b>本次扫码已计入实际箱数</b></div></div><p class="hint">实际箱数已继续累计，订单已标记为异常。请核对是否重复扫码或存在额外箱子。</p><button class="primary" id="closeOverLimit" type="button">我知道了</button></div></div>
+<div id="toast"></div>
+<script src="./assets/cloud-client.js"></script><script src="./assets/manual-queue.js"></script><script>
+(()=>{'use strict';const KEY='box_verify_manual_v2';let state;try{state=JSON.parse(localStorage.getItem(KEY)||'null')}catch{}state=state&&Array.isArray(state.orders)&&Array.isArray(state.logs)?state:{orders:[],logs:[],task:'本地任务',member:'',endpoint:''};if(state.member==='本机操作员')state.member='';if(typeof state.taskEnded!=='boolean')state.taskEnded=false;if(!Array.isArray(state.archives))state.archives=[];let current='',pending='',camera=null,lastCamera='',busy=false;let locateTarget="",locateSuccessTimer=null;let audioCtx=null,soundOn=true,cameraArmed=true,cameraMisses=0,cameraLastHit=0,overTimer=null;const $=id=>document.getElementById(id);const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let savedLocal=localStorage.getItem(KEY)||JSON.stringify(state);function persist(){try{const next=JSON.stringify(state);localStorage.setItem(KEY,next);savedLocal=next;}catch(e){if(savedLocal)state=JSON.parse(savedLocal);toast('本机存储失败，本次操作未保存。请导出备份并检查空间');throw e;}}const find=id=>state.orders.find(x=>x.id===id);function toast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3000)}const SCAN_ACTIONS=['首箱扫码','第二箱扫码并填写预估','扫描箱子','超量扫码'];
+// 为旧版日志补充全任务扫码序号；旧日志若已被清理，无法恢复丢失的序号。
+if(!Number.isSafeInteger(state.globalScanCounter)||state.globalScanCounter<0)state.globalScanCounter=0;
+for(const entry of [...state.logs].reverse())if(SCAN_ACTIONS.includes(entry.action)){if(!Number.isSafeInteger(entry.globalSeq)||entry.globalSeq<1)entry.globalSeq=++state.globalScanCounter;else state.globalScanCounter=Math.max(state.globalScanCounter,entry.globalSeq)}
+function log(action,id,detail=''){const entry={time:now(),member:state.member,action,id,detail};if(SCAN_ACTIONS.includes(action))entry.globalSeq=++state.globalScanCounter;state.logs.unshift(entry);queueChange(action,id)}function boxScans(id){return state.logs.filter(x=>x.id===id&&SCAN_ACTIONS.includes(x.action)&&!x.voided).slice().reverse().map((x,i)=>({globalSeq:x.globalSeq??null,seq:(x.action==='首箱扫码'?1:x.action==='第二箱扫码并填写预估'?2:(Number((x.detail||'').match(/第\s*(\d+)\s*箱/)?.[1])||Number((x.detail||'').match(/实际\s*(\d+)\s*箱/)?.[1])||i+1)),time:x.time||'未知',member:x.member||'未知',over:x.action==='超量扫码',action:x.action,detail:x.detail||''}));}
+function boxDetails(o){const scans=boxScans(o.id);const missing=Math.max(0,o.actual-scans.length);const cancelled=state.logs.filter(x=>x.id===o.id&&x.voided&&SCAN_ACTIONS.includes(x.action)).sort((a,b)=>(a.globalSeq||0)-(b.globalSeq||0));return `<details class="box-detail"><summary>查看全任务扫码序号和时间（${scans.length} 条）</summary><div class="box-summary">已同步序号按云端接收顺序 · 时间保留本机扫码时间 · 当前已扫 ${o.actual} 箱${missing?` · 其中 ${missing} 箱无可追溯记录`:''}</div>${scans.length?scans.map(x=>`<div class="box-line"><b class="${x.over?'box-warning':''}">全任务第 ${x.globalSeq??'未知'} 码<br>本订单第 ${x.seq} 箱</b><div><div class="box-time">${escape(x.time)} ${x.over?'<span class="box-warning">⚠ 超量</span>':''}</div><div class="box-extra">操作人：${escape(x.member)}</div></div></div>`).join(''):'<p class="muted">暂无逐箱扫码记录</p>'}${cancelled.length?`<div class="box-summary">已撤销扫码：${cancelled.map(x=>`全任务第 ${x.globalSeq??'未知'} 码（${escape(x.voidReason||'误扫')}）`).join('、')}</div>`:''}</details>`}
+function stats(){return{total:state.orders.length,done:state.orders.filter(x=>x.done).length,active:state.orders.filter(x=>!x.done&&!x.exception).length,bad:state.orders.filter(x=>x.exception).length}}function statsHtml(){const s=stats();return[['订单总数',s.total,'#1d2e45'],['已完成',s.done,'#078237'],['进行中',s.active,'#238F84'],['异常',s.bad,'#d12b36']].map(([a,b,c])=>`<div class="stat"><span>${a}</span><strong style="color:${c}">${b}</strong></div>`).join('')}
+function render(){const ended=state.taskEnded;$('taskStateLabel').textContent=ended?'已结束':'进行中';$('taskStateDescription').textContent=ended?`任务已于 ${state.taskEndedAt||'未知时间'} 结束，当前统计已归零，历史记录请到「历史任务」查看；可重新开启原任务恢复数据，或开始全新任务。`:'核验完成后可结束任务，当前统计清零，原有数据移入历史任务。';$('endTaskBtn').classList.toggle('hidden',ended);$('reopenTaskBtn').classList.toggle('hidden',!ended);$('restoreTaskBtn').classList.toggle('hidden',!ended||!state.archives.length);$('barcode').disabled=ended;$('scanBtn').disabled=ended;$('nextBtn').disabled=ended;$('toggleOrderKeypad').disabled=ended;if(ended){$('orderKeypad').classList.add('hidden');$('toggleOrderKeypad').textContent='⌨ 打开数字键盘'}const s=stats();$('statsCompact').innerHTML=statsHtml();$('taskName').textContent=state.task;$('taskDisplay').textContent=`任务：${state.task}　成员：${state.member||'未填写（必填）'}`;$('cloudStatus').textContent=state.endpoint?'● 已配置接口（未验证）':'● 本地模式';$('cloudStatus').className=state.endpoint?'offline':'offline';const o=find(current);if(!o){$('orderArea').innerHTML='<div class="card"><p class="label">当前订单</p><p class="muted">请扫描8位订单号开始核验。</p></div>'}else{const hasEstimate=Number.isInteger(o.estimate)&&o.estimate>0;const pct=hasEstimate?Math.min(100,Math.round(o.actual/o.estimate*100)):0;$('orderArea').innerHTML=`<div class="card"><div class="notice ${o.exception?'danger':'success'}">${o.exception?'⚠ 该订单存在异常，请检查箱数':'✓ 订单已更新'}</div><div class="label">当前订单号</div><div class="order">${escape(o.id)}</div><div class="numbers"><div class="num"><span>预估总箱数</span><strong>${hasEstimate?o.estimate:"待填写"}</strong></div><div class="num"><span>实际已扫箱数</span><strong>${o.actual}</strong></div></div><div class="progressrow"><b>箱数进度</b><span>${hasEstimate?`${o.actual} / ${o.estimate} (${Math.round(o.actual/o.estimate*100)}%)`:`${o.actual} 箱 · 第2箱填写预估`}</span></div><div class="track"><div class="fill" style="width:${pct}%"></div></div><div class="notice ${o.exception?'danger':'success'}">${o.exception?'实际数量超过预估，已记录超出箱数，请核对':`第 ${o.actual} 箱已记录，${!hasEstimate?"第2箱扫码时强制填写预估总箱数":o.done?'订单已完成':'可继续扫描同一订单的下一箱'}`}</div><button class="primary" id="continueBtn">▣ 继续扫码（第 ${o.actual+1} 箱）</button><button class="secondary" id="correctBtn">🛠 扫码纠错 / 减少箱数</button><button class="secondary" id="finishBtn">✓ ${o.done?'取消完成标记':'完成该订单'}</button><div class="smallbuttons"><button id="editEstimateBtn">✎ 修改预估箱数</button><button id="exceptionBtn">⚠ ${o.exception?'取消异常':'标记异常'}</button></div></div>`;$('continueBtn').onclick=()=>{$('barcode').value=o.id;scan(o.id)};$('correctBtn').onclick=()=>openCorrection(o.id);$('finishBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}o.done=!o.done;log(o.done?'完成订单':'取消完成',o.id);persist();render()};$('editEstimateBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}const n=prompt('请输入新的预估总箱数（正整数）',o.estimate);if(n===null)return;if(!/^[1-9]\d*$/.test(n)||Number(n)>99999){toast('请输入有效的正整数');return}o.estimate=Number(n);o.exception=o.actual>o.estimate;log('修改预估',o.id,'新预估：'+n);persist();render()};$('exceptionBtn').onclick=()=>{if(state.taskEnded){toast('任务已结束，请先重新开启');return}o.exception=!o.exception;log(o.exception?'标记异常':'取消异常',o.id);persist();render()}}$('statsFull').innerHTML=`<button class="secondary" id="statsCorrectBtn">🛠 扫码纠错 / 减少箱数</button><div class="stats">${statsHtml()}</div>${state.orders.length?state.orders.map(o=>`<div class="record"><div class="row"><b>${escape(o.id)}</b><span class="pill">${o.done?'已完成':o.exception?'异常':'进行中'}</span></div><div class="muted">预估 ${o.estimate??"待填写"} 箱 · 已扫 ${o.actual} 箱</div>${boxDetails(o)}</div>`).join(''):'<p class="muted">暂无订单</p>'}`;$('statsCorrectBtn').onclick=()=>openCorrection(current||'');$('historyList').innerHTML=state.logs.length?state.logs.map(x=>`<div class="record"><b>${escape(x.action)}</b>　${escape(x.id)}<div class="muted">${escape(x.time)} · ${escape(x.member)} ${escape(x.detail)}</div></div>`).join(''):'<p class="muted">暂无操作记录</p>';$('exceptionList').innerHTML=state.orders.filter(o=>o.exception).map(o=>`<div class="record"><b>${escape(o.id)}</b><div class="muted">预估 ${o.estimate??"待填写"} · 实际 ${o.actual}</div></div>`).join('')||'<p class="muted">暂无异常订单</p>';$('archiveList').innerHTML=state.archives.length?state.archives.map((a,i)=>{const orders=Array.isArray(a.orders)?a.orders:[];const logs=Array.isArray(a.logs)?a.logs:[];const count=orders.reduce((n,o)=>n+(Number(o.actual)||0),0);return `<details class="record"><summary><b>${escape(a.task||'未命名任务')}</b> · ${escape(a.endedAt||'')}<div class="muted">${orders.length} 个订单 · ${count} 箱</div></summary>${orders.map(o=>{const scans=logs.filter(l=>l.id===o.id&&Number.isInteger(l.globalSeq)).sort((x,y)=>x.globalSeq-y.globalSeq);return `<details class="record"><summary><b>${escape(o.id)}</b> · 预估 ${o.estimate??'待填写'} · 实际 ${o.actual}</summary>${scans.map(l=>`<div class="muted">全任务第 ${l.globalSeq} 码 · ${escape(l.time||'')} · ${escape(l.member||'')} ${l.voided?'（已撤销）':''}</div>`).join('')||'<div class="muted">无可用逐箱记录</div>'}</details>`}).join('')}<button class="secondary" type="button" data-archive-export="${i}">导出本任务 CSV</button></details>`}).join(''):'<p class="muted">暂无已结束任务</p>';document.querySelectorAll('[data-archive-export]').forEach(b=>b.onclick=()=>{const a=state.archives[Number(b.dataset.archiveExport)];if(!a)return;const rows=[['订单号','预估箱数','实际箱数','状态'],...a.orders.map(o=>[o.id,o.estimate??'',o.actual,o.exception?'异常':o.done?'完成':'进行中'])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='历史任务_'+(a.task||'任务')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});}
+function unlockAudio(){if(!soundOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}catch(e){}}
+function beep(kind='ok'){if(!soundOn)return;try{unlockAudio();if(!audioCtx)return;const t=audioCtx.currentTime;const patterns={ok:{type:'square',notes:[[950,0,.075],[1450,.105,.11]],gain:.38},prompt:{type:'sine',notes:[[510,0,.32],[510,.40,.32],[510,.80,.32]],gain:.55},located:{type:'triangle',notes:[[880,0,.16],[1175,.20,.17],[1568,.42,.42]],gain:.58},error:{type:'sawtooth',notes:[[340,0,.24],[240,.30,.32]],gain:.36},key:{type:'sine',notes:[[480,0,.055]],gain:.12}};const cfg=patterns[kind]||patterns.ok;for(const [freq,offset,dur] of cfg.notes){const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=cfg.type;osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,t+offset);gain.gain.linearRampToValueAtTime(cfg.gain,t+offset+.012);gain.gain.exponentialRampToValueAtTime(.0001,t+offset+dur);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(t+offset);osc.stop(t+offset+dur+.02)}}catch(e){}}
+function setLocateMode(target){locateTarget=target;$('locateBtn').textContent=target?'📍 定位中：'+target:'📍 定位箱子';$('locateBtn').style.background=target?'#d8f8e9':'';$('barcode').placeholder=target?'定位中：请扫描箱码':'输入8位订单号';$('locateShade').classList.add('hidden');if(target){$('barcode').value='';toast('定位模式已开启，扫描 '+target+'；不会增加箱数')}else toast('已退出定位模式')}
+$('locateBtn').onclick=()=>{$('locateInput').value=locateTarget;$('locateResult').innerHTML=locateTarget?'<div class="notice success">当前定位目标：'+escape(locateTarget)+'</div>':'<p class="muted">设置目标订单号后，直接扫码寻找。</p>';$('locateSearch').textContent=locateTarget?'更换定位目标':'开始定位';$('locateShade').classList.remove('hidden')};
+$('locateClose').onclick=()=>$('locateShade').classList.add('hidden');
+function locateScans(){const q=$('locateInput').value.trim();if(!/^\d{8}$/.test(q)){toast('请输入8位目标订单号');$('locateResult').innerHTML='<div class="notice danger">目标必须是8位订单号。</div>';return}setLocateMode(q)}
+$('locateSearch').onclick=locateScans;$('locateInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();locateScans()}});
+const exitLocate=document.createElement('button');exitLocate.type='button';exitLocate.className='secondary';exitLocate.textContent='退出定位模式';$('locateClose').before(exitLocate);exitLocate.onclick=()=>setLocateMode('');
+function locateScan(id){if(!/^\d{8}$/.test(id)){toast('请输入8位箱码');return}if(id===locateTarget){beep('located');$('locateSuccessOrder').textContent=id;$('locateSuccessShade').classList.remove('hidden');clearTimeout(locateSuccessTimer);locateSuccessTimer=setTimeout(()=>{$('locateSuccessShade').classList.add('hidden')},3200)}else{beep('error');toast('不是目标箱子：'+id+'；请继续寻找 '+locateTarget)}$('barcode').value=''}
+$('locateSuccessClose').onclick=()=>{$('locateSuccessShade').classList.add('hidden');clearTimeout(locateSuccessTimer)};
+$('soundBtn').onclick=()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'🔊 声音开启':'🔇 声音关闭';if(soundOn){unlockAudio();beep()}};
+document.addEventListener('pointerdown',unlockAudio,{passive:true});document.addEventListener('keydown',unlockAudio);
+function showOverLimit(o){$('overLimitOrder').textContent=o.id;$('overLimitEstimate').textContent=o.estimate;$('overLimitActual').textContent=o.actual;$('overLimitShade').classList.remove('hidden');$('barcode').value='';setOrderKeyboard(false);beep('error');clearTimeout(overTimer);overTimer=setTimeout(()=>{$('overLimitShade').classList.add('hidden')},1700);}
+$('closeOverLimit').onclick=()=>{clearTimeout(overTimer);$('overLimitShade').classList.add('hidden');};
+function showEstimate(id){beep('prompt');pending=id;$('modalOrder').textContent=id;$('estimateInput').value='';$('modalShade').classList.remove('hidden')}let correctionQty=1;
+function openCorrection(id=''){if(state.taskEnded){toast('任务已结束，不能纠错；请先重新开启任务');return}$('correctionOrder').value=id;$('correctionReason').value='';correctionQty=1;$('correctionCount').textContent='1';$('correctionShade').classList.remove('hidden');updateCorrectionInfo()}
+function updateCorrectionInfo(){const id=$('correctionOrder').value.trim(),o=find(id);$('correctionInfo').textContent=o?`订单 ${id} · 当前实际 ${o.actual} 箱 · 预估 ${o.estimate??'待填写'} 箱`:'请输入存在的8位订单号';$('correctionCount').textContent=correctionQty}
+$('correctionOrder').addEventListener('input',updateCorrectionInfo);
+$('correctionMinus').onclick=()=>{correctionQty=Math.max(1,correctionQty-1);updateCorrectionInfo()};
+$('correctionPlus').onclick=()=>{const o=find($('correctionOrder').value.trim());correctionQty=Math.min(o?.actual||1,correctionQty+1);updateCorrectionInfo()};
+$('cancelCorrection').onclick=()=>$('correctionShade').classList.add('hidden');
+$('confirmCorrection').onclick=()=>{const id=$('correctionOrder').value.trim(),o=find(id),reason=$('correctionReason').value.trim();if(!o){toast('找不到此订单');return}if(!reason){toast('请填写纠错原因');return}if(correctionQty>o.actual){toast('减少箱数不能超过实际箱数');return}const old=o.actual;const candidates=state.logs.filter(x=>x.id===id&&SCAN_ACTIONS.includes(x.action)&&!x.voided).sort((a,b)=>(b.globalSeq||0)-(a.globalSeq||0));const voided=[];for(const entry of candidates.slice(0,correctionQty)){entry.voided=true;entry.voidReason=reason;entry.voidBy=state.member;entry.voidTime=now();voided.push(entry.globalSeq)}o.actual-=correctionQty;o.exception=!!o.estimate&&o.actual>o.estimate;if(o.actual<2&&o.estimate&&old>=2){/* 保留已填写的预估，不要求重复输入 */}if(o.actual===0){o.done=false}log('扫码纠错',id,`实际 ${old} → ${o.actual}，减少 ${correctionQty} 箱；原因：${reason}；撤销全任务序号：${voided.join('、')||'旧记录缺失'}`);current=id;persist();$('correctionShade').classList.add('hidden');render();toast(`纠错成功：${id} 实际箱数 ${old} → ${o.actual}`)};
+function scan(raw){if(!state.member||!state.member.trim()){toast('请先填写操作人员（必填），再开始扫码');settings();$('memberInput').focus();return}if(locateTarget){locateScan(String(raw||'').trim());return}if(state.taskEnded){toast('任务已结束，禁止继续扫码；如需修改请先重新开启任务');return}if(busy)return;const id=String(raw||'').trim();if(!/^\d{8}$/.test(id)){toast('请输入8位数字订单号');return}if(pending){toast('请先填写当前订单的预估总箱数');return}const o=find(id);if(!o){state.orders.unshift({id,estimate:null,actual:1,done:false,exception:false,created:now()});current=id;log('首箱扫码',id,'第 1 箱自动计入，第二箱需填写预估');beep('ok');persist();render();toast('第1箱已记录；第2箱扫码时填写预估总箱数');$('barcode').value='';return}if(o.actual===0){o.actual=1;current=id;log('首箱扫码',id,'纠错后重新记录第1箱');beep('ok');persist();render();toast('第1箱已重新记录');$('barcode').value='';return}if(!Number.isInteger(o.estimate)||o.estimate<1){current=id;showEstimate(id);return}if(o.done){beep('error');toast('订单已标记完成，请先取消完成标记');current=id;render();return}o.actual++;current=id;if(o.actual>o.estimate){o.exception=true;log('超量扫码',id,`实际 ${o.actual} 箱，预估 ${o.estimate} 箱`);persist();render();showOverLimit(o)}else{log('扫描箱子',id,`第 ${o.actual} 箱`);beep('ok');persist();render();toast(`订单 ${id}：已记录第 ${o.actual} 箱`)}$('barcode').value=''}
+function saveEstimate(){if(state.taskEnded){toast('任务已结束，无法记录第2箱');return}const v=$('estimateInput').value;if(!/^[1-9]\d*$/.test(v)||Number(v)>99999){toast('必须填写有效的预估总箱数（1～99999）');return}const id=pending;if(!id)return;let o=find(id);if(!o){toast('订单不存在，请先扫描第1箱');return}else{if(Number(v)<2){toast('已扫描第2箱，预估总箱数不能小于2');return}o.estimate=Number(v);o.actual++;beep('ok');log('第二箱扫码并填写预估',id,`预估 ${v} 箱，实际第 ${o.actual} 箱`)}pending='';current=id;$('modalShade').classList.add('hidden');persist();render();toast('预估已保存，第2箱已计入，实际箱数已保存在本机')}
+for(const k of ['1','2','3','4','5','6','7','8','9','清空','0','⌫']){const b=document.createElement('button');b.type='button';b.textContent=k;b.setAttribute('aria-label',k==='⌫'?'删除最后一位':k);b.onclick=()=>{const i=$('barcode');i.value=k==='清空'?'':k==='⌫'?i.value.slice(0,-1):i.value.length<8?i.value+k:i.value;if(i.value.length===8)toast('已输入8位订单号，点击确认扫码');};$('orderKeypad').appendChild(b)}
+const orderKeyboard=$('orderKeypad'),orderKeyboardToggle=$('toggleOrderKeypad');
+function setOrderKeyboard(open){orderKeyboard.classList.toggle('hidden',!open);orderKeyboardToggle.textContent=open?'⌨ 收起数字键盘':'⌨ 打开数字键盘';orderKeyboardToggle.setAttribute('aria-expanded',String(open));}
+orderKeyboardToggle.onclick=()=>setOrderKeyboard(orderKeyboard.classList.contains('hidden'));
+$('barcode').addEventListener('click',()=>setOrderKeyboard(true));
+$('scanBtn').onclick=()=>{scan($('barcode').value);setOrderKeyboard(false)};$('barcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();scan($('barcode').value);setOrderKeyboard(false)}});$('saveEstimate').onclick=saveEstimate;$('cancelEstimate').onclick=()=>{pending='';$('modalShade').classList.add('hidden');toast('已取消第2箱扫码，第1箱仍保留')};for(const k of ['1','2','3','4','5','6','7','8','9','清空','0','⌫']){const b=document.createElement('button');b.textContent=k;b.onclick=()=>{beep('key');const i=$('estimateInput');i.value=k==='清空'?'':k==='⌫'?i.value.slice(0,-1):i.value.length<5?i.value+k:i.value};$('keypad').appendChild(b)}$('nextBtn').onclick=()=>{cameraArmed=true;cameraMisses=0;lastCamera='';$('barcode').focus();toast('已准备识别下一箱')};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('main>section').forEach(x=>x.classList.toggle('hidden',x.id!=='tab-'+b.dataset.tab));render()});
+$('cameraBtn').onclick=async()=>{if(state.taskEnded&&!camera){toast('任务已结束，摄像头扫码已停用');return}if(camera){cameraArmed=false;await camera.stop().catch(()=>{});camera.clear();camera=null;$('camera').classList.add('hidden');$('cameraBtn').textContent='📷 手机摄像头';return}if(!window.Html5Qrcode){toast('摄像头组件未加载，请联网后重试，或使用扫码枪');return}try{unlockAudio();cameraArmed=true;cameraMisses=0;$('camera').classList.remove('hidden');camera=new Html5Qrcode('camera');await camera.start({facingMode:'environment'},{fps:10,qrbox:{width:230,height:160}},code=>{const id=String(code).trim();if((pending&&!locateTarget)||!$('overLimitShade').classList.contains('hidden')||!$('locateSuccessShade').classList.contains('hidden'))return;if(!cameraArmed)return;cameraArmed=false;cameraMisses=0;cameraLastHit=Date.now();lastCamera=id;scan(id)},()=>{if(cameraArmed)return;cameraMisses++;/* Explicit next-box acknowledgement prevents repeated reads of one physical box. */});$('cameraBtn').textContent='关闭摄像头'}catch(e){camera=null;$('camera').classList.add('hidden');toast('摄像头无法启动：请检查权限及 HTTPS 环境')}};
+function csv(){const lines=[['订单号','预估总箱数','实际已扫箱数','是否完成','是否异常','创建时间'],...state.orders.map(o=>[o.id,o.estimate,o.actual,o.done?'是':'否',o.exception?'是':'否',o.created])];const data='\ufeff'+lines.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8'}));a.download='订单箱数核验_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}$('exportBtn').onclick=csv;
+function exportScans(){const rows=[['全任务第几码','订单号','本订单第几箱','扫码时间','操作成员','状态','备注']];for(const o of state.orders){for(const x of boxScans(o.id)){rows.push([x.globalSeq??'',o.id,x.seq,x.time,x.member,x.over?'超出预估':'正常',x.detail])}}rows.splice(1,rows.length-1,...rows.slice(1).sort((a,b)=>Number(a[0])-Number(b[0])));const content='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='逐箱扫码顺序与时间_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}$('exportScansBtn').onclick=exportScans;
+// Cloud configuration is deliberately not represented as connected until a verified adapter is supplied.
+const settings=()=>{$('taskInput').value=state.task;$('memberInput').value=state.member||'';$('endpointInput').value=state.endpoint;$('settingsShade').classList.remove('hidden')};document.querySelector('.hero h1').onclick=settings;document.querySelector('.sheet').onclick=settings;$('closeSettings').onclick=()=>$('settingsShade').classList.add('hidden');$('saveSettings').onclick=()=>{if(!$('memberInput').value.trim()){toast('操作人员为必填项');$('memberInput').focus();return}state.member=$('memberInput').value.trim();state.endpoint=$('endpointInput').value.trim();persist();$('settingsShade').classList.add('hidden');render();toast('设置已保存；云端同步需配套服务端接口')};$('syncBtn').onclick=()=>toast('尚未接入已验证的云端协议；不会用云端数据覆盖本地记录');$('clearBtn').onclick=()=>{if(confirm('确定永久清空本机全部订单和操作记录？')){state.orders=[];state.logs=[];state.globalScanCounter=0;current='';persist();render();toast('本地数据已清空')}};
+$('endTaskBtn').onclick=async()=>{if(pending){toast('请先确认或取消第2箱预估输入');return}if(!state.orders.length&&!state.logs.length){toast('当前任务没有扫码记录，无需结束');return}const total=state.orders.reduce((n,o)=>n+o.actual,0);if(!confirm(`确定结束当前任务「${state.task}」？\n订单 ${state.orders.length} 个，实际扫码 ${total} 箱。\n结束后当前统计立即归零，原始记录保存到「历史任务」。`))return;const endedAt=now();state.archives.unshift({task:state.task,member:state.member,endedAt,orders:JSON.parse(JSON.stringify(state.orders)),logs:JSON.parse(JSON.stringify(state.logs)),globalScanCounter:state.globalScanCounter||0});state.orders=[];state.logs=[];state.globalScanCounter=0;state.taskEnded=true;state.taskEndedAt=endedAt;current='';pending='';$('barcode').value='';persist();if(camera){try{await camera.stop()}catch(e){}try{camera.clear()}catch(e){}camera=null;$('camera').classList.add('hidden');$('cameraBtn').textContent='📷 手机摄像头'}render();toast('任务已结束，当前统计已归零；历史记录已保存')};$('restoreTaskBtn').onclick=()=>{if(!state.taskEnded){toast('当前任务正在进行中');return}const last=state.archives[0];if(!last){toast('没有可以恢复的历史任务');return}if(!confirm(`确定重新开启「${last.task}」？\n将恢复原有订单、扫码序号、扫码时间及纠错记录，并继续累计。\n此任务将从历史任务列表移回当前任务。`))return;state.orders=JSON.parse(JSON.stringify(last.orders||[]));state.logs=JSON.parse(JSON.stringify(last.logs||[]));state.globalScanCounter=last.globalScanCounter||0;state.task=last.task;state.member=last.member||state.member;state.archives.shift();state.taskEnded=false;state.taskEndedAt='';current='';pending='';persist();render();toast('原任务已重新开启，扫码记录及序号已恢复')};// 日期批次任务管理：每个任务独立保存订单、全局扫码序号与操作日志。
+const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const dateCode=d=>d.replace(/-/g,'');
+const knownTasks=()=>[state.task,...state.archives.map(a=>a.task)];
+function nextBatch(date){const prefix=dateCode(date)+'-';let max=0;for(const name of knownTasks()){if(String(name).startsWith(prefix)){const n=Number(String(name).slice(prefix.length));if(Number.isSafeInteger(n))max=Math.max(max,n)}}return max+1}
+function taskId(date,batch){return dateCode(date)+'-'+String(batch).padStart(2,'0')}
+function updateTaskCode(){const date=$('newTaskDate').value,batch=Number($('newTaskBatch').value);$('newTaskCode').value=date&&Number.isSafeInteger(batch)&&batch>=1&&batch<=999?taskId(date,batch):''}
+function snapshot(status='暂停'){return{task:state.task,member:state.member||'',endedAt:state.taskEndedAt||'',status,orders:JSON.parse(JSON.stringify(state.orders)),logs:JSON.parse(JSON.stringify(state.logs)),globalScanCounter:state.globalScanCounter||0}}
+function loadTask(t){state.task=t.task;state.member=t.member||'';state.orders=JSON.parse(JSON.stringify(t.orders||[]));state.logs=JSON.parse(JSON.stringify(t.logs||[]));state.globalScanCounter=t.globalScanCounter||0;state.taskEnded=false;state.taskEndedAt='';current='';pending='';$('barcode').value='';persist();render()}
+function saveCurrentBeforeSwitch(){if(state.taskEnded)return;if(state.orders.length||state.logs.length||/^\d{8}-\d+$/.test(state.task)){state.archives.unshift(snapshot('暂停'))}}
+function openTaskManager(){const date=localDate();$('newTaskDate').value=date;$('newTaskBatch').value=nextBatch(date);$('newTaskMember').value=state.member||'';updateTaskCode();renderAvailableTasks();$('taskManagerShade').classList.remove('hidden')}
+function renderAvailableTasks(){const items=state.archives.map((a,i)=>`<div class="record"><div class="row"><div><b>${escape(a.task)}</b><div class="muted">${escape(a.status||'已结束')} · ${escape(a.member||'未填写')} · ${(a.orders||[]).length} 个订单</div></div><button class="secondary" type="button" data-task-index="${i}" style="width:auto;margin:0">进入任务</button></div></div>`).join('');$('availableTasks').innerHTML=items||'<p class="muted">暂无其他任务</p>';document.querySelectorAll('[data-task-index]').forEach(btn=>btn.onclick=()=>{const idx=Number(btn.dataset.taskIndex),t=state.archives[idx];if(!t)return;if(!confirm(`切换到任务「${t.task}」？当前任务数据会先保存。`))return;state.archives.splice(idx,1);saveCurrentBeforeSwitch();loadTask(t);$('taskManagerShade').classList.add('hidden');toast('已进入任务：'+t.task)})}
+$('taskManagerBtn').onclick=openTaskManager;$('openTaskManager').onclick=()=>{$('settingsShade').classList.add('hidden');openTaskManager()};$('closeTaskManager').onclick=()=>$('taskManagerShade').classList.add('hidden');
+$('newTaskDate').onchange=()=>{$('newTaskBatch').value=nextBatch($('newTaskDate').value);updateTaskCode()};$('newTaskBatch').oninput=updateTaskCode;$('autoBatchBtn').onclick=()=>{$('newTaskBatch').value=nextBatch($('newTaskDate').value);updateTaskCode()};
+$('generateTaskId').onclick=()=>{$('taskInput').value=taskId(localDate(),nextBatch(localDate()));toast('已生成新任务编号，请点击创建任务以启用')};
+$('createTaskBtn').onclick=()=>{const name=$('newTaskCode').value,member=$('newTaskMember').value.trim();if(!name){toast('请选择有效日期与批次');return}if(!member){toast('操作人员不能为空');$('newTaskMember').focus();return}if(knownTasks().includes(name)){toast('该日期批次已存在，请选择其他批次');return}if(!confirm(`创建任务 ${name}，操作人员：${member}？\n当前任务如有数据会自动保存，扫码序号从第1码开始。`))return;saveCurrentBeforeSwitch();loadTask({task:name,member,orders:[],logs:[],globalScanCounter:0});$('taskManagerShade').classList.add('hidden');toast('新任务创建成功：'+name)};
+$('reopenTaskBtn').onclick=openTaskManager;
+
+/* Manual cloud adapter: no polling, visibility refresh, or automatic upload. */
+state.cloud=state.cloud||{token:'',outbox:[],base:[],revision:0,estimateVersions:{},lastSync:''};
+state.savedTasks=state.savedTasks||[];
+if(!state.cloud.token){try{const old=JSON.parse(localStorage.getItem('warehouse-cloud-session-v1')||'null');if(old?.token)state.cloud.token=old.token;}catch{}}
+const originalRender=render;
+render=function(){
+ originalRender();
+ const c=state.cloud,n=c.outbox.length,scans=c.outbox.filter(x=>x.kind==='scan').length;
+ $('cloudStatus').textContent=busy?'● 正在手动同步':n?'● 待同步 '+scans+' 箱 / '+n+' 项':c.token?'● 本机已保存':'● 请创建或加入任务';
+ $('cloudStatus').className=n?'offline':'ok';
+ $('taskDisplay').textContent='任务：'+state.task+'　成员：'+(state.member||'未填写')+(c.code?'　任务码：'+c.code:'');
+ $('syncSummary').textContent=(c.lastSync?'上次同步：'+new Date(c.lastSync).toLocaleString():'尚未同步')+' · 扫码先保存在本机，下拉或点击后才上传并下载。';
+ $('manualSync').disabled=busy||!c.token;
+ $('restoreTaskBtn').classList.add('hidden');
+ $('endTaskBtn').disabled=!c.token||c.role!=='admin'||busy;
+ $('taskStateDescription').textContent=state.taskEnded?'云端任务已结束，记录保留。可创建或切换其他任务。':'本机待同步操作 '+n+' 项。只有下拉更新后才会上传并合并其他成员数据。';
+};
+function queueChange(action,id){
+ const o=find(id),c=state.cloud;
+ if(!c?.token)return;
+ let entries=[];
+ if(SCAN_ACTIONS.includes(action)){
+   if(action==='第二箱扫码并填写预估')entries.push({kind:'estimate',barcode:id,value:o.estimate,expectedVersion:c.estimateVersions[id]||0});
+   entries.push({kind:'scan',barcode:id});
+ }else if(action==='修改预估')entries.push({kind:'estimate',barcode:id,value:o.estimate,expectedVersion:c.estimateVersions[id]||0});
+ else if(action==='扫码纠错')entries.push({kind:'adjust',barcode:id,value:-correctionQty,reason:$('correctionReason').value.trim()});
+ else if(action==='完成订单'||action==='取消完成')entries.push({kind:'done',barcode:id,value:o.done?1:0});
+ else if(action==='标记异常'||action==='取消异常')entries.push({kind:'abnormal',barcode:id,value:o.exception?1:0});
+ for(const b of entries)if(b.kind==='estimate')c.estimateVersions[id]=(c.estimateVersions[id]||0)+1;
+ state.cloud=ManualQueue.enqueue(c,entries);
+ if(state.logs[0]&&entries.length)state.logs[0].operationId=state.cloud.outbox.at(-1).id;
+}
+function cloudOrders(s){
+ return s.orders.map(o=>({id:o.barcode,estimate:o.hasFilledEstimate?o.estimate:null,actual:o.actual,done:!!o.done,exception:!!o.abnormal||(o.hasFilledEstimate&&o.actual>o.estimate),created:''}));
+}
+function applyCloud(s,history){
+ const c=state.cloud;c.base=s.orders;c.revision=s.task.revision;c.role=s.me.role;c.code=s.task.code;c.taskId=s.task.id;
+ c.estimateVersions=Object.fromEntries(s.orders.map(o=>[o.barcode,o.estimateVersion]));
+ for(const b of c.outbox)if(b.kind==='estimate')c.estimateVersions[b.barcode]=(c.estimateVersions[b.barcode]||0)+1;
+ state.task=s.task.title;state.member=s.me.name;state.taskEnded=s.task.status!=='active';
+ state.orders=cloudOrders({orders:ManualQueue.replay(s.orders,c.outbox)});
+ if(history){
+  let seq=0;
+  const labels={scan:'扫描箱子',estimate:'修改预估',adjust:'扫码纠错',done:'完成订单',abnormal:'标记异常',archive:'结束任务'};
+  const cloudLogs=history.map(l=>{
+   let b={},a={};try{b=JSON.parse(l.beforeValue||'{}');a=JSON.parse(l.afterValue||'{}')}catch{}
+   const entry={time:new Date(l.clientTime||l.time).toLocaleString('zh-CN',{hour12:false}),member:l.actor,action:labels[l.kind]||l.kind,id:l.barcode,detail:l.kind==='scan'?'第 '+a.actual+' 箱':l.kind==='estimate'?'新预估：'+a.estimate:'实际 '+(b.actual||0)+' → '+(a.actual||0),operationId:l.id};
+   if(l.kind==='scan')entry.globalSeq=++seq;
+   if(l.kind==='adjust'&&a.actual<b.actual){
+    let amount=b.actual-a.actual;
+    for(let i=cloudLogsBeingBuilt.length-1;i>=0&&amount;i--){const e=cloudLogsBeingBuilt[i];if(e.id===l.barcode&&e.globalSeq&&!e.voided){e.voided=true;e.voidReason='云端纠错';amount--;}}
+   }
+   cloudLogsBeingBuilt.push(entry);return entry;
+  });
+  const waiting=new Set(c.outbox.map(b=>b.id));
+  const localLogs=state.logs.filter(l=>waiting.has(l.operationId)).map(l=>({...l,globalSeq:undefined,detail:'待同步 · '+l.detail}));
+  state.logs=[...localLogs,...cloudLogs.reverse()];state.globalScanCounter=seq+localLogs.filter(l=>SCAN_ACTIONS.includes(l.action)).length;
+ }
+ if(state.taskEnded){const archived={task:state.task,member:state.member,endedAt:new Date().toLocaleString(),orders:structuredClone(state.orders),logs:structuredClone(state.logs),globalScanCounter:state.globalScanCounter,taskId:c.taskId};state.archives=state.archives.filter(a=>a.taskId!==c.taskId).concat([archived]);}
+ persist();render();
+}
+let cloudLogsBeingBuilt=[];
+async function syncCloud(){
+ if(busy||pending){toast(pending?'请先确认或取消预估输入':'正在同步，请稍候');return}
+ if(!state.cloud.token){openTaskManager();return}
+ busy=true;document.querySelector('.app').inert=true;$('syncBusy').classList.remove('hidden');render();
+ try{
+  let snapshot;
+  while(state.cloud.outbox.length){
+   const batch=state.cloud.outbox.slice(0,80);
+   const result=await CloudSheets.call('sync',{operations:batch},state.cloud.token);
+   const accepted=new Set(result.accepted);
+   state.cloud.outbox=state.cloud.outbox.filter(x=>!accepted.has(x.id));
+   // Save acknowledgements before any subsequent network request.
+   persist();snapshot=result.snapshot;
+   if(result.conflict){
+    state.cloud.conflict=result.conflict;state.cloud.remote=snapshot;persist();
+    throw new Error('有操作未合并：'+result.conflict.error+'。已接收的操作不会重复计数。请处理冲突后再次下拉。');
+   }
+  }
+  snapshot=snapshot||await CloudSheets.call('state',{},state.cloud.token);
+  const history=await CloudSheets.call('history',{},state.cloud.token);
+  cloudLogsBeingBuilt=[];applyCloud(snapshot,history.logs);
+  $('syncError').classList.add('hidden');state.cloud.lastSync=new Date().toISOString();state.cloud.conflict=null;persist();render();toast('同步完成：本机记录已上传，云端数量已合并');
+ }catch(e){toast(e.message);$('syncError').textContent=e.message; $('syncError').classList.remove('hidden');}
+ finally{busy=false;document.querySelector('.app').inert=false;$('syncBusy').classList.add('hidden');render();showConflict();}
+}
+function showConflict(){
+ const c=state.cloud,conf=c.conflict;$('resolveConflict').classList.toggle('hidden',!conf);
+ if(!conf)return;
+ $('conflictText').textContent=conf.error+'；本机记录仍保留，可先导出备份。';
+ const b=c.outbox.find(x=>x.id===conf.id);
+ $('keepLocalEstimate').classList.toggle('hidden',b?.kind!=='estimate'||conf.status!==409||c.remote?.task.status!=='active');
+ $('keepLocalEstimate').onclick=()=>{
+  if(!confirm('确认以本机预估覆盖当前云端预估？其他扫码箱数仍按增量合并。'))return;
+  const remote=c.remote.orders.find(o=>o.barcode===b.barcode);let version=remote?.estimateVersion||0;
+  for(const x of c.outbox)if(x.kind==='estimate'&&x.barcode===b.barcode){x.expectedVersion=version++;x.id=crypto.randomUUID();}
+  c.conflict=null;persist();showConflict();syncCloud();
+ };
+ $('useCloudEstimate').classList.toggle('hidden',b?.kind!=='estimate');
+ $('useCloudEstimate').onclick=()=>{
+  if(!confirm('使用云端预估，并撤销本机此订单尚未同步的预估修改？待同步扫码会保留。'))return;
+  c.outbox=c.outbox.filter(x=>!(x.kind==='estimate'&&x.barcode===b.barcode));c.conflict=null;
+  cloudLogsBeingBuilt=[];applyCloud(c.remote);persist();showConflict();syncCloud();
+ };
+}
+function stashTask(){
+ if(state.cloud.token)state.savedTasks=state.savedTasks.filter(t=>t.cloud.token!==state.cloud.token).concat([{task:state.task,member:state.member,orders:state.orders,logs:state.logs,taskEnded:state.taskEnded,cloud:structuredClone(state.cloud)}]);
+}
+async function enterCloud(create){
+ if(busy)return;
+ if(state.cloud.outbox.length){toast('请先下拉同步当前任务，再切换任务');return}
+ const name=$('newTaskMember').value.trim(),title=$('newTaskCode').value,code=$('joinCloudCode').value.trim();
+ if(!name){toast('请输入操作人员姓名');return}
+ const args=create?{name,title}:{name,code},action=create?'create':'join';
+ if(!create&&!code){toast('请输入共享任务码');return}
+ busy=true;
+ try{
+  const old=state.enterAttempt;
+  if(old&&(old.action!==action||JSON.stringify(old.args)!==JSON.stringify(args)))throw new Error('上次创建或加入结果待确认，请用相同信息重试');
+  if(!old){state.enterAttempt={action,args,token:CloudSheets.newToken()};persist();}
+  const attempt=state.enterAttempt,s=await CloudSheets.call(action,args,attempt.token);
+  stashTask();state.cloud={token:s.token,outbox:[],base:[],revision:0,estimateVersions:{},lastSync:new Date().toISOString()};
+  state.enterAttempt=null;state.logs=[];current='';pending='';applyCloud(s,[]);
+  $('taskManagerShade').classList.add('hidden');$('settingsShade').classList.add('hidden');toast('已进入任务；扫码先存本机，下拉时上传');
+ }catch(e){if(e.status&&e.status<500)state.enterAttempt=null;persist();toast(e.message);}
+ finally{busy=false;render();}
+}
+openTaskManager=function(){
+ $('newTaskDate').value=localDate();$('newTaskBatch').value=nextBatch(localDate());$('newTaskMember').value=state.enterAttempt?.args.name||state.member||'';updateTaskCode();
+ $('availableTasks').replaceChildren();
+ for(const t of state.savedTasks){
+  const b=document.createElement('button');b.className='secondary';b.textContent=t.task+' · '+t.member+(t.taskEnded?'（已归档）':'');
+  b.onclick=()=>{if(state.cloud.outbox.length){toast('请先同步当前任务');return}stashTask();const saved=state.savedTasks;state={...state,...structuredClone(t),savedTasks:saved};current='';persist();render();showConflict();$('taskManagerShade').classList.add('hidden');};
+  $('availableTasks').appendChild(b);
+ }
+ $('taskManagerShade').classList.remove('hidden');
+};
+$('createTaskBtn').onclick=()=>enterCloud(true);$('joinCloudTask').onclick=()=>enterCloud(false);
+$('taskManagerBtn').onclick=openTaskManager;$('reopenTaskBtn').onclick=openTaskManager;
+$('openTaskManager').onclick=()=>{$('settingsShade').classList.add('hidden');openTaskManager()};
+$('syncBtn').onclick=syncCloud;$('manualSync').onclick=syncCloud;
+$('clearBtn').classList.add('hidden');$('endpointInput').closest('label').classList.add('hidden');
+$('settingsShade').querySelector('p.hint').textContent='已连接既有 Google Sheets。扫码仅保存在本机，下拉才会上传和下载。请勿清除浏览器站点数据，以免丢失待同步记录及管理员身份。';
+$('saveSettings').onclick=()=>{toast('协作成员姓名在创建或加入任务时确定');$('settingsShade').classList.add('hidden')};
+$('restoreTaskBtn').onclick=()=>toast('已归档任务保持只读，可创建新任务');
+$('endTaskBtn').onclick=async()=>{
+ if(busy||pending)return;
+ if(state.cloud.role!=='admin'){toast('仅管理员可以结束任务');return}
+ if(state.cloud.outbox.length){toast('请先下拉上传所有待同步记录，再结束任务');return}
+ if(!confirm('结束云端共享任务？请确认所有成员均已下拉上传。其他成员未上传的扫码不会自动合并。历史数据保留。'))return;
+ state.cloud=ManualQueue.enqueue(state.cloud,[{kind:'archive'}]);persist();await syncCloud();
+};
+const originalScan=scan;
+scan=function(raw){
+ if(locateTarget){locateScan(String(raw||'').trim());return}
+ if(!state.cloud.token){toast('请先创建或加入共享任务');openTaskManager();return}
+ if(state.cloud.conflict){toast('请先处理同步冲突，记录仍保留');return}
+ originalScan(raw);
+};
+const originalDetails=boxDetails;
+boxDetails=function(o){return originalDetails(o).replaceAll('全任务第 未知 码','本机待同步扫码').replaceAll('全任务第 undefined 码','本机待同步扫码')};
+let touchStart=null;
+document.addEventListener('touchstart',e=>{if(window.scrollY===0&&!e.target.closest('input,button,.modalshade,#camera'))touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+document.addEventListener('touchmove',e=>{if(!touchStart)return;const dy=e.touches[0].clientY-touchStart.y;if(dy>15&&Math.abs(e.touches[0].clientX-touchStart.x)<60){if(e.cancelable)e.preventDefault();$('pullHint').textContent=dy>85?'松手同步到云端':'继续下拉以同步';touchStart.distance=dy;}},{passive:false});
+document.addEventListener('touchend',()=>{const distance=touchStart?.distance||0;touchStart=null;$('pullHint').textContent='顶部下拉更新 · 或点击手动同步';if(distance>85)syncCloud();});
+window.addEventListener('beforeunload',e=>{if(state.cloud.outbox.length||busy){e.preventDefault();e.returnValue=''}});
+showConflict();render();
+
+render();})();
+</script><script src="./assets/html5-qrcode.min.js" defer></script></body></html>
