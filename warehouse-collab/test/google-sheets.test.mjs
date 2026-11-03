@@ -137,3 +137,81 @@ test('migration freeze prevents local writes without deleting existing data',asy
     const resolved=path.resolve(dir);assert.equal(path.dirname(resolved),path.resolve(os.tmpdir()));assert.ok(path.basename(resolved).startsWith('warehouse-test-'));fs.rmSync(resolved,{recursive:true,force:true});
   }
 });
+
+test('manual batches merge two offline members exactly once and preserve rejected suffix',()=>{
+ const g=fakeGoogle(),rpc=(action,args={},token='a'.repeat(48))=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+ const a='a'.repeat(48),b='b'.repeat(48);
+ const made=rpc('create',{name:'管理员',title:'手动同步'},a).data;
+ rpc('join',{name:'成员',code:made.task.code},b);
+ const scan=()=>({id:randomUUID(),kind:'scan',barcode:'00000009'});
+ const one=[scan(),{id:randomUUID(),kind:'estimate',barcode:'00000009',value:8,expectedVersion:0},scan()];
+ assert.equal(rpc('state',{},a).data.orders.length,0);
+ let result=rpc('sync',{operations:one},a).data;
+ assert.equal(result.accepted.length,3);assert.equal(result.snapshot.orders[0].actual,2);
+ assert.equal(rpc('sync',{operations:one},a).data.snapshot.orders[0].actual,2);
+ const other=[scan(),{id:randomUUID(),kind:'estimate',barcode:'00000009',value:10,expectedVersion:0},scan()];
+ result=rpc('sync',{operations:other},b).data;
+ assert.deepEqual(result.accepted,[other[0].id]);assert.equal(result.conflict.status,409);
+ assert.equal(result.snapshot.orders[0].actual,3);assert.equal(result.snapshot.orders[0].estimate,8);
+ // Failed negative adjustment must not leak its mutation into the committed snapshot.
+ const bad={id:randomUUID(),kind:'adjust',barcode:'00000009',value:-99,reason:'测试'};
+ result=rpc('sync',{operations:[bad]},b).data;
+ assert.equal(result.accepted.length,0);assert.equal(result.snapshot.orders[0].actual,3);
+ result=rpc('sync',{operations:[other[2]]},b).data;assert.equal(result.snapshot.orders[0].actual,4);
+ const flag={id:randomUUID(),kind:'done',barcode:'00000009',value:1};
+ assert.equal(rpc('sync',{operations:[flag]},a).data.snapshot.orders[0].done,true);
+ assert.equal(rpc('state',{},b).data.orders[0].done,true);
+ assert.ok(rpc('history',{},a).data.logs.every(l=>l.id));
+ const last=scan();g.failNextCommit();assert.equal(rpc('sync',{operations:[last]},b).ok,false);
+ assert.equal(rpc('state',{},b).data.orders[0].actual,4);
+ assert.equal(rpc('sync',{operations:[last]},b).data.snapshot.orders[0].actual,5);
+ assert.equal(rpc('sync',{operations:[last]},b).data.snapshot.orders[0].actual,5);
+ assert.equal(rpc('sync',{operations:[]},'c'.repeat(48)).status,401);
+ rpc('op',{id:randomUUID(),kind:'archive'},a);
+ assert.equal(rpc('sync',{operations:[scan()]},b).data.conflict.status,409);
+});
+
+test('new UI stores scans locally until manual refresh, survives reload, and merges two members',async()=>{
+ const g=fakeGoogle();
+ const html=fs.readFileSync(new URL('../../../work/github-sync/manual-preview.html',import.meta.url),'utf8');
+ function browser(sharedStorage=new Map()){
+  const elements=new Map();
+  class Element{
+   constructor(id=''){this.id=id;this.value='';this.disabled=false;this.hidden=false;this.style={};this.dataset={};this.children=[];this.textContent='';this.parentElement={querySelector:()=>new Element()};const s=new Set();this.classList={add:x=>s.add(x),remove:x=>s.delete(x),contains:x=>s.has(x),toggle:(x,force)=>{if(force===undefined)force=!s.has(x);if(force)s.add(x);else s.delete(x);return force;}};}
+   set innerHTML(text){this._html=text;for(const match of text.matchAll(/id="([^"]+)"/g))get(match[1]);}
+   get innerHTML(){return this._html||''}
+   addEventListener(name,fn){(this.events||={})[name]=fn;}
+   appendChild(x){this.children.push(x);return x;}append(x){this.children.push(x)}replaceChildren(){this.children=[];}before(){}setAttribute(){}focus(){}closest(){return new Element()}remove(){}
+   querySelectorAll(){return []}
+  }
+  const get=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id)};
+  for(const m of html.matchAll(/id="([^"]+)"/g))get(m[1]);
+  const store={getItem:k=>sharedStorage.get(k)||null,setItem:(k,v)=>sharedStorage.set(k,v),removeItem:k=>sharedStorage.delete(k)};
+  let calls=0;
+  const ctx=vm.createContext({console,structuredClone,Date,JSON,Map,Set,Math,Number,String,Array,RegExp,Promise,Error,URL,Blob,crypto:{randomUUID},localStorage:store,navigator:{},setTimeout:()=>0,clearTimeout:()=>{},confirm:()=>true,prompt:()=>null,
+   document:{getElementById:get,querySelector:s=>get(s),querySelectorAll:()=>[],createElement:()=>new Element(),addEventListener:()=>{}},
+   window:{scrollY:0,addEventListener:()=>{}},
+   CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
+  });
+  vm.runInContext(fs.readFileSync(new URL('../../../work/github-sync/assets/manual-queue.js',import.meta.url),'utf8'),ctx);
+  for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
+  return{get,store:sharedStorage,calls:()=>calls,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
+ }
+ const a=browser();assert.equal(a.calls(),0,'opening UI must not contact cloud');
+ a.get('newTaskCode').value='手动验收';a.get('newTaskMember').value='管理员';
+ await a.get('createTaskBtn').onclick();const created=a.saved();assert.ok(created.cloud.token);
+ const initialCalls=a.calls();a.scan('00000002');a.scan('00000002');
+ a.get('estimateInput').value='8';a.get('saveEstimate').onclick();
+ assert.equal(a.calls(),initialCalls,'scans must not upload');
+ assert.equal(a.saved().orders[0].actual,2);assert.equal(a.saved().cloud.outbox.length,3);
+ const restored=browser(a.store);assert.equal(restored.calls(),0);assert.equal(restored.saved().cloud.outbox.length,3);
+ await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.outbox.length,0);
+ assert.equal(restored.saved().orders[0].actual,2);
+ const b=browser();b.get('newTaskMember').value='成员';b.get('joinCloudCode').value=restored.saved().cloud.code;
+ await b.get('joinCloudTask').onclick();
+ restored.scan('00000002');b.scan('00000002');
+ assert.equal(restored.saved().orders[0].actual,3);assert.equal(b.saved().orders[0].actual,3);
+ await b.get('manualSync').onclick();await restored.get('manualSync').onclick();
+ assert.equal(restored.saved().orders[0].actual,4);assert.equal(restored.saved().cloud.outbox.length,0);
+ assert.equal(restored.saved().logs.filter(l=>l.globalSeq).length,4);
+});
