@@ -177,13 +177,69 @@ function doPost(e){
 function json_(value){return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);}
 
 // Browser transport. Membership tokens protect task data; privileged import/health stay HMAC-only.
+
+/** Owner-only setup: enter RESET_PASSWORD_SETUP in Script Properties, then run this function. */
+function configureResetPassword(){
+ var p=PropertiesService.getScriptProperties(),password=p.getProperty('RESET_PASSWORD_SETUP'),secret=p.getProperty('WAREHOUSE_SECRET');
+ if(typeof password!=='string'||password.length<8||password.length>128)throw new Error('请先在脚本属性设置 RESET_PASSWORD_SETUP（8～128位），不要在日志或代码中填写密码');
+ if(!secret)throw new Error('仓库服务尚未初始化');
+ var salt=Utilities.getUuid();p.setProperty('RESET_PASSWORD_SALT',salt);p.setProperty('RESET_PASSWORD_HASH',resetHash_(password,salt,secret));
+ p.deleteProperty('RESET_PASSWORD_SETUP');p.deleteProperty('RESET_FAILURES');p.deleteProperty('RESET_FAILURE_WINDOW');console.log('管理员清除密码已设置，临时明文属性已移除。');
+}
+function resetHash_(password,salt,secret){return Utilities.computeHmacSha256Signature(salt+':'+password,secret,Utilities.Charset.UTF_8).map(function(b){return('0'+((b+256)%256).toString(16)).slice(-2);}).join('');}
+function verifyResetPassword_(password){
+ var p=PropertiesService.getScriptProperties(),expected=p.getProperty('RESET_PASSWORD_HASH'),salt=p.getProperty('RESET_PASSWORD_SALT');
+ if(!expected||!salt)reject_('管理员尚未设置清除密码，请先完成密码设置',409);
+ var windowStart=Number(p.getProperty('RESET_FAILURE_WINDOW')||0),failures=Number(p.getProperty('RESET_FAILURES')||0);
+ if(Date.now()-windowStart>=900000){windowStart=Date.now();failures=0;p.setProperty('RESET_FAILURE_WINDOW',String(windowStart));}
+ if(failures>=5)reject_('密码尝试过多，请15分钟后重试',429);
+ var actual=resetHash_(typeof password==='string'?password:'',salt,p.getProperty('WAREHOUSE_SECRET')),diff=actual.length^expected.length;
+ for(var i=0;i<expected.length;i++)diff|=expected.charCodeAt(i)^(actual.charCodeAt(i)||0);
+ if(diff){p.setProperty('RESET_FAILURES',String(failures+1));reject_('管理员密码错误，未清除任何数据',403);}
+ p.deleteProperty('RESET_FAILURES');p.deleteProperty('RESET_FAILURE_WINDOW');
+}
+function resetAll_(id,tables,args,token){
+ if(!/^[a-zA-Z0-9-]{16,100}$/.test(args.id||'')||args.confirm!=='清除全部数据')reject_('请输入完整确认文字“清除全部数据”');
+ verifyResetPassword_(args.password);
+ var meta=Sheets.Spreadsheets.get(id,{fields:'developerMetadata(metadataKey,metadataValue),sheets(properties(sheetId,title,gridProperties(rowCount,columnCount)))'});
+ var marker=(meta.developerMetadata||[]).find(function(x){if(x.metadataKey!=='warehouse-reset')return false;try{var v=JSON.parse(x.metadataValue);return v.id===args.id&&v.token===sha_(token);}catch(e){return false;}});
+ if(marker){var prior=JSON.parse(marker.metadataValue);return{reset:true,duplicate:true,backups:prior.backups,time:prior.time};}
+ var member=lookup_(tables.members,function(x){return x.token===sha_(token);});
+ if(!member)reject_('当前管理员会话无效，未清除任何数据',401);
+ if(member.value.role!=='admin')reject_('仅管理员可以清除全部数据',403);
+ var prefix='清除备份_'+Date.now()+'_'+args.id.slice(0,6)+'_',backups=[],requests=[];
+ Object.keys(TABLES).forEach(function(k){var name=prefix+TABLES[k].sheet;backups.push(name);requests.push({duplicateSheet:{sourceSheetId:tables[k].id,newSheetName:name}});});
+ Object.keys(TABLES).forEach(function(k){var sheet=meta.sheets.find(function(s){return s.properties.sheetId===tables[k].id;});var grid=sheet.properties.gridProperties;if(grid.rowCount>1)requests.push({updateCells:{range:{sheetId:tables[k].id,startRowIndex:1,endRowIndex:grid.rowCount,startColumnIndex:0,endColumnIndex:grid.columnCount||TABLES[k].keys.length},rows:[],fields:'userEnteredValue'}});});
+ var record={id:args.id,token:sha_(token),time:new Date().toISOString(),backups:backups};requests.push({createDeveloperMetadata:{developerMetadata:{metadataKey:'warehouse-reset',metadataValue:JSON.stringify(record),visibility:'DOCUMENT',location:{spreadsheet:true}}}});
+ // Backup all four tables, clear them, and save the retry marker in one atomic batch.
+ Sheets.Spreadsheets.batchUpdate({requests:requests},id);return{reset:true,backups:backups,time:record.time};
+}
+function recoverTask_(tables,args,token){
+ var found=lookup_(tables.members,function(x){return x.token===sha_(token);});if(!found)reject_('会话已失效，请先导出本机记录，再重新加入任务',401);
+ var m=found.value;if(m.role!=='admin')reject_('请由该任务的管理员恢复任务',403);if(args.taskId!==m.task)reject_('本机任务关联不一致，未修改任何数据',409);
+ if(lookup_(tables.tasks,function(x){return x.id===m.task;}))return{changes:[],data:publicSnapshot_(tables,m)};
+ if(typeof args.title!=='string'||!args.title.trim()||args.title.length>80||!Array.isArray(args.base)||args.base.length>2000)reject_('本机任务快照无效');
+ if(!/^(?:\d{8}|[a-fA-F0-9]{16})$/.test(String(args.code||'')))reject_('本机任务码无效');
+ if(lookup_(tables.tasks,function(t){return t.code===args.code;}))reject_('本机任务码与其他任务冲突，请联系管理员',409);
+ var changes=[];function add(k,value){var row=tables[k].rows.reduce(function(n,r){return Math.max(n,r.row+1);},1);tables[k].rows.push({row:row,value:value});changes.push({table:k,row:row,value:value});}
+ var revision=Number.isSafeInteger(args.revision)&&args.revision>=0?args.revision:0;
+ args.base.forEach(function(b){if(!/^\d{8}$/.test(b.barcode||''))reject_('本机订单号无效');['actual','estimate'].forEach(function(k){if(!Number.isSafeInteger(b[k])||b[k]<0||b[k]>999999999)reject_('本机数量快照无效');});
+ if(lookup_(tables.orders,function(o){return o.task===m.task&&o.barcode===b.barcode;}))return;
+ var o={task:m.task,barcode:b.barcode,actual:b.actual,estimate:b.estimate,filled:b.hasFilledEstimate?1:0,abnormal:b.abnormal?1:0,scans:Number(b.scanCount)||b.actual,version:Number(b.version)||0,estimateVersion:Number(b.estimateVersion)||0,actualVersion:Number(b.actualVersion)||0,updated:Number(b.lastScanTime)||revision};revision=Math.max(revision,o.updated);add('orders',o);
+ if(b.done)add('operations',{task:m.task,id:'recover-done-'+Utilities.getUuid(),token:m.token,payload:'恢复完成标记',actor:m.name,kind:'done',barcode:b.barcode,beforeValue:'',afterValue:JSON.stringify(Object.assign({},o,{done:1})),time:new Date().toISOString()});
+ });
+ add('tasks',{id:m.task,code:String(args.code).toUpperCase(),title:args.title.trim(),status:args.archived?'archived':'active',revision:revision});
+ add('operations',{task:m.task,id:'recover-'+Utilities.getUuid(),token:m.token,payload:'管理员从本机最后云端快照恢复缺失任务；未覆盖现存订单',actor:m.name,kind:'recover',barcode:'',beforeValue:'',afterValue:JSON.stringify({title:args.title,orders:args.base.length}),time:new Date().toISOString()});
+ return{changes:changes,data:publicSnapshot_(tables,m)};
+}
+
 function browserRequest(request){
   var lock;
   try{
-    if(!request||JSON.stringify(request).length>120000)reject_('请求格式错误');
+    if(!request||JSON.stringify(request).length>(request.action==='recover'?1000000:120000))reject_('请求格式错误');
     var action=request.action;
     if(action==='ping')return{ok:true,data:{online:true,backend:'Google Sheets',version:2}};
-    if(!['create','join','state','op','history','sync'].includes(action))reject_('浏览器不允许调用此接口',403);
+    if(!['create','join','state','op','history','sync','recover','reset','resetStatus'].includes(action))reject_('浏览器不允许调用此接口',403);
     if(!/^[a-f0-9]{48}$/.test(request.token||''))reject_('会话无效，请重新加入任务',401);
     lock=LockService.getScriptLock();if(!lock.tryLock(20000))reject_('云端正在处理其他操作，请稍后用原编号重试',503);
     var props=PropertiesService.getScriptProperties(),id=props.getProperty('SPREADSHEET_ID'),ids=JSON.parse(props.getProperty('SHEET_IDS')||'null');
@@ -194,6 +250,9 @@ function browserRequest(request){
       args.code='';
     }
     var tables=readTables_(id,ids),result;
+    if(action==='reset')return{ok:true,data:resetAll_(id,tables,args,request.token)};
+    if(action==='resetStatus'){var admin=lookup_(tables.members,function(m){return m.token===sha_(request.token);});if(!admin||admin.value.role!=='admin')reject_('仅管理员可以查看清除设置',403);return{ok:true,data:{configured:!!props.getProperty('RESET_PASSWORD_HASH')}};}
+    if(action==='recover'){var recovered=recoverTask_(tables,args,request.token);commit_(id,tables,recovered.changes);return{ok:true,data:recovered.data};}
     if(action==='create'){
       var reserved=Object.values(taskCodes_(tables));
       for(var attempt=0;attempt<100;attempt++){var candidate=String(parseInt(sha_(Utilities.getUuid()).slice(0,12),16)%100000000).padStart(8,'0');if(reserved.indexOf(candidate)<0){args.code=candidate;break;}}
