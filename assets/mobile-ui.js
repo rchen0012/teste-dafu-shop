@@ -14,8 +14,8 @@ var PullSyncGesture=class {
 if(typeof module!=='undefined')module.exports={MobileScanGate,PullSyncGesture};
 
 var CameraScanConfig={
- box(width,height){return{width:Math.max(1,Math.floor(width*.96)),height:Math.max(1,Math.floor(height*.9))};},
- options(enhanced=true){const options={fps:20,qrbox:(w,h)=>this.box(w,h),disableFlip:true};if(enhanced)options.videoConstraints={facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}};return options;},
+ box(width,height){const side=Math.max(1,Math.floor(Math.min(224,Math.min(width,height)*.72)));return{width:side,height:side};},
+ options(enhanced=true){const options={fps:15,aspectRatio:4/3,qrbox:(w,h)=>this.box(w,h),disableFlip:true};if(enhanced)options.videoConstraints={facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960},aspectRatio:{ideal:4/3},frameRate:{ideal:30,max:30}};return options;},
  async focus(camera){let caps;try{caps=camera.getRunningTrackCapabilities?.()||{}}catch(e){return}for(const [name,value] of [['focusMode','continuous'],['exposureMode','continuous'],['whiteBalanceMode','continuous']]){try{if(caps[name]?.includes(value))await camera.applyVideoConstraints({advanced:[{[name]:value}]});}catch(e){/* Each optional enhancement falls back independently. */}}}
 
 };
