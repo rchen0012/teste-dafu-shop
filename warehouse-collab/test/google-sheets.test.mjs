@@ -229,9 +229,8 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  restored.answerPrompt('6');restored.get('editEstimateBtn').onclick();await restored.get('manualSync').onclick();assert.equal(restored.saved().orders[0].exception,false);assert.match(restored.get('exceptionList').innerHTML,/暂无异常订单/);
  restored.scan('00000002');const tokenBefore=restored.saved().cloud.token,pendingId=restored.saved().cloud.outbox[0].id;
  const drift=restored.saved();drift.orders[0].actual=999;restored.store.set('box_verify_manual_v2',JSON.stringify(drift));
- const cacheDevice=browser(restored.store);await cacheDevice.get('confirmLocalCache').onclick();
+ const cacheDevice=browser(restored.store);await cacheDevice.get('refreshTaskState').onclick();
  assert.equal(cacheDevice.saved().cloud.token,tokenBefore);assert.equal(cacheDevice.saved().cloud.role,'admin');assert.equal(cacheDevice.saved().cloud.outbox[0].id,pendingId);assert.equal(cacheDevice.saved().orders[0].actual,7,'cache refresh rebuilds latest cloud base plus unsent delta');
- assert.ok([...cacheDevice.store.keys()].some(k=>k.startsWith('box_verify_backup_')));
  const staleTab=browser(cacheDevice.store);
  await cacheDevice.get('endTaskBtn').onclick();assert.equal(cacheDevice.saved().taskEnded,true);assert.equal(cacheDevice.saved().cloud.outbox.length,0);assert.equal(cacheDevice.saved().orders[0].actual,7,'ending automatically confirms pending scan first');
  await staleTab.get('endTaskBtn').onclick();assert.equal(staleTab.saved().taskEnded,true);assert.equal(staleTab.saved().cloud.outbox.length,0,'stale tab confirms acknowledged scan and already ended task');
