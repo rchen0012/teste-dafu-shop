@@ -191,16 +191,17 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
   const get=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id)};
   for(const m of html.matchAll(/id="([^"]+)"/g))get(m[1]);
   const store={getItem:k=>sharedStorage.get(k)||null,setItem:(k,v)=>sharedStorage.set(k,v),removeItem:k=>sharedStorage.delete(k)};
-  let calls=0,failHistory=false;
-  const ctx=vm.createContext({console,structuredClone,Date,JSON,Map,Set,Math,Number,String,Array,RegExp,Promise,Error,URL,Blob,crypto:{randomUUID},localStorage:store,navigator:{},setTimeout:()=>0,clearTimeout:()=>{},confirm:()=>true,prompt:()=>null,
+  let calls=0,failHistory=false,prompts=[];
+  const ctx=vm.createContext({console,structuredClone,Date,JSON,Map,Set,Math,Number,String,Array,RegExp,Promise,Error,URL,Blob,crypto:{randomUUID},localStorage:store,navigator:{},setTimeout:()=>0,clearTimeout:()=>{},confirm:()=>true,prompt:()=>prompts.shift()??null,
    document:{getElementById:get,querySelector:s=>get(s),querySelectorAll:()=>[],createElement:()=>new Element(),addEventListener:()=>{}},
    window:{scrollY:0,addEventListener:()=>{}},
    CloudSheets:{newToken:()=>randomUUID().replaceAll('-','')+randomUUID().replaceAll('-','').slice(0,16),call:async(action,args,token)=>{calls++;if(action==='history'&&failHistory){failHistory=false;throw Object.assign(new Error('history connection interrupted'),{status:503});}const r=JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));if(!r.ok)throw Object.assign(new Error(r.error),{status:r.status});return r.data;}}
   });
   vm.runInContext(fs.readFileSync(new URL('../../assets/manual-queue.js',import.meta.url),'utf8'),ctx);
   vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);
+  vm.runInContext(fs.readFileSync(new URL('../../assets/order-check.js',import.meta.url),'utf8'),ctx);
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
-  return{get,store:sharedStorage,calls:()=>calls,failNextHistory:()=>failHistory=true,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
+  return{get,store:sharedStorage,calls:()=>calls,answerPrompt:value=>prompts.push(value),failNextHistory:()=>failHistory=true,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
  }
  const a=browser();assert.equal(a.calls(),0,'opening UI must not contact cloud');
  a.get('newTaskCode').value='手动验收';a.get('newTaskMember').value='管理员';
@@ -208,7 +209,7 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  const initialCalls=a.calls();a.scan('00000002');a.scan('00000002');
  a.get('estimateInput').value='8';a.get('saveEstimate').onclick();
  assert.equal(a.calls(),initialCalls,'scans must not upload');
- assert.equal(a.saved().orders[0].actual,2);assert.equal(a.saved().cloud.outbox.length,3);
+ assert.equal(a.saved().orders[0].actual,2);assert.equal(a.saved().cloud.outbox.length,3);assert.match(a.get('exceptionList').innerHTML,/少扫 6 箱/);assert.match(a.get('exceptionList').innerHTML,/查看全任务扫码序号和时间/);assert.match(a.get('exceptionList').innerHTML,/管理员/);
  const restored=browser(a.store);assert.equal(restored.calls(),0);assert.equal(restored.saved().cloud.outbox.length,3);
  await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.outbox.length,0);
  assert.equal(restored.saved().orders[0].actual,2);
@@ -223,6 +224,8 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.syncErrorStatus,404);assert.equal(restored.saved().cloud.outbox.length,1);
  await restored.get('recoverMissingTask').onclick();assert.equal(restored.saved().cloud.outbox.length,0);assert.equal(restored.saved().orders[0].actual,5);
  restored.scan('00000002');restored.failNextHistory();await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.outbox.length,0);assert.equal(restored.saved().cloud.base[0].actual,6,'acknowledged base survives history download failure');
+ restored.get('exceptionBtn').onclick();assert.equal(restored.saved().cloud.outbox.at(-1).value,1);restored.get('exceptionBtn').onclick();assert.equal(restored.saved().cloud.outbox.at(-1).value,0);assert.equal(restored.saved().orders[0].exception,true,'removing manual flag cannot hide shortage');
+ restored.answerPrompt('6');restored.get('editEstimateBtn').onclick();await restored.get('manualSync').onclick();assert.equal(restored.saved().orders[0].exception,false);assert.match(restored.get('exceptionList').innerHTML,/暂无异常订单/);
 });
 
 test('camera automatically rearms after box leaves, and pull cancellation never syncs',()=>{
@@ -270,4 +273,26 @@ test('only the original task admin can recover missing tasks, using its local ba
  assert.equal(rpc('recover',args,b).status,403);assert.equal(rpc('recover',{...args,taskId:'other'},a).status,409);
  assert.equal(rpc('recover',args,a).data.orders[0].actual,1);assert.equal(rpc('recover',args,a).data.orders[0].actual,1);
  assert.equal(rpc('sync',{operations:[{id:randomUUID(),kind:'scan',barcode:'00000002'}]},a).data.snapshot.orders[0].actual,2);
+});
+
+test('shortages excess and manual marks stay distinct, including completed and zero-count orders',()=>{
+ const ctx=vm.createContext({module:{exports:{}}});vm.runInContext(fs.readFileSync(new URL('../../assets/order-check.js',import.meta.url),'utf8'),ctx);const check=ctx.module.exports;
+ for(const [actual,estimate,difference,label]of [[2,5,-3,'少扫 3 箱'],[0,5,-5,'少扫 5 箱'],[7,5,2,'超出 2 箱'],[5,5,0,'数量一致']]){
+  const o={id:'00000001',actual,estimate,done:true,manualAbnormal:false};check.normalize([o]);assert.equal(o.exception,difference!==0);assert.equal(check.get(o).difference,difference);assert.equal(check.get(o).label,label);
+ }
+ const pending={actual:1,estimate:null,manualAbnormal:false};assert.equal(check.get(pending).abnormal,false);assert.equal(check.get(pending).label,'待填预估');
+ assert.equal(check.get({actual:5,estimate:5,manualAbnormal:true}).label,'人工标记异常');
+ const migrated={id:'00000001',actual:3,estimate:5,exception:false};check.normalize([migrated],[{barcode:migrated.id,abnormal:false}],[]);assert.equal(migrated.manualAbnormal,false);assert.equal(migrated.exception,true);
+});
+test('camera uses a wider responsive region and rearms quickly without repeating a stationary code',async()=>{
+ const ctx=vm.createContext({module:{exports:{}}});vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);const {MobileScanGate,CameraScanConfig}=ctx.module.exports;
+ const gate=new MobileScanGate();assert.equal(gate.hit('00000001',0),true);
+ for(let t=50;t<500;t+=50){gate.hit('00000001',t);gate.miss(t+10);}assert.equal(gate.hit('00000001',500),false);
+ gate.miss(650);gate.miss(850);gate.miss(1050);assert.equal(gate.hit('00000001',1051),true,'automatic same-order next box after 550 ms absence');
+ assert.equal(gate.hit('00000002',1060),true,'new order needs no delay');
+ const config=CameraScanConfig.options();assert.equal(config.fps,20);assert.equal(config.videoConstraints.facingMode.ideal,'environment');
+ for(const [w,h]of [[240,180],[320,240],[390,290],[800,600]]){const box=config.qrbox(w,h);assert.ok(box.width<w&&box.width>=w*.85-1||w>720);assert.ok(box.height<=h);}
+ assert.equal(CameraScanConfig.options(false).videoConstraints,undefined);
+ let focus;await CameraScanConfig.focus({getRunningTrackCapabilities:()=>({focusMode:['continuous']}),applyVideoConstraints:async value=>focus=value});assert.equal(focus.advanced[0].focusMode,'continuous');
+ await CameraScanConfig.focus({getRunningTrackCapabilities:()=>{throw new Error('unsupported')}});
 });
