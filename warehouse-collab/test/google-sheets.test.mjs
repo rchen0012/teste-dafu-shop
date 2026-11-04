@@ -294,14 +294,14 @@ test('shortages excess and manual marks stay distinct, including completed and z
  assert.equal(check.get({actual:5,estimate:5,manualAbnormal:true}).label,'人工标记异常');
  const migrated={id:'00000001',actual:3,estimate:5,exception:false};check.normalize([migrated],[{barcode:migrated.id,abnormal:false}],[]);assert.equal(migrated.manualAbnormal,false);assert.equal(migrated.exception,true);
 });
-test('camera uses a wider responsive region and rearms quickly without repeating a stationary code',async()=>{
+test('camera uses a compact square region and rearms quickly without repeating a stationary code',async()=>{
  const ctx=vm.createContext({module:{exports:{}}});vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);const {MobileScanGate,CameraScanConfig}=ctx.module.exports;
  const gate=new MobileScanGate();assert.equal(gate.hit('00000001',0),true);
  for(let t=50;t<500;t+=50){gate.hit('00000001',t);gate.miss(t+10);}assert.equal(gate.hit('00000001',500),false);
  gate.miss(650);gate.miss(850);gate.miss(1050);assert.equal(gate.hit('00000001',1051),true,'automatic same-order next box after 550 ms absence');
  assert.equal(gate.hit('00000002',1060),true,'new order needs no delay');
- const config=CameraScanConfig.options();assert.equal(config.fps,20);assert.equal(config.videoConstraints.facingMode.ideal,'environment');
- for(const [w,h]of [[240,180],[320,240],[390,290],[800,600]]){const box=config.qrbox(w,h);assert.ok(box.width<w&&box.width>=w*.85-1||w>720);assert.ok(box.height<=h);}
+ const config=CameraScanConfig.options();assert.equal(config.fps,15);assert.equal(config.videoConstraints.facingMode.ideal,'environment');
+ for(const [w,h]of [[240,180],[320,240],[390,290],[800,600]]){const box=config.qrbox(w,h);assert.equal(box.width,box.height);assert.ok(box.width<=224&&box.width<w);assert.ok(box.height<h);}
  assert.equal(CameraScanConfig.options(false).videoConstraints,undefined);
  let focus;await CameraScanConfig.focus({getRunningTrackCapabilities:()=>({focusMode:['continuous']}),applyVideoConstraints:async value=>focus=value});assert.equal(focus.advanced[0].focusMode,'continuous');
  await CameraScanConfig.focus({getRunningTrackCapabilities:()=>{throw new Error('unsupported')}});
