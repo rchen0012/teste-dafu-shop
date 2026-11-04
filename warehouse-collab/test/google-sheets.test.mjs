@@ -322,7 +322,7 @@ test('local cache reconciliation retains unconfirmed writes and never uses a mis
  const result=helper.pendingAfterRefresh({outbox:[scan,other,archive]},{task:{status:'archived'}},logs);
  assert.equal(result.length,1);assert.equal(result[0].id,other.id);
  const html=fs.readFileSync(new URL('../../index.html',import.meta.url),'utf8');
- assert.ok(html.indexOf('class="scan-top"')<html.indexOf('class="hero"'),'scanner is first');
+ assert.ok(html.indexOf('class="hero"')<html.indexOf('class="scan-top"'),'brand and task information precede scanner');
  assert.ok(html.includes('@media(min-width:900px)'));assert.ok(html.includes('max-width:1440px'));assert.ok(!html.includes('localStorage.clear('));
  assert.ok(html.includes('placeholder="请输入：123456"'));assert.ok(html.includes('state.cloud.outbox.length){const ok=await syncCloud()'));
 });
