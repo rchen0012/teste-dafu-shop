@@ -200,6 +200,7 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
   vm.runInContext(fs.readFileSync(new URL('../../assets/manual-queue.js',import.meta.url),'utf8'),ctx);
   vm.runInContext(fs.readFileSync(new URL('../../assets/mobile-ui.js',import.meta.url),'utf8'),ctx);
   vm.runInContext(fs.readFileSync(new URL('../../assets/order-check.js',import.meta.url),'utf8'),ctx);
+  vm.runInContext(fs.readFileSync(new URL('../../assets/local-task-state.js',import.meta.url),'utf8'),ctx);
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],ctx);
   return{get,store:sharedStorage,calls:()=>calls,answerPrompt:value=>prompts.push(value),failNextHistory:()=>failHistory=true,saved:()=>JSON.parse(sharedStorage.get('box_verify_manual_v2')),scan:code=>{get('barcode').value=code;get('scanBtn').onclick();}};
  }
@@ -226,6 +227,15 @@ test('new UI stores scans locally until manual refresh, survives reload, and mer
  restored.scan('00000002');restored.failNextHistory();await restored.get('manualSync').onclick();assert.equal(restored.saved().cloud.outbox.length,0);assert.equal(restored.saved().cloud.base[0].actual,6,'acknowledged base survives history download failure');
  restored.get('exceptionBtn').onclick();assert.equal(restored.saved().cloud.outbox.at(-1).value,1);restored.get('exceptionBtn').onclick();assert.equal(restored.saved().cloud.outbox.at(-1).value,0);assert.equal(restored.saved().orders[0].exception,true,'removing manual flag cannot hide shortage');
  restored.answerPrompt('6');restored.get('editEstimateBtn').onclick();await restored.get('manualSync').onclick();assert.equal(restored.saved().orders[0].exception,false);assert.match(restored.get('exceptionList').innerHTML,/暂无异常订单/);
+ restored.scan('00000002');const tokenBefore=restored.saved().cloud.token,pendingId=restored.saved().cloud.outbox[0].id;
+ const drift=restored.saved();drift.orders[0].actual=999;restored.store.set('box_verify_manual_v2',JSON.stringify(drift));
+ const cacheDevice=browser(restored.store);await cacheDevice.get('confirmLocalCache').onclick();
+ assert.equal(cacheDevice.saved().cloud.token,tokenBefore);assert.equal(cacheDevice.saved().cloud.role,'admin');assert.equal(cacheDevice.saved().cloud.outbox[0].id,pendingId);assert.equal(cacheDevice.saved().orders[0].actual,7,'cache refresh rebuilds latest cloud base plus unsent delta');
+ assert.ok([...cacheDevice.store.keys()].some(k=>k.startsWith('box_verify_backup_')));
+ const staleTab=browser(cacheDevice.store);
+ await cacheDevice.get('endTaskBtn').onclick();assert.equal(cacheDevice.saved().taskEnded,true);assert.equal(cacheDevice.saved().cloud.outbox.length,0);assert.equal(cacheDevice.saved().orders[0].actual,7,'ending automatically confirms pending scan first');
+ await staleTab.get('endTaskBtn').onclick();assert.equal(staleTab.saved().taskEnded,true);assert.equal(staleTab.saved().cloud.outbox.length,0,'stale tab confirms acknowledged scan and already ended task');
+
 });
 
 test('camera automatically rearms after box leaves, and pull cancellation never syncs',()=>{
@@ -254,9 +264,9 @@ test('admin reset requires password and role, backs up four tables atomically, a
  assert.equal(rpc('resetStatus',{},a).data.configured,false);
  g.props.RESET_PASSWORD_SETUP='test-reset-password-only';g.ctx.configureResetPassword();assert.equal(g.props.RESET_PASSWORD_SETUP,undefined);assert.ok(g.props.RESET_PASSWORD_HASH);assert.notEqual(g.props.RESET_PASSWORD_HASH,'test-reset-password-only');
  assert.equal(rpc('resetStatus',{},a).data.configured,true);
- const args={id:randomUUID(),password:'test-reset-password-only',confirm:'清除全部数据'};
+ const args={id:randomUUID(),password:'test-reset-password-only',confirm:'123456'};
  assert.equal(rpc('reset',{...args,password:'wrong-password'},a).status,403);assert.equal(Object.keys(g.grids).length,4);
- assert.equal(rpc('reset',args,b).status,403);assert.equal(rpc('reset',{...args,confirm:'错误'},a).status,400);
+ assert.equal(rpc('reset',args,b).status,403);assert.equal(rpc('reset',{...args,confirm:'错误'},a).status,400);assert.equal(rpc('reset',{...args,confirm:'清除全部数据'},a).status,400);
  g.failNextCommit();assert.equal(rpc('reset',args,a).ok,false);assert.equal(g.grids[g.ids.tasks].rows.length,2);assert.equal(Object.keys(g.grids).length,4);
  const reset=rpc('reset',args,a);assert.equal(reset.ok,true);assert.equal(reset.data.backups.length,4);assert.equal(Object.keys(g.grids).length,8);
  for(const id of Object.values(g.ids))assert.equal(g.grids[id].rows.length,1,'headers retained, all data rows cleared');
@@ -295,4 +305,24 @@ test('camera uses a wider responsive region and rearms quickly without repeating
  assert.equal(CameraScanConfig.options(false).videoConstraints,undefined);
  let focus;await CameraScanConfig.focus({getRunningTrackCapabilities:()=>({focusMode:['continuous']}),applyVideoConstraints:async value=>focus=value});assert.equal(focus.advanced[0].focusMode,'continuous');
  await CameraScanConfig.focus({getRunningTrackCapabilities:()=>{throw new Error('unsupported')}});
+});
+
+test('task closure is idempotent across independent archive requests and still enforces admin role',()=>{
+ const g=fakeGoogle(),rpc=(action,args={},token='a'.repeat(48))=>JSON.parse(JSON.stringify(g.ctx.browserRequest({action,args,token})));
+ const a='a'.repeat(48),b='b'.repeat(48),made=rpc('create',{name:'管理员',title:'状态一致性'},a).data;
+ rpc('join',{name:'成员',code:made.task.code},b);
+ const first=rpc('op',{id:randomUUID(),kind:'archive'},a).data,second=rpc('op',{id:randomUUID(),kind:'archive'},a);
+ assert.equal(second.ok,true);assert.equal(second.data.task.revision,first.task.revision);assert.equal(rpc('history',{},a).data.logs.filter(l=>l.kind==='archive').length,1);
+ assert.equal(rpc('op',{id:randomUUID(),kind:'archive'},b).status,403);
+});
+test('local cache reconciliation retains unconfirmed writes and never uses a mismatched payload as acknowledgement',()=>{
+ const ctx=vm.createContext({module:{exports:{}}});vm.runInContext(fs.readFileSync(new URL('../../assets/local-task-state.js',import.meta.url),'utf8'),ctx);
+ const helper=ctx.module.exports,scan={id:'a'.repeat(24),kind:'scan',barcode:'00000001'},other={id:'b'.repeat(24),kind:'scan',barcode:'00000002'},archive={id:'c'.repeat(24),kind:'archive'};
+ const logs=[{id:scan.id,kind:'scan',payload:JSON.stringify(['scan','00000001',null,null,null])},{id:other.id,kind:'scan',payload:JSON.stringify(['scan','00000003',null,null,null])}];
+ const result=helper.pendingAfterRefresh({outbox:[scan,other,archive]},{task:{status:'archived'}},logs);
+ assert.equal(result.length,1);assert.equal(result[0].id,other.id);
+ const html=fs.readFileSync(new URL('../../index.html',import.meta.url),'utf8');
+ assert.ok(html.indexOf('class="scan-top"')<html.indexOf('class="hero"'),'scanner is first');
+ assert.ok(html.includes('@media(min-width:900px)'));assert.ok(html.includes('max-width:1440px'));assert.ok(!html.includes('localStorage.clear('));
+ assert.ok(html.includes('placeholder="请输入：123456"'));assert.ok(html.includes('state.cloud.outbox.length){const ok=await syncCloud()'));
 });
