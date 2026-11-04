@@ -359,7 +359,7 @@ $('cancelResetAll').onclick=()=>{$('resetPassword').value='';$('resetShade').cla
 $('confirmResetAll').onclick=async()=>{
  if(busy)return;const password=$('resetPassword').value,phrase=$('resetPhrase').value;
  if(password.length<8){$('resetError').textContent='请输入管理员密码（至少8位）';return;}
- if(phrase!=='清除全部数据'){$('resetError').textContent='请完整输入“清除全部数据”';return;}
+ if(phrase!=='12345678'){$('resetError').textContent='请完整输入“12345678”';return;}
  if(!confirm('最后确认：备份并清除云端所有任务、成员、订单和操作记录？所有设备都需要重新加入。'))return;
  busy=true;$('confirmResetAll').disabled=true;$('cancelResetAll').disabled=true;
  try{
