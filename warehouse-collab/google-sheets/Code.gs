@@ -63,6 +63,7 @@ function plan_(tables,action,args,token){
   var prior=lookup_(tables.operations,function(o){return o.task===m.task&&o.id===b.id;});
   if(prior){if(prior.value.token!==m.token||prior.value.payload!==payload)reject_('操作 ID 已用于其他请求',409);return{changes:[],data:publicSnapshot_(tables,m)};}
   var task=lookup_(tables.tasks,function(t){return t.id===m.task;});
+  if(task&&task.value.status==='archived'&&b.kind==='archive'){if(m.role!=='admin')reject_('仅任务创建人可以归档',403);return{changes:[],data:publicSnapshot_(tables,m)};}
   if(!task||task.value.status!=='active')reject_('任务已归档，不能继续修改',409);
   var before=null,after=null;
   if(b.kind==='archive'){
@@ -199,7 +200,7 @@ function verifyResetPassword_(password){
  p.deleteProperty('RESET_FAILURES');p.deleteProperty('RESET_FAILURE_WINDOW');
 }
 function resetAll_(id,tables,args,token){
- if(!/^[a-zA-Z0-9-]{16,100}$/.test(args.id||'')||args.confirm!=='清除全部数据')reject_('请输入完整确认文字“清除全部数据”');
+ if(!/^[a-zA-Z0-9-]{16,100}$/.test(args.id||'')||args.confirm!=='123456')reject_('请输入完整确认数字“123456”');
  verifyResetPassword_(args.password);
  var meta=Sheets.Spreadsheets.get(id,{fields:'developerMetadata(metadataKey,metadataValue),sheets(properties(sheetId,title,gridProperties(rowCount,columnCount)))'});
  var marker=(meta.developerMetadata||[]).find(function(x){if(x.metadataKey!=='warehouse-reset')return false;try{var v=JSON.parse(x.metadataValue);return v.id===args.id&&v.token===sha_(token);}catch(e){return false;}});
